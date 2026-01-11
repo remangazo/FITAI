@@ -1,0 +1,435 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* ========================================
+   FITAI Personal - Premium Brand Identity
+   Indigo/Violet Signature Color System
+   ======================================== */
+
+@theme {
+  /* Brand Palette - Signature Indigo & Violet */
+  --color-brand-primary: #6366F1;
+  /* Indigo-500 - Principal */
+  --color-brand-primary-light: #818CF8;
+  /* Indigo-400 */
+  --color-brand-primary-dark: #4F46E5;
+  /* Indigo-600 */
+  --color-brand-violet: #8B5CF6;
+  /* Violet-500 - Acento */
+  --color-brand-violet-light: #A78BFA;
+  /* Violet-400 */
+
+  /* Premium Accent - Para highlights especiales */
+  --color-accent-gold: #F59E0B;
+  --color-accent-cyan: #22D3EE;
+  /* Solo para data viz */
+
+  /* Backgrounds - Ultra Dark para sensación premium */
+  --color-background: #09090B;
+  /* Zinc-950 - Casi negro */
+  --color-surface: #18181B;
+  /* Zinc-900 */
+  --color-surface-elevated: #27272A;
+  /* Zinc-800 */
+  --color-surface-brighter: #3F3F46;
+  /* Zinc-700 */
+
+  /* Legacy aliases */
+  --color-brand-indigo: var(--color-brand-primary);
+  --color-brand-cyan: var(--color-accent-cyan);
+
+  --color-primary: var(--color-brand-primary);
+  --color-accent: var(--color-brand-violet);
+
+  /* Text Hierarchy - Mayor contraste */
+  --color-text: #FAFAFA;
+  /* Zinc-50 */
+  --color-text-secondary: #A1A1AA;
+  /* Zinc-400 */
+  --color-text-muted: #71717A;
+  /* Zinc-500 */
+  --color-text-dim: #52525B;
+  /* Zinc-600 */
+
+  /* Borders - Más sutiles */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hover: rgba(255, 255, 255, 0.12);
+  --color-border-active: rgba(99, 102, 241, 0.5);
+
+  /* Gradients - Signature */
+  --gradient-brand: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  --gradient-brand-vibrant: linear-gradient(135deg, #818CF8 0%, #A78BFA 100%);
+  --gradient-deep: linear-gradient(180deg, #09090B 0%, #18181B 100%);
+  --gradient-premium: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
+  --gradient-glow: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 50%);
+  --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+
+  /* Shadows & Glows - Más refinados */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-premium: 0 12px 40px -12px rgba(0, 0, 0, 0.6);
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.25);
+  --glow-violet: 0 0 20px rgba(139, 92, 246, 0.25);
+  --glow-gold: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+/* Base Styles */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image: var(--gradient-glow);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-hover);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-dim);
+  }
+}
+
+/* Component Styles */
+@layer components {
+
+  /* Modern Glass - Más sutil */
+  .glass {
+    background: rgba(24, 24, 27, 0.85);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid var(--color-border);
+  }
+
+  .glass-brighter {
+    background: rgba(39, 39, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-hover);
+  }
+
+  /* Premium Cards - Clean & Minimal */
+  .card-premium {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .card-premium:hover {
+    border-color: var(--color-border-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Brand Typography */
+  .title-brand {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+
+  .gradient-text {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-premium {
+    background: var(--gradient-premium);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Premium Buttons */
+  .btn-brand {
+    background: var(--gradient-brand);
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--glow-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+
+  .btn-brand:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px rgba(99, 102, 241, 0.5);
+  }
+
+  .btn-brand:active {
+    transform: translateY(0);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-text);
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-border-hover);
+  }
+
+  /* Subtle Card (MyFitCoach style) */
+  .card-subtle {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  /* Elite Cards (con gradient top) */
+  .card-elite {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-elite::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--gradient-brand);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card-elite:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .card-elite:hover::before {
+    opacity: 1;
+  }
+
+  /* Badge Premium */
+  .badge-premium {
+    background: var(--gradient-premium);
+    color: #09090B;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Inputs - Clean style */
+  .input-field {
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: white;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .input-field:focus {
+    background: var(--color-surface-elevated);
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  .input-field::placeholder {
+    color: var(--color-text-dim);
+  }
+
+  /* Set Input (para workout tracker) */
+  .input-set {
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+
+  .input-set:focus {
+    border-color: var(--color-brand-primary);
+    background: var(--color-surface-brighter);
+  }
+
+  .input-with-icon {
+    padding-left: 44px !important;
+  }
+
+  /* Divider with text */
+  .divider-with-text {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--color-text-dim);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .divider-with-text::before,
+  .divider-with-text::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .divider-with-text::before {
+    margin-right: 1rem;
+  }
+
+  .divider-with-text::after {
+    margin-left: 1rem;
+  }
+
+  /* Progress System */
+  .bar-container {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--gradient-brand);
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+
+  /* Workout Set Row (à la MyFitCoach) */
+  .set-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 1fr 1fr 40px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .set-row:last-child {
+    border-bottom: none;
+  }
+
+  .set-number {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  .set-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .set-check.completed {
+    background: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+    color: white;
+  }
+}
+
+/* Elite Utilities */
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+  }
+
+  .border-glow {
+    box-shadow: inset 0 0 20px rgba(79, 70, 229, 0.1), 0 0 20px rgba(79, 70, 229, 0.1);
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+}

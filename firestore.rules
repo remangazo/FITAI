@@ -1,0 +1,209 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========== HELPER FUNCTIONS ==========
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidString(field, min, max) {
+      return field is string && field.size() >= min && field.size() <= max;
+    }
+    
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    // ========== USER PROFILES ==========
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      // Prevent users from modifying their own premium status
+      allow update: if isOwner(userId) 
+        && (!request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus']));
+      allow delete: if isOwner(userId);
+    }
+    
+    // ========== ROUTINES ==========
+    match /routines/{routineId} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // ========== DIETS ==========
+    match /diets/{dietId} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // ========== WORKOUTS ==========
+    match /workouts/{workoutId} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // ========== NUTRITION LOGS ==========
+    match /nutritionLogs/{logId} {
+      allow read, write: if isAuthenticated() 
+        && logId >= request.auth.uid 
+        && logId < request.auth.uid + '~';
+    }
+    
+    // ========== COMMUNITY POSTS ==========
+    match /communityPosts/{postId} {
+      // Any authenticated user can read posts
+      allow read: if isAuthenticated();
+      // Only creator can create/modify/delete
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'type', 'createdAt']);
+      allow update, delete: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+        
+      // Likes subcollection
+      match /likes/{likeId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && likeId == request.auth.uid;
+        allow delete: if isAuthenticated() && likeId == request.auth.uid;
+      }
+      
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() 
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isAuthenticated() 
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Social Graph: Followers (Subcollection of User)
+    match /users/{userId}/followers/{followerId} {
+      allow read: if isAuthenticated();
+      // Only the follower can add themselves (Follow) OR remove themselves (Unfollow)
+      allow write: if request.auth.uid == followerId;
+    }
+    
+    // Social Graph: Following (Subcollection of User)
+    match /users/{userId}/following/{followingId} {
+      allow read: if isAuthenticated();
+      // Only the user can modify who they follow
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Allow users to create notifications for others (e.g. valid Follow/Like)
+      allow create: if isAuthenticated() 
+        && request.resource.data.sourceUserId == request.auth.uid;
+        
+      // Allow users to update their own notifications (e.g. mark as read)
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // --- GAMIFICATION ---
+    match /challenges/{challengeId} {
+      allow read: if isAuthenticated();
+      // Allow write mainly for admin, but for MVP allowing basic management if needed or rely on seeding logic from secure context.
+      // For strictly secure apps, this would be admin only.
+      allow write: if isAuthenticated(); 
+      
+      match /participants/{participantId} {
+        allow read: if isAuthenticated();
+        // Allow user to join (create) or update their own progress (via secure logic or client trusted for MVP)
+        allow create, update: if isOwner(participantId);
+      }
+    }
+    
+    // Proofs (for AI Verification)
+    match /proofs/{proofId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ========== ACTIVITIES (for activity tracker) ==========
+    match /activities/{activityId} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ========== SHOP PRODUCTS ==========
+    match /products/{productId} {
+      // Anyone can read products (Public Shop)
+      allow read: if true;
+      
+      // Only Admins can create/update/delete
+      // We check the user's document role field
+      allow write: if isAuthenticated() 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // ========== GDPR DATA REQUESTS ==========
+    match /gdprRequests/{requestId} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ========== TRAINERS (Coach Ecosystem) ==========
+    match /trainers/{trainerId} {
+      // Public profile - anyone authenticated can read
+      allow read: if isAuthenticated();
+      // Only the trainer can create/update their own profile
+      allow create: if isOwner(trainerId);
+      allow update: if isOwner(trainerId)
+        && (!request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['rewardPoints', 'rewardLevel', 'shopDiscount', 'studentReferrals']));
+      allow delete: if isOwner(trainerId);
+    }
+
+    // ========== ASSIGNED ROUTINES (Trainer -> Student) ==========
+    match /assignedRoutines/{routineId} {
+      // Trainer can create/update routines for their students
+      allow create: if isAuthenticated() 
+        && request.resource.data.trainerId == request.auth.uid;
+      // Both trainer and student can read
+      allow read: if isAuthenticated() 
+        && (resource.data.trainerId == request.auth.uid 
+            || resource.data.studentId == request.auth.uid);
+      // Only trainer can update/delete
+      allow update, delete: if isAuthenticated() 
+        && resource.data.trainerId == request.auth.uid;
+    }
+
+    // ========== TEAM CHALLENGES (Trainer's internal challenges) ==========
+    match /teamChallenges/{challengeId} {
+      // Only trainer who created it can manage
+      allow create: if isAuthenticated() 
+        && request.resource.data.coachId == request.auth.uid;
+      // Members of the team can read (students with matching coachId)
+      allow read: if isAuthenticated();
+      allow update, delete: if isAuthenticated() 
+        && resource.data.coachId == request.auth.uid;
+      
+      match /participants/{participantId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isOwner(participantId);
+      }
+    }
+  }
+}

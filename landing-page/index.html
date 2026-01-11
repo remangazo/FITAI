@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitAI Coach | Elite Intelligence</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js + Intersect Plugin -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Google Fonts: Outfit (Bold/Black) & Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            indigo: '#6366F1',
+                            violet: '#8B5CF6',
+                        },
+                        dark: {
+                            DEFAULT: '#09090B',
+                            card: '#111114',
+                            border: '#1F1F23',
+                            lighter: '#18181B'
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) rotate(-1deg)' },
+                            '50%': { transform: 'translateY(-20px) rotate(1deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .text-huge {
+            font-size: clamp(3rem, 10vw, 7.5rem);
+            line-height: 0.8;
+            letter-spacing: -0.05em;
+        }
+
+        .bg-grid {
+            background-size: 50px 50px;
+            background-image: radial-gradient(circle, #27272a 1px, transparent 1px);
+        }
+
+        .bento-card {
+            background: #111114;
+            border: 1px solid #1F1F23;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bento-card:hover {
+            border-color: #6366F1;
+            transform: translateY(-5px);
+        }
+
+        .glass-dark {
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pricing-table-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.2s ease;
+        }
+
+        .pricing-table-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #09090B;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6366F1;
+            border-radius: 10px;
+        }
+
+        /* Shimmer Animation */
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .shimmer-indigo {
+            background: linear-gradient(90deg, #6366F1 0%, #a78bfa 50%, #6366F1 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 5s linear infinite;
+        }
+
+        .shimmer-white {
+            background: linear-gradient(90deg, #ffffff 0%, #a1a1aa 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 8s linear infinite;
+        }
+
+        @keyframes ambient-float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .animate-ambient {
+            animation: ambient-float 4s ease-in-out infinite;
+        }
+
+        /* Title Reveal Animations */
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-up.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-scale.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+</head>
+
+<body class="bg-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-indigo/30">
+
+    <!-- Nav -->
+    <nav x-data="{ scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
+        :class="{ 'glass-dark py-4': scrolled, 'py-8': !scrolled }"
+        class="fixed top-0 w-full z-[100] px-6 md:px-12 flex justify-between items-center transition-all duration-500">
+        <div class="flex items-center gap-2">
+            <span class="text-3xl font-display font-black tracking-tighter uppercase">FIT<span
+                    class="text-brand-indigo">AI</span></span>
+        </div>
+        <div class="hidden md:flex items-center gap-10 text-[10px] font-black tracking-[0.4em] uppercase">
+            <a href="#pro"
+                class="hover:text-brand-indigo transition-colors opacity-60 hover:opacity-100 uppercase tracking-widest leading-none">PROFESIONAL</a>
+            <a href="#community"
+                class="hover:text-brand-indigo transition-colors opacity-60 hover:opacity-100 uppercase tracking-widest leading-none">COMUNIDAD</a>
+            <a href="#plans"
+                class="hover:text-brand-indigo transition-colors opacity-60 hover:opacity-100 uppercase tracking-widest leading-none">PLANES</a>
+            <button
+                class="bg-white text-dark px-10 py-5 rounded-none font-black hover:bg-brand-indigo hover:text-white transition-all transform hover:scale-105">ACCESO
+                ÉLITE</button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="min-h-screen relative flex items-center justify-center pt-32 pb-20 px-6 overflow-hidden bg-grid">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-indigo/10 blur-[180px]"></div>
+            <div class="absolute bottom-0 left-0 w-[800px] h-[800px] bg-brand-violet/10 blur-[180px]"></div>
+        </div>
+
+        <div class="relative z-10 max-w-[1400px] w-full grid lg:grid-cols-2 gap-20 items-start pt-8">
+            <div class="space-y-12 lg:pt-0">
+                <div
+                    class="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-2 rounded-full text-[10px] font-black tracking-[0.3em] text-brand-indigo uppercase">
+                    <span class="flex h-2 w-2 rounded-full bg-brand-indigo animate-pulse"></span>
+                    Membresía Premium Abierta
+                </div>
+
+                <!-- Dynamic Typewriter Title -->
+                <div x-data="{ 
+                    titles: ['ENTRENA', 'EVOLUCIONA', 'DOMINA'], 
+                    current: 0, 
+                    text: '', 
+                    charIndex: 0, 
+                    isDeleting: false,
+                    type() {
+                        let fullText = this.titles[this.current];
+                        if (this.isDeleting) {
+                            this.text = fullText.substring(0, this.text.length - 1);
+                        } else {
+                            this.text = fullText.substring(0, this.text.length + 1);
+                        }
+
+                        let typeSpeed = this.isDeleting ? 100 : 200;
+                        if (!this.isDeleting && this.text === fullText) {
+                            typeSpeed = 2000;
+                            this.isDeleting = true;
+                        } else if (this.isDeleting && this.text === '') {
+                            this.isDeleting = false;
+                            this.current = (this.current + 1) % this.titles.length;
+                            typeSpeed = 500;
+                        }
+
+                        setTimeout(() => this.type(), typeSpeed);
+                    }
+                }" x-init="type()">
+                    <h1 class="text-huge font-display font-black uppercase italic min-h-[1.6em]">
+                        <span x-text="text" class="text-white"></span><br>
+                        <span class="text-brand-indigo shimmer-indigo">INTELIGENTE.</span>
+                    </h1>
+                </div>
+
+                <p
+                    class="text-2xl md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-8">
+                    La primera plataforma donde la IA no solo te da planes, sino que entiende tu biología.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-8">
+                    <a href="https://peachpuff-narwhal-354649.hostingersite.com/" target="_blank"
+                        class="bg-brand-indigo text-white px-8 md:px-14 py-6 md:py-8 text-lg md:text-xl font-black uppercase tracking-tighter hover:bg-white hover:text-dark transition-all transform hover:-rotate-1 inline-block text-center w-full md:w-auto">
+                        UNIRSE AHORA
+                    </a>
+                    <div class="flex items-center gap-4">
+                        <div class="flex -space-x-3">
+                            <div class="w-12 h-12 rounded-full border-2 border-dark bg-slate-800"></div>
+                            <div class="w-12 h-12 rounded-full border-2 border-dark bg-brand-indigo"></div>
+                            <div class="w-12 h-12 rounded-full border-2 border-dark bg-slate-700"></div>
+                        </div>
+                        <div class="text-[10px] font-black tracking-widest text-white/40 leading-tight uppercase">
+                            50,000+ ATLETAS <br> EN ELÉVACIÓN
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real Asset: movil1.png & movil4.png Loop -->
+            <div class="relative flex justify-center lg:justify-end mt-12 lg:mt-0 lg:-mr-20" x-data="{ current: 1 }"
+                x-init="setInterval(() => current = current === 1 ? 2 : 1, 4000)">
+                <div class="relative animate-float h-[500px] md:h-[800px] w-full max-w-[350px] md:max-w-[550px]">
+                    <div class="absolute inset-0 bg-brand-indigo/20 blur-[80px] md:blur-[120px]"></div>
+
+                    <!-- Image 1: Dashboard -->
+                    <img src="images/movil1.png" alt="FitAI Dashboard"
+                        class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
+                        :class="current === 1 ? 'opacity-100' : 'opacity-0'">
+
+                    <!-- Image 2: Nutrition -->
+                    <img src="images/movil4.png" alt="FitAI Nutrition"
+                        class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
+                        :class="current === 2 ? 'opacity-100' : 'opacity-0'">
+
+                    <div class="absolute -bottom-10 md:bottom-1/4 left-1/2 -translate-x-1/2 md:translate-x-0 md:-left-20 glass-dark p-6 md:p-8 border-t-4 animate-float-delayed z-20 min-w-[200px] md:min-w-[220px] transition-all duration-500 text-center"
+                        x-data="{ 
+                            stats: [
+                                { label: 'PROGRESO IA', value: '+14.2%', desc: 'Capacidad Metabólica', color: 'border-brand-indigo', text: 'text-brand-indigo' },
+                                { label: 'NUTRICIÓN', value: '98%', desc: 'Adherencia Semanal', color: 'border-emerald-500', text: 'text-emerald-500' },
+                                { label: 'ENTRENO', value: '12', desc: 'Series Efectivas Hoy', color: 'border-brand-violet', text: 'text-brand-violet' },
+                                { label: 'EXPERIENCIA', value: '+250 XP', desc: 'Racha de 5 Días', color: 'border-amber-500', text: 'text-amber-500' }
+                            ],
+                            current: 0,
+                            init() {
+                                setInterval(() => {
+                                    this.current = (this.current + 1) % this.stats.length;
+                                }, 3500);
+                            }
+                        }" :class="stats[current].color">
+                        <div class="relative h-20 overflow-hidden flex items-center justify-center">
+                            <template x-for="(stat, index) in stats">
+                                <div x-show="current === index" x-transition:enter="transition ease-out duration-500"
+                                    x-transition:enter-start="opacity-0 translate-y-4"
+                                    x-transition:leave="transition ease-in duration-300 absolute inset-0"
+                                    class="flex flex-col justify-center items-center w-full">
+                                    <p class="text-[10px] font-black uppercase tracking-widest mb-2" :class="stat.text"
+                                        x-text="stat.label"></p>
+                                    <div class="text-4xl font-display font-black leading-none tracking-tighter"
+                                        x-text="stat.value">
+                                    </div>
+                                    <div class="text-[8px] font-bold text-white/30 uppercase mt-2" x-text="stat.desc">
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- IA Engine -->
+    <section class="py-12 md:py-24 px-6 md:px-12 bg-black overflow-hidden border-y border-white/5 relative">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0 opacity-20 transition-opacity duration-1000">
+            <img src="images/bg_ia_engine.png" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+        </div>
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div class="lg:order-2 space-y-16">
+                <div class="space-y-6" x-data="{ active: false }" x-intersect="active = true">
+                    <p class="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.5em] text-brand-indigo uppercase transition-all duration-700"
+                        :class="active ? 'opacity-100' : 'opacity-0'">
+                        <span class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
+                        THE INTELLIGENCE CORE
+                    </p>
+                    <h2 class="text-4xl md:text-6xl lg:text-[5.5rem] font-display font-black uppercase leading-none md:leading-[0.85] tracking-tighter reveal-up"
+                        :class="{ 'active': active }">
+                        <span class="shimmer-white">MENOS</span><br>
+                        <span class="shimmer-indigo">DUDA.</span><br>
+                        <span class="shimmer-white">MÁS RESULTADOS.</span>
+                    </h2>
+                </div>
+                <p class="text-xl md:text-2xl text-white/50 leading-relaxed font-medium reveal-up"
+                    x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
+                    FitAI analiza cada sesión individual de entrenamiento. Si fallas una repetición, Gemini 1.5 Flash
+                    recalcula tu volumen en milisegundos para que no te estanques nunca.
+                </p>
+                <div class="grid grid-cols-2 gap-12 pt-8 reveal-up" x-data="{ active: false }"
+                    x-intersect="active = true" :class="{ 'active': active }">
+                    <div class="space-y-2">
+                        <div class="text-5xl font-display font-black">2.4ms</div>
+                        <div class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">LATENCIA IA RECAP
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="text-5xl font-display font-black">0</div>
+                        <div class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">ESTANCAMIENTOS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:order-1 relative flex justify-center">
+                <div class="absolute inset-0 bg-violet-600/10 blur-[200px]"></div>
+                <img src="images/movil2.png" alt="FitAI Routines"
+                    class="relative z-10 w-[550px] animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white/5 rounded-full animate-pulse-slow">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Coach Ecosystem -->
+    <section id="pro" class="py-24 px-6 md:px-12 relative overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0 opacity-10 transition-opacity duration-1000">
+            <img src="images/bg_coaches.png" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-dark"></div>
+        </div>
+        <div class="max-w-7xl mx-auto space-y-20">
+            <div class="text-center md:text-left" x-data="{ active: false }" x-intersect="active = true">
+                <p class="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.5em] text-brand-indigo uppercase mb-6 reveal-up"
+                    :class="{ 'active': active }">
+                    <span class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
+                    ELITE COACHING NETWORK
+                </p>
+                <h2 class="text-7xl md:text-[10rem] font-display font-black uppercase leading-none tracking-tighter reveal-scale"
+                    :class="{ 'active': active }">
+                    <span class="shimmer-white">EL ESTÁNDAR</span> <br>
+                    <span
+                        class="bg-white text-dark px-10 transform -rotate-2 inline-block animate-ambient">PROFESIONAL.</span>
+                </h2>
+                <p class="mt-16 text-2xl md:text-4xl font-display font-medium text-white/40 leading-tight reveal-up"
+                    :class="{ 'active': active }">
+                    La herramienta definitiva para <span class="text-white">profesionales y coaches
+                        independientes.</span><br class="hidden md:block">
+                    Olvídate del Excel. <span class="text-brand-indigo font-black">100% GRATUITO.</span><br>
+                    Potencia tu marca y gestiona a tus atletas <span class="text-white">sin costes mensuales.</span>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+                <div class="bento-card relative p-12 space-y-12 group overflow-hidden reveal-up"
+                    x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
+                    <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
+                        <img src="images/massive_management.png" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
+                    </div>
+                    <div
+                        class="relative z-10 w-16 h-16 bg-brand-indigo flex items-center justify-center rounded-2xl group-hover:rotate-6 transition-transform">
+                        <i data-lucide="users-2" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div class="relative z-10 space-y-4">
+                        <h3 class="text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
+                            GESTIÓN MASIVA</h3>
+                        <p class="text-white/40 text-lg leading-relaxed font-medium">Controla el progreso de 50+ atletas
+                            desde un solo mando. Visualiza alertas de riesgo automáticas.</p>
+                    </div>
+                </div>
+                <div class="bento-card relative p-12 space-y-12 border-brand-indigo/50 bg-gradient-to-br from-dark to-brand-indigo/10 group overflow-hidden reveal-up"
+                    style="transition-delay: 0.1s" x-data="{ active: false }" x-intersect="active = true"
+                    :class="{ 'active': active }">
+                    <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
+                        <img src="images/monetization.png" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
+                    </div>
+                    <div
+                        class="relative z-10 w-16 h-16 bg-white flex items-center justify-center rounded-2xl group-hover:rotate-6 transition-transform">
+                        <i data-lucide="dollar-sign" class="w-8 h-8 text-dark"></i>
+                    </div>
+                    <div class="relative z-10 space-y-4">
+                        <h3 class="text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
+                            MONETIZACIÓN</h3>
+                        <p class="text-brand-indigo text-lg font-black uppercase tracking-widest italic leading-none">
+                            15% Comisión Recurrente</p>
+                        <p class="text-white/40 text-lg leading-relaxed font-medium">Cada alumno premium en tu red es
+                            ingreso pasivo directo para ti.</p>
+                    </div>
+                </div>
+                <div class="bento-card relative p-12 space-y-12 group overflow-hidden reveal-up"
+                    style="transition-delay: 0.2s" x-data="{ active: false }" x-intersect="active = true"
+                    :class="{ 'active': active }">
+                    <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
+                        <img src="images/branding.png" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
+                    </div>
+                    <div
+                        class="relative z-10 w-16 h-16 bg-dark-lighter flex items-center justify-center rounded-2xl group-hover:rotate-6 transition-transform border border-white/10">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-brand-indigo"></i>
+                    </div>
+                    <div class="relative z-10 space-y-4">
+                        <h3 class="text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
+                            BRANDING ELITE</h3>
+                        <p class="text-white/40 text-lg leading-relaxed font-medium">Desde tu logo hasta tu metodología
+                            personalizada. Todo bajo tu marca personal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Management Showcase -->
+            <div class="space-y-20 pt-10">
+                <!-- Case 1 -->
+                <!-- Automated Experience Showcase v3 -->
+                <div class="relative mt-10" x-data="{ 
+                step: 1, 
+                totalSteps: 3, 
+                paused: false,
+                interval: null,
+                init() {
+                    this.interval = setInterval(() => {
+                        if (!this.paused) this.step = this.step < this.totalSteps ? this.step + 1 : 1;
+                    }, 5000);
+                }
+            }" @mouseenter="paused = true" @mouseleave="paused = false">
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        <!-- Text Side (Static Container to avoid jumps) -->
+                        <div
+                            class="lg:col-span-5 space-y-12 relative z-10 min-h-0 lg:min-h-[400px] flex flex-col justify-center order-2 lg:order-1">
+                            <div class="relative">
+                                <!-- Card 1 -->
+                                <div x-show="step === 1" x-transition:enter="transition ease-out duration-500"
+                                    x-transition:enter-start="opacity-0 translate-y-4"
+                                    x-transition:leave="transition ease-in duration-300 absolute inset-0"
+                                    class="space-y-6">
+                                    <div class="flex items-center gap-4 text-brand-indigo">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
+                                            <span class="text-[10px] font-black tracking-[0.4em] uppercase">Panel de
+                                                Control</span>
+                                        </div>
+                                        <div class="h-[1px] w-12 bg-brand-indigo/30"></div>
+                                    </div>
+                                    <h3
+                                        class="text-5xl md:text-7xl font-display font-black uppercase leading-[0.85] tracking-tighter">
+                                        TU TORRE DE <br> <span class="shimmer-indigo">CONTROL.</span>
+                                    </h3>
+                                    <p class="text-xl text-white/50 leading-relaxed font-medium">
+                                        Gestiona tu comunidad FitAI con coste cero. Visualiza recompensas, estado
+                                        premium y puntos acumulados desde un solo mando intuitivo.
+                                    </p>
+                                </div>
+
+                                <!-- Card 2 -->
+                                <div x-show="step === 2" x-transition:enter="transition ease-out duration-500"
+                                    x-transition:enter-start="opacity-0 translate-y-4"
+                                    x-transition:leave="transition ease-in duration-300 absolute inset-0"
+                                    class="space-y-6" x-cloak>
+                                    <div class="flex items-center gap-4 text-brand-violet">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="flex h-1.5 w-1.5 rounded-full bg-brand-violet animate-pulse"></span>
+                                            <span class="text-[10px] font-black tracking-[0.4em] uppercase">Gestión
+                                                Activa</span>
+                                        </div>
+                                        <div class="h-[1px] w-12 bg-brand-violet/30"></div>
+                                    </div>
+                                    <h3
+                                        class="text-5xl md:text-7xl font-display font-black uppercase leading-[0.85] tracking-tighter">
+                                        IDENTIFICA <br> <span class="shimmer-indigo">AL INSTANTE.</span>
+                                    </h3>
+                                    <p class="text-xl text-white/50 leading-relaxed font-medium">
+                                        Detecta alumnos "En Riesgo" de forma automática. El sistema alerta sobre bajas
+                                        en asistencia o cumplimiento semanal.
+                                    </p>
+                                </div>
+
+                                <!-- Card 3 -->
+                                <div x-show="step === 3" x-transition:enter="transition ease-out duration-500"
+                                    x-transition:enter-start="opacity-0 translate-y-4"
+                                    x-transition:leave="transition ease-in duration-300 absolute inset-0"
+                                    class="space-y-6" x-cloak>
+                                    <div class="flex items-center gap-4 text-brand-indigo">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
+                                            <span class="text-[10px] font-black tracking-[0.4em] uppercase">Análisis
+                                                Pro</span>
+                                        </div>
+                                        <div class="h-[1px] w-12 bg-brand-indigo/30"></div>
+                                    </div>
+                                    <h3
+                                        class="text-5xl md:text-7xl font-display font-black uppercase leading-[0.85] tracking-tighter">
+                                        EVOLUCIÓN <br> <span class="shimmer-indigo">DETALLADA.</span>
+                                    </h3>
+                                    <p class="text-xl text-white/50 leading-relaxed font-medium">
+                                        Estudia el progreso biométrico y técnico de cada atleta. Toma decisiones basadas
+                                        en datos reales para maximizar resultados.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Dots Indicator -->
+                            <div class="flex gap-3">
+                                <template x-for="i in totalSteps">
+                                    <button @click="step = i" class="h-1.5 rounded-full transition-all duration-500"
+                                        :class="step === i ? 'w-10 bg-white' : 'w-2 bg-white/10'"></button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Visual Side (Stays fixed size) -->
+                        <div class="lg:col-span-7 relative order-1 lg:order-2">
+                            <div
+                                class="relative aspect-[16/10] rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl overflow-hidden">
+                                <!-- Image Layers -->
+                                <div class="absolute inset-0 transition-all duration-1000 transform"
+                                    :class="step === 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'">
+                                    <img src="images/coach1.png" class="w-full h-full object-cover">
+                                </div>
+                                <div class="absolute inset-0 transition-all duration-1000 transform"
+                                    :class="step === 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'">
+                                    <img src="images/coach2.png" class="w-full h-full object-cover">
+                                </div>
+                                <div class="absolute inset-0 transition-all duration-1000 transform"
+                                    :class="step === 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'">
+                                    <img src="images/coach3.png" class="w-full h-full object-cover">
+                                </div>
+
+                                <!-- Decorative Overlays -->
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-tr from-brand-indigo/10 to-transparent pointer-events-none">
+                                </div>
+                            </div>
+
+                            <!-- Floating Badge -->
+                            <div
+                                class="absolute -top-6 -right-6 glass-dark p-6 border border-white/10 rounded-2xl z-20 shadow-2xl flex items-center gap-4 animate-float">
+                                <div class="w-12 h-12 bg-white flex items-center justify-center rounded-xl">
+                                    <i data-lucide="sparkles" class="w-6 h-6 text-dark animate-pulse"></i>
+                                </div>
+                                <div>
+                                    <div
+                                        class="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">
+                                        Tecnología</div>
+                                    <div class="text-xs font-black uppercase text-white tracking-widest leading-none">
+                                        FitAI Elite</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Hub -->
+    <section id="community" class="py-12 md:py-24 px-6 md:px-12 bg-[#0c0c0e] relative overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0 opacity-15 transition-opacity duration-1000">
+            <img src="images/bg_community.png" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-[#0c0c0e] via-transparent to-[#0c0c0e]"></div>
+        </div>
+        <div class="absolute top-1/2 left-0 w-full h-full bg-brand-indigo/5 blur-[150px]"></div>
+
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 lg:gap-32 items-center">
+            <div class="lg:w-1/2 space-y-16 relative z-10" x-data="{ active: false }" x-intersect="active = true">
+                <div class="space-y-6">
+                    <p
+                        class="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.5em] text-brand-indigo uppercase">
+                        <span class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
+                        GLOBAL NETWORK
+                    </p>
+                    <h2 class="text-5xl md:text-7xl lg:text-9xl font-display font-black uppercase leading-tight italic reveal-up"
+                        :class="{ 'active': active }">
+                        <span class="shimmer-white">NUNCA</span> <br>
+                        <span class="shimmer-indigo">SOLO.</span>
+                    </h2>
+                </div>
+                <div class="space-y-8">
+                    <p class="text-xl md:text-2xl font-bold uppercase tracking-tighter border-l-4 border-white pl-8 reveal-up"
+                        :class="{ 'active': active }">Podios 3D, desafíos en vivo y el mayor sistema de reconocimiento
+                        para atletas competitivos.</p>
+                    <div class="flex flex-wrap gap-4 pt-10 reveal-up" :class="{ 'active': active }">
+                        <div
+                            class="bg-white/5 px-8 py-4 rounded-none border border-white/5 text-[11px] font-black uppercase tracking-widest text-brand-indigo">
+                            KUDOS LÍQUIDOS</div>
+                        <div
+                            class="bg-white/5 px-8 py-4 rounded-none border border-white/5 text-[11px] font-black uppercase tracking-widest text-brand-indigo">
+                            RETOS SEMANALES</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-1/2 relative flex justify-center opacity-100 scale-100 md:opacity-0 md:scale-95 transition-all duration-1000"
+                x-data="{ currentsocial: 1, active: false }"
+                x-init="setInterval(() => currentsocial = currentsocial === 1 ? 2 : 1, 3500)"
+                x-intersect="active = true" :class="{ 'md:opacity-100 md:scale-100': active }">
+                <div class="relative h-[400px] md:h-[700px] w-full max-w-[320px] md:max-w-[550px]">
+                    <div class="absolute inset-0 bg-brand-indigo/10 blur-[80px] md:blur-[150px]"></div>
+
+                    <!-- Image 1: Social -->
+                    <img src="images/movil3.png" alt="FitAI Community"
+                        class="absolute inset-0 z-10 w-full h-full object-contain md:rotate-3 animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] transition-opacity duration-1000"
+                        :class="currentsocial === 1 ? 'opacity-100' : 'opacity-0'">
+
+                    <!-- Image 2: Ranking -->
+                    <img src="images/movil5.png" alt="FitAI Ranking"
+                        class="absolute inset-0 z-10 w-full h-full object-contain md:rotate-3 animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] transition-opacity duration-1000"
+                        :class="currentsocial === 2 ? 'opacity-100' : 'opacity-0'">
+
+                    <div class="absolute bottom-1/4 -right-10 bg-white p-6 md:p-8 transform rotate-6 shadow-2xl z-20">
+                        <p
+                            class="text-dark font-black text-2xl uppercase italic leading-none underline decoration-brand-indigo decoration-4 mb-2">
+                            Social 2.0</p>
+                        <p class="text-[9px] font-black text-dark/40 tracking-widest leading-none uppercase">DOMINIO
+                            TOTAL
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Plans -->
+    <section id="plans" class="py-12 md:py-24 px-6 md:px-12 bg-dark relative overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0 opacity-10 transition-opacity duration-1000">
+            <img src="images/bg_pricing.png" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-dark"></div>
+        </div>
+        <div class="max-w-[1200px] mx-auto space-y-24">
+            <div class="text-center space-y-6" x-data="{ active: false }" x-intersect="active = true">
+                <p class="text-[10px] font-black tracking-[0.5em] text-brand-indigo uppercase">COMPARA Y ASCIENDE</p>
+                <h2 class="text-5xl md:text-7xl lg:text-9xl font-display font-black uppercase tracking-tighter reveal-up"
+                    :class="{ 'active': active }">
+                    <span class="shimmer-white">PLANES</span> <span
+                        class="italic text-brand-indigo shimmer-indigo">ÉLITE.</span>
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4 lg:gap-1">
+                <div class="bg-dark-card relative border border-white/5 p-12 md:p-16 flex flex-col justify-between hover:bg-white/5 transition-all overflow-hidden group reveal-up"
+                    x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
+                    <!-- Background Training Image -->
+                    <div class="absolute inset-0 z-0 opacity-10 group-hover:opacity-25 transition-opacity duration-700">
+                        <img src="images/plan_free.png" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
+                    </div>
+
+                    <div class="relative z-10 space-y-12">
+                        <div>
+                            <p class="text-[11px] font-black tracking-widest text-white/40 uppercase mb-4">PLAN ATLETA
+                            </p>
+                            <h3 class="text-6xl font-display font-black uppercase italic mb-8">FREEMIUM</h3>
+                        </div>
+                        <ul class="space-y-6">
+                            <li class="flex items-center justify-between pricing-table-row pb-4 text-white/80">
+                                <span class="text-xs font-black uppercase tracking-widest">IA Generativa</span>
+                                <span
+                                    class="bg-white/10 px-4 py-1 text-[9px] font-black uppercase tracking-widest">Básica</span>
+                            </li>
+                            <li class="flex items-center justify-between pricing-table-row pb-4 text-white/60">
+                                <span class="text-xs font-black uppercase tracking-widest">Rutinas Inteligentes</span>
+                                <i data-lucide="check" class="w-4 h-4 text-white/40"></i>
+                            </li>
+                            <li class="flex items-center justify-between pricing-table-row pb-4 text-white/60">
+                                <span class="text-xs font-black uppercase tracking-widest">Dietas Sugeridas</span>
+                                <i data-lucide="check" class="w-4 h-4 text-white/40"></i>
+                            </li>
+                            <li class="flex items-center justify-between pricing-table-row pb-4 text-white/60">
+                                <span class="text-xs font-black uppercase tracking-widest">Historial (30 días)</span>
+                                <i data-lucide="check" class="w-4 h-4 text-white/40"></i>
+                            </li>
+                            <li class="flex items-center justify-between pricing-table-row pb-4 text-white/20">
+                                <span class="text-xs font-black uppercase tracking-widest">Análisis Metabólico 3D</span>
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="relative z-10 mt-20 pt-12 border-t border-white/5 text-center">
+                        <div class="text-5xl font-display font-black mb-10">$0<span
+                                class="text-sm text-white/20 italic font-medium">/MES</span></div>
+                        <button
+                            class="w-full border-2 border-white/20 text-white py-6 font-black uppercase tracking-tighter hover:border-white transition-all transform hover:scale-102">EMPEZAR
+                            GRATIS</button>
+                    </div>
+                </div>
+
+                <div class="relative bg-brand-indigo border-y border-white/10 p-12 md:p-16 flex flex-col justify-between overflow-hidden group reveal-up"
+                    x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
+
+                    <!-- Background Training Image -->
+                    <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
+                        <img src="images/plan_elite.png" class="w-full h-full object-cover">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-brand-indigo via-brand-indigo/60 to-transparent">
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute top-10 right-10 bg-white text-brand-indigo px-6 py-2 text-[10px] font-black tracking-widest uppercase italic shadow-2xl z-20">
+                        RECOMENDADO</div>
+                    <div class="space-y-12 relative z-10">
+                        <div>
+                            <p class="text-[11px] font-black tracking-widest text-white/60 uppercase mb-4">STATUS
+                                SUPREMO</p>
+                            <h3 class="text-7xl md:text-8xl font-display font-black uppercase italic mb-8 leading-none">
+                                ELITE<br>PREMIUM</h3>
+                        </div>
+                        <ul class="space-y-6">
+                            <li class="flex items-center justify-between border-b border-white/20 pb-4">
+                                <span class="text-xs font-black uppercase tracking-widest text-white">IA Generativa
+                                    Pro</span>
+                                <i data-lucide="check" class="text-white w-5 h-5"></i>
+                            </li>
+                            <li class="flex items-center justify-between border-b border-white/20 pb-4">
+                                <span class="text-xs font-black uppercase tracking-widest text-white">Participación
+                                    Social Activa</span>
+                                <i data-lucide="check" class="text-white w-5 h-5"></i>
+                            </li>
+                            <li class="flex items-center justify-between border-b border-white/20 pb-4">
+                                <span class="text-xs font-black uppercase tracking-widest text-white">Beneficios en
+                                    Tienda FitAI</span>
+                                <i data-lucide="check" class="text-white w-5 h-5"></i>
+                            </li>
+                            <li class="flex items-center justify-between border-b border-white/20 pb-4">
+                                <span class="text-xs font-black uppercase tracking-widest text-white">Análisis
+                                    Metabólico 3D</span>
+                                <i data-lucide="check" class="text-white w-5 h-5"></i>
+                            </li>
+                            <li class="flex items-center justify-between border-b border-white/20 pb-4">
+                                <span class="text-xs font-black uppercase tracking-widest text-white">Rutinas
+                                    Adaptativas Pro</span>
+                                <i data-lucide="check" class="text-white w-5 h-5"></i>
+                            </li>
+                            <li class="flex items-center justify-between border-b border-white/20 pb-4">
+                                <span class="text-xs font-black uppercase tracking-widest text-white">Soporte
+                                    Prioritario 24/7</span>
+                                <i data-lucide="check" class="text-white w-5 h-5"></i>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-20 pt-12 border-t border-white/20 text-center relative z-10">
+                        <div class="text-7xl font-display font-black mb-10">$12<span
+                                class="text-base text-white/50 italic font-medium">.99/MES</span></div>
+                        <button
+                            class="w-full bg-white text-brand-indigo py-8 font-black text-2xl uppercase tracking-tighter shadow-2xl shadow-black/30 hover:scale-105 transition-all">PÁSATE
+                            A ÉLITE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark py-12 md:py-24 px-6 md:px-12 border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
+                <div class="space-y-8">
+                    <span
+                        class="text-4xl font-display font-black tracking-tighter uppercase leading-none block">FIT<span
+                            class="text-brand-indigo">AI</span></span>
+                    <p class="text-white/40 text-sm font-medium leading-relaxed max-w-xs">La infraestructura definitiva
+                        para el entrenamiento de élite potenciado por IA.</p>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase mb-8">PRODUCTO</h4>
+                    <nav class="flex flex-col gap-4 text-[11px] font-black tracking-[0.2em] uppercase text-white/50">
+                        <a href="#pro" class="hover:text-brand-indigo transition-all">COACH PARTNER</a>
+                        <a href="#plans" class="hover:text-brand-indigo transition-all">PLANES ÉLITE</a>
+                    </nav>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase mb-8">COMPAÑÍA</h4>
+                    <nav class="flex flex-col gap-4 text-[11px] font-black tracking-[0.2em] uppercase text-white/50">
+                        <a href="#" class="hover:text-brand-indigo transition-all">SOPORTE 24/7</a>
+                        <a href="#" class="hover:text-brand-indigo transition-all">CONTACTO</a>
+                    </nav>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase mb-8">SOCIAL</h4>
+                    <nav class="flex flex-col gap-4 text-[11px] font-black tracking-[0.2em] uppercase text-white/50">
+                        <a href="#" class="hover:text-brand-indigo transition-all">INSTAGRAM</a>
+                        <a href="#" class="hover:text-brand-indigo transition-all">LINKEDIN</a>
+                    </nav>
+                </div>
+            </div>
+            <div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+                <p class="text-[10px] font-black tracking-[0.2em] text-white/20 uppercase italic">LEVEL UP YOUR
+                    GENETICS.</p>
+                <p class="text-[10px] font-bold text-white/30 uppercase tracking-widest">© 2026 FitAI Personal. Todos
+                    los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

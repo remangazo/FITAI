@@ -54,6 +54,8 @@ const NotificationCenter = () => {
         } else if (notification.type === 'like' || notification.type === 'comment') {
             // Navigate to post if implemented, else community
             navigate('/community');
+        } else if (notification.type === 'new_routine') {
+            navigate('/dashboard');
         }
     };
 
@@ -114,6 +116,7 @@ const NotificationCenter = () => {
                                                 {item.type === 'like' && <Heart size={16} className="text-pink-400" />}
                                                 {item.type === 'comment' && <MessageCircle size={16} className="text-green-400" />}
                                                 {item.type === 'workout_reminder' && <Bell size={16} className="text-orange-400" />}
+                                                {item.type === 'new_routine' && <Dumbbell size={16} className="text-indigo-400" />}
                                             </div>
                                             <div>
                                                 <p className="text-sm text-slate-200 leading-snug">

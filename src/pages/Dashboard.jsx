@@ -51,7 +51,8 @@ import {
     Brain,
     UtensilsCrossed,
     Info,
-    Scale
+    Scale,
+    Sparkles
 } from 'lucide-react';
 import {
     AreaChart,
@@ -1107,10 +1108,15 @@ const RoutineCard = ({ routine, expanded, onToggle }) => (
                 </div>
                 <div>
                     <div className="flex items-center gap-3 mb-1">
-                        <h4 className="font-black text-white text-lg tracking-tight">{routine.title}</h4>
+                        <h4 className="font-black text-white text-lg tracking-tight">{routine.name || routine.title}</h4>
                         {routine.isActive && (
                             <div className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[8px] font-black text-emerald-400 uppercase tracking-tighter">
                                 ACTIVA
+                            </div>
+                        )}
+                        {routine.isAssignedByCoach && (
+                            <div className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[8px] font-black text-indigo-400 uppercase tracking-tighter flex items-center gap-1">
+                                <Sparkles size={8} /> MI COACH
                             </div>
                         )}
                     </div>

@@ -63,6 +63,7 @@ function App() {
                   <Route path="/tools" element={<Tools />} />
                   <Route path="/become-trainer" element={<TrainerOnboarding />} />
                   <Route path="/trainer" element={<TrainerDashboard />} />
+                  <Route path="/trainer/demo" element={<TrainerDashboard isDemo={true} />} />
 
                   {/* CRM Routes */}
                   <Route path="/crm/login" element={<AdminLogin />} />
@@ -70,6 +71,7 @@ function App() {
                   <Route path="/crm" element={<Navigate to="/crm/store" replace />} />
 
                   <Route path="/trainer/student/:studentId" element={<StudentProgress />} />
+                  <Route path="/trainer/student/demo" element={<StudentProgress isDemo={true} />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </Suspense>

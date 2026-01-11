@@ -251,6 +251,64 @@ class TrainerService {
     }
 
     /**
+     * Get all students for a trainer with summarized activity stats
+     */
+    async getMyStudentsWithStats(trainerId) {
+        try {
+            const students = await this.getMyStudents(trainerId);
+
+            // Get recent activity for all students efficiently
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const studentsWithStats = await Promise.all(students.map(async (student) => {
+                // Get last workout
+                const lastWorkoutQuery = query(
+                    collection(db, 'workouts'),
+                    where('userId', '==', student.id),
+                    orderBy('completedAt', 'desc'),
+                    limit(1)
+                );
+                const lastSnapshot = await getDocs(lastWorkoutQuery);
+                const lastWorkout = lastSnapshot.empty ? null : lastSnapshot.docs[0].data();
+
+                // Get workouts count in last 30 days
+                const recentWorkoutsQuery = query(
+                    collection(db, 'workouts'),
+                    where('userId', '==', student.id),
+                    where('completedAt', '>=', thirtyDaysAgo)
+                );
+                const recentSnapshot = await getDocs(recentWorkoutsQuery);
+                const workoutCount = recentSnapshot.size;
+
+                // Simple "At Risk" logic: more than 7 days since last workout if they have a plan
+                const lastWorkoutDate = lastWorkout?.completedAt?.toDate?.() || null;
+                const daysSinceLastWorkout = lastWorkoutDate
+                    ? Math.floor((new Date() - lastWorkoutDate) / (1000 * 60 * 60 * 24))
+                    : null;
+
+                const isAtRisk = daysSinceLastWorkout !== null && daysSinceLastWorkout > 7;
+
+                return {
+                    ...student,
+                    stats: {
+                        workoutCount,
+                        lastWorkoutDate,
+                        daysSinceLastWorkout,
+                        isAtRisk,
+                        attendanceRate: this.calculateAttendanceRate(recentSnapshot.docs.map(d => d.data()), student)
+                    }
+                };
+            }));
+
+            return studentsWithStats;
+        } catch (error) {
+            console.error('[TrainerService] getMyStudentsWithStats error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get all students for a trainer
      */
     async getMyStudents(trainerId) {
@@ -369,7 +427,7 @@ class TrainerService {
                 batch.update(docSnap.ref, { status: 'replaced' });
             });
 
-            // Create new assigned routine
+            // Create new assigned routine record (history)
             const assignedRoutineRef = doc(collection(db, ASSIGNED_ROUTINES_COLLECTION));
             const assignedData = {
                 trainerId,
@@ -382,7 +440,69 @@ class TrainerService {
             };
             batch.set(assignedRoutineRef, assignedData);
 
+            // Also add directly to student's "routines" collection so it appears in their dashboard
+            const studentRoutineRef = doc(collection(db, 'routines'));
+            const studentRoutineData = {
+                ...routineData,
+                userId: studentId,
+                assignedBy: trainerId,
+                isAssignedByCoach: true,
+                createdAt: serverTimestamp(),
+                isActive: true, // Mark it as active immediately if requested "automatic/active"
+                status: 'active'
+            };
+
+            // Before making it active, we should deactivate others for the student
+            // (Similar to routineService.activateRoutine logic but in same batch)
+            const studentRoutinesQuery = query(
+                collection(db, 'routines'),
+                where('userId', '==', studentId),
+                where('isActive', '==', true)
+            );
+            const studentRoutinesSnapshot = await getDocs(studentRoutinesQuery);
+            studentRoutinesSnapshot.docs.forEach(rDoc => {
+                batch.update(rDoc.ref, { isActive: false, status: 'archived' });
+            });
+
+            batch.set(studentRoutineRef, studentRoutineData);
+
+            // Create notification for student
+            const notificationRef = doc(collection(db, 'notifications'));
+            const trainerDoc = await getDoc(doc(db, TRAINER_COLLECTION, trainerId));
+            const trainerName = trainerDoc.data()?.displayName || 'Tu Coach';
+
+            batch.set(notificationRef, {
+                userId: studentId,
+                sourceUserId: trainerId,
+                sourceName: trainerName,
+                type: 'new_routine',
+                message: `${trainerName} te ha asignado una nueva rutina: ${routineData.name}`,
+                read: false,
+                createdAt: serverTimestamp(),
+            });
+
             await batch.commit();
+
+            // Send Real-Time Push Notification via backend
+            try {
+                const functionsUrl = import.meta.env.VITE_FUNCTIONS_URL || '';
+                if (functionsUrl) {
+                    await fetch(`${functionsUrl}/sendPushNotification`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: studentId,
+                            templateId: 'assigned_routine',
+                            customData: {
+                                title: '🏋️ Nueva Rutina de tu Coach',
+                                body: `${trainerName} te ha asignado un nuevo plan: ${routineData.name}. ¡Pulsa para empezar!`
+                            }
+                        })
+                    });
+                }
+            } catch (pushError) {
+                console.warn('[TrainerService] Non-critical push notification error:', pushError);
+            }
 
             return { success: true, routineId: assignedRoutineRef.id };
         } catch (error) {

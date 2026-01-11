@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Save, Zap, Edit2, ChevronDown, ChevronUp, Trash2, Plus, PencilLine, Check, Settings, Info, Download } from 'lucide-react';
+import { X, Save, Zap, Edit2, ChevronDown, ChevronUp, Trash2, Plus, PencilLine, Check, Settings, Info, Download, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { exportRoutineToPDF } from '../services/pdfExportService';
@@ -153,6 +153,16 @@ const RoutineModal = ({ routine, onSave, onSaveAndActivate, onClose, isNew = tru
                                 <X size={24} />
                             </button>
                         </div>
+                        {activeRoutine?.isAssignedByCoach && activeRoutine?.notes && (
+                            <div className="mt-4 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+                                <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    <MessageSquare size={12} /> Notas de tu Coach
+                                </h4>
+                                <p className="text-sm text-slate-300 italic whitespace-pre-wrap leading-relaxed">
+                                    {activeRoutine.notes}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Content */}

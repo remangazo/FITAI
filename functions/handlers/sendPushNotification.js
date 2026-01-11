@@ -49,6 +49,12 @@ const NOTIFICATION_TEMPLATES = {
         body: 'Es domingo: registra tu peso para ver tu progreso esta semana.',
         icon: '/logo192.png',
         click_action: '/profile'
+    },
+    assigned_routine: {
+        title: '🏋️ Nueva Rutina Asignada',
+        body: 'Tu coach te ha asignado un nuevo plan de entrenamiento. ¡A darle con todo!',
+        icon: '/logo192.png',
+        click_action: '/dashboard'
     }
 };
 

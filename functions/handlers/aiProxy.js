@@ -13,6 +13,7 @@ const RATE_LIMITS = {
     calculateMacros: { windowMs: 60000, maxRequests: 20 },
     analyzeProgress: { windowMs: 60000, maxRequests: 5 },
     verifyProof: { windowMs: 60000, maxRequests: 5 },
+    analyzeRoutineFromImage: { windowMs: 60000, maxRequests: 10 },
 };
 
 // Premium Limits (Monthly)
@@ -220,6 +221,9 @@ module.exports = async (req, res) => {
             case "verifyProof":
                 result = await handleVerifyProof(data);
                 break;
+            case "analyzeRoutineFromImage":
+                result = await handleAnalyzeRoutineFromImage(data);
+                break;
             default:
                 return res.status(400).json({ error: `Unknown action: ${action}` });
         }
@@ -368,4 +372,43 @@ async function handleVerifyProof(data) {
     }
 
     return { verified: false, confidence: 0, reason: "No se pudo analizar la respuesta de la IA." };
+}
+
+async function handleAnalyzeRoutineFromImage(data) {
+    const prompt = `Analiza esta imagen de una rutina de entrenamiento y extrae la información en formato JSON.
+    
+    Busca:
+    1. Un título sugerido para la rutina.
+    2. Una descripción breve.
+    3. Los días de entrenamiento.
+    4. Los ejercicios con sus series (sets), repeticiones (reps) y descanso (rest).
+    
+    Responde SOLO con un JSON válido siguiendo esta estructura:
+    {
+      "name": "Título de la rutina",
+      "description": "Descripción breve",
+      "days": [
+        {
+          "day": "Día (ej: Lunes o Día 1)",
+          "focus": "Enfoque (ej: Piernas)",
+          "exercises": [
+            { "name": "Ejercicio", "sets": 4, "reps": "12", "rest": "60s" }
+          ]
+        }
+      ],
+      "notes": "Cualquier información adicional encontrada que no encaje en la estructura"
+    }
+    
+    Si la imagen no es una rutina, devuelve un objeto indicando error.`;
+
+    const systemPrompt = "Eres un experto en lectura de rutinas de fitness. Extraes datos con precisión milimétrica.";
+
+    // data.image must be a base64 string
+    const response = await callOpenRouter(prompt, systemPrompt, data.image);
+
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+    }
+    throw new Error("No se pudo extraer el JSON de la respuesta de la IA.");
 }

@@ -9,20 +9,22 @@
  * - Trainer notes
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, User, Dumbbell, Scale, Calendar,
     TrendingUp, Target, Clock, Flame, Award, Send, Loader2,
-    CheckCircle2, AlertCircle, Plus, FileText
+    CheckCircle2, AlertCircle, Plus, FileText, Crown
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { trainerService } from '../services/trainerService';
 import { BackButton } from '../components/Navigation';
+import { analyzeRoutineFromImage } from '../services/geminiService';
+import { Camera, Sparkles, Wand2 } from 'lucide-react';
 
-export default function StudentProgress() {
+export default function StudentProgress({ isDemo = false }) {
     const { studentId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -36,6 +38,44 @@ export default function StudentProgress() {
     }, [studentId, user]);
 
     const loadStudentData = async () => {
+        if (isDemo) {
+            setStudentData({
+                student: {
+                    displayName: 'Juan Pérez',
+                    goal: 'Hipertrofia Muscular',
+                    experience: 'Avanzado',
+                    weight: 82.5,
+                    height: 180,
+                    age: 28,
+                    metabolism: 'Rápido',
+                    isPremium: true,
+                    daysPerWeek: 5,
+                    weightHistory: [
+                        { date: '2023-10-01', weight: 85.0 },
+                        { date: '2023-10-15', weight: 84.2 },
+                        { date: '2023-11-01', weight: 83.5 },
+                        { date: '2023-11-15', weight: 83.0 },
+                        { date: '2023-12-01', weight: 82.5 }
+                    ]
+                },
+                stats: {
+                    totalWorkouts: 18,
+                    attendanceRate: 92
+                },
+                workouts: [
+                    { routineName: 'Empuje (Pecho/Tríceps)', completedAt: { toDate: () => new Date() } },
+                    { routineName: 'Tracción (Espalda/Bíceps)', completedAt: { toDate: () => new Date(Date.now() - 86400000) } },
+                    { routineName: 'Piernas (Cuádriceps)', completedAt: { toDate: () => new Date(Date.now() - 2 * 86400000) } }
+                ],
+                routines: [],
+                assignedRoutines: [
+                    { id: 'ar-1', routine: { name: 'Plan Elite Vol. 1' }, status: 'active', notes: 'Enfocate en la fase excéntrica', assignedAt: { toDate: () => new Date() } }
+                ]
+            });
+            setLoading(false);
+            return;
+        }
+
         if (!user || !studentId) return;
 
         setLoading(true);
@@ -98,64 +138,106 @@ export default function StudentProgress() {
             </div>
 
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-slate-900 rounded-2xl p-4 text-center border border-white/5">
-                        <Dumbbell className="mx-auto mb-2 text-blue-400" size={20} />
-                        <div className="text-2xl font-black">{stats.totalWorkouts}</div>
-                        <div className="text-xs text-slate-400">Entrenos (30d)</div>
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-10 overflow-hidden">
+                    <div className="relative">
+                        <div className="w-16 h-16 bg-brand-primary/10 rounded-2xl flex items-center justify-center border border-brand-primary/20 overflow-hidden">
+                            {student.photoURL ? (
+                                <img src={student.photoURL} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-2xl font-['Outfit'] font-black text-brand-primary">
+                                    {student.displayName?.charAt(0)}
+                                </span>
+                            )}
+                        </div>
+                        {student.isPremium && (
+                            <div className="absolute -top-2 -right-2 bg-amber-400 p-1 rounded-lg border-2 border-slate-950 shadow-lg">
+                                <Crown size={12} className="text-slate-900" />
+                            </div>
+                        )}
                     </div>
-                    <div className="bg-slate-900 rounded-2xl p-4 text-center border border-white/5">
-                        <Target className="mx-auto mb-2 text-green-400" size={20} />
-                        <div className="text-2xl font-black">{stats.attendanceRate}%</div>
-                        <div className="text-xs text-slate-400">Asistencia</div>
+                    <div>
+                        <h1 className="text-3xl font-['Outfit'] font-black tracking-tight text-white leading-tight">
+                            {student.displayName}
+                        </h1>
+                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                            <span className="bg-slate-800 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {student.goal}
+                            </span>
+                            <span>•</span>
+                            <span>{student.experience}</span>
+                        </div>
                     </div>
-                    <div className="bg-slate-900 rounded-2xl p-4 text-center border border-white/5">
-                        <Scale className="mx-auto mb-2 text-purple-400" size={20} />
-                        <div className="text-2xl font-black">{student.weight || '--'}</div>
-                        <div className="text-xs text-slate-400">Peso actual (kg)</div>
-                    </div>
+                </div>
+
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-3 gap-4 mb-10">
+                    <QuickStat label="Entrenos (30d)" value={studentData.stats.totalWorkouts} icon={Dumbbell} color="text-blue-400" />
+                    <QuickStat label="Asistencia" value={`${studentData.stats.attendanceRate}%`} icon={Award} color="text-emerald-400" />
+                    <QuickStat label="Peso actual (kg)" value={student.weight || '--'} icon={Scale} color="text-violet-400" />
+                </div>
+                <div className="bg-slate-900 rounded-2xl p-4 text-center border border-white/5">
+                    <Scale className="mx-auto mb-2 text-purple-400" size={20} />
+                    <div className="text-2xl font-black">{student.weight || '--'}</div>
+                    <div className="text-xs text-slate-400">Peso actual (kg)</div>
                 </div>
 
                 {/* Weight Chart */}
                 {chartData.length > 1 && (
-                    <div className="bg-slate-900 rounded-2xl p-5 border border-white/5">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="text-blue-400" size={18} />
-                                <span className="font-bold">EvoluciÃ³n de Peso</span>
+                    <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl p-8 border border-white/5 relative overflow-hidden group mb-10 shadow-xl shadow-black/40">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-[60px] rounded-full"></div>
+                        <div className="flex items-center justify-between mb-8 relative z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                    <TrendingUp className="text-blue-400" size={20} />
+                                </div>
+                                <span className="font-['Outfit'] font-black uppercase tracking-[0.2em] text-xs text-slate-400">Evolución de Peso</span>
                             </div>
+                            <div className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Últimos 10 registros</div>
                         </div>
-                        <div className="h-40">
+                        <div className="h-64 relative z-10">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={chartData}>
+                                    <defs>
+                                        <linearGradient id="colorPeso" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
                                     <XAxis
                                         dataKey="date"
-                                        tick={{ fill: '#64748b', fontSize: 10 }}
+                                        tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
                                         axisLine={false}
                                         tickLine={false}
+                                        dy={15}
                                     />
                                     <YAxis
                                         domain={['dataMin - 1', 'dataMax + 1']}
-                                        tick={{ fill: '#64748b', fontSize: 10 }}
+                                        tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
                                         axisLine={false}
                                         tickLine={false}
-                                        width={30}
+                                        width={35}
                                     />
                                     <Tooltip
                                         contentStyle={{
-                                            background: '#1e293b',
-                                            border: 'none',
-                                            borderRadius: 8,
-                                            color: 'white'
+                                            background: '#0f172a',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: 16,
+                                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+                                            fontSize: '12px',
+                                            fontWeight: '900',
+                                            padding: '12px'
                                         }}
+                                        cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '5 5' }}
                                     />
                                     <Line
                                         type="monotone"
                                         dataKey="peso"
                                         stroke="#3b82f6"
-                                        strokeWidth={2}
-                                        dot={{ fill: '#3b82f6', strokeWidth: 0 }}
+                                        strokeWidth={5}
+                                        dot={{ fill: '#3b82f6', strokeWidth: 3, r: 5, stroke: '#0f172a' }}
+                                        activeDot={{ r: 8, strokeWidth: 0 }}
+                                        animationDuration={2000}
                                     />
                                 </LineChart>
                             </ResponsiveContainer>
@@ -173,8 +255,8 @@ export default function StudentProgress() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${activeTab === tab.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-400 hover:text-white'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-400 hover:text-white'
                                 }`}
                         >
                             <tab.icon size={16} />
@@ -187,11 +269,11 @@ export default function StudentProgress() {
                 <AnimatePresence mode="wait">
                     {activeTab === 'overview' && (
                         <motion.div
-                            key="overview"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-4"
+                            key="resumen"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="space-y-8"
                         >
                             {/* Recent Workouts */}
                             <div className="bg-slate-900 rounded-2xl p-5 border border-white/5">
@@ -219,18 +301,21 @@ export default function StudentProgress() {
                             </div>
 
                             {/* Student Info */}
-                            <div className="bg-slate-900 rounded-2xl p-5 border border-white/5">
-                                <h3 className="font-bold mb-4 flex items-center gap-2">
-                                    <User size={16} className="text-blue-400" />
-                                    InformaciÃ³n del Alumno
+                            <div className="bg-slate-900/50 backdrop-blur-xl rounded-[2rem] p-8 border border-white/5 relative overflow-hidden group shadow-xl shadow-black/30">
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-primary to-brand-violet"></div>
+                                <h3 className="font-['Outfit'] font-black text-[10px] uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-3">
+                                    <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                        <User size={14} className="text-blue-400" />
+                                    </div>
+                                    Perfil del Atleta
                                 </h3>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <InfoRow label="Objetivo" value={student.goal || '--'} />
-                                    <InfoRow label="Experiencia" value={student.experience || '--'} />
-                                    <InfoRow label="DÃ­as/semana" value={student.daysPerWeek || '--'} />
-                                    <InfoRow label="Edad" value={student.age ? `${student.age} aÃ±os` : '--'} />
-                                    <InfoRow label="Altura" value={student.height ? `${student.height} cm` : '--'} />
-                                    <InfoRow label="Premium" value={student.isPremium ? 'âœ… SÃ­' : 'âŒ No'} />
+                                <div className="grid grid-cols-2 gap-y-8 gap-x-6">
+                                    <InfoRow label="Objetivo" value={student.goal || '--'} icon={Target} />
+                                    <InfoRow label="Frecuencia" value={`${student.daysPerWeek || '--'} días/sem`} icon={Calendar} />
+                                    <InfoRow label="Nivel" value={student.experience || '--'} icon={Award} />
+                                    <InfoRow label="Metabolismo" value={student.metabolism || 'Estándar'} icon={Flame} />
+                                    <InfoRow label="Altura" value={student.height ? `${student.height} cm` : '--'} icon={Scale} />
+                                    <InfoRow label="Status" value={student.isPremium ? 'Elite Premium' : 'Atleta Free'} icon={Crown} premium={student.isPremium} />
                                 </div>
                             </div>
                         </motion.div>
@@ -265,8 +350,8 @@ export default function StudentProgress() {
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="font-bold">{ar.routine?.name || 'Rutina'}</span>
                                                     <span className={`text-xs px-2 py-1 rounded-full ${ar.status === 'active'
-                                                            ? 'bg-green-500/20 text-green-400'
-                                                            : 'bg-slate-700 text-slate-400'
+                                                        ? 'bg-green-500/20 text-green-400'
+                                                        : 'bg-slate-700 text-slate-400'
                                                         }`}>
                                                         {ar.status === 'active' ? 'Activa' : 'Reemplazada'}
                                                     </span>
@@ -328,11 +413,16 @@ export default function StudentProgress() {
 }
 
 // Info Row Component
-function InfoRow({ label, value }) {
+function InfoRow({ label, value, icon: Icon, premium }) {
     return (
-        <div>
-            <div className="text-slate-500 text-xs">{label}</div>
-            <div className="font-medium">{value}</div>
+        <div className="flex items-start gap-3">
+            <div className={`p-2 rounded-xl ${premium ? 'bg-amber-400/10 text-amber-400' : 'bg-slate-800/50 text-slate-500'}`}>
+                {Icon && <Icon size={16} />}
+            </div>
+            <div>
+                <div className="text-slate-500 text-[9px] font-black uppercase tracking-widest leading-none mb-1">{label}</div>
+                <div className={`font-bold text-sm ${premium ? 'text-amber-400' : 'text-white'}`}>{value}</div>
+            </div>
         </div>
     );
 }
@@ -342,17 +432,53 @@ function AssignRoutineModal({ onClose, onAssign }) {
     const [name, setName] = useState('');
     const [notes, setNotes] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+    const fileInputRef = useRef(null);
+
+    const handleScanRoutine = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsScanning(true);
+        try {
+            // Convert file to base64
+            const reader = new FileReader();
+            const base64Promise = new Promise((resolve) => {
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+            const base64Image = await base64Promise;
+
+            // Call Gemini
+            const aiData = await analyzeRoutineFromImage(base64Image);
+
+            if (aiData) {
+                setName(aiData.title || '');
+                // Formatear ejercicios en las notas para que el coach los revise
+                let exercisesText = "";
+                if (aiData.exercises && aiData.exercises.length > 0) {
+                    exercisesText = "\n\nEJERCICIOS DETECTADOS:\n" +
+                        aiData.exercises.map(ex => `- ${ex.name}: ${ex.sets}x${ex.reps} (${ex.notes || ''})`).join('\n');
+                }
+                setNotes((aiData.notes || '') + exercisesText);
+            }
+        } catch (error) {
+            console.error("Error scanning routine:", error);
+            alert("No pudimos leer la imagen. Intenta con una foto más clara.");
+        } finally {
+            setIsScanning(false);
+        }
+    };
 
     const handleSubmit = async () => {
         if (!name.trim()) return;
 
         setIsLoading(true);
         try {
-            // Simplified: just create a basic routine structure
             const routineData = {
                 name: name.trim(),
                 createdAt: new Date(),
-                days: [],
+                days: [], // Aquí se podrían mapear los días si la IA los devolviera estructurados
             };
             await onAssign(routineData, notes);
         } finally {
@@ -375,7 +501,30 @@ function AssignRoutineModal({ onClose, onAssign }) {
                 className="bg-slate-900 rounded-2xl p-6 w-full max-w-md border border-white/10"
                 onClick={e => e.stopPropagation()}
             >
-                <h3 className="text-xl font-black mb-4">Asignar Rutina</h3>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-black">Asignar Rutina</h3>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleScanRoutine}
+                    />
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isScanning}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-brand-primary/20 to-brand-violet/20 border border-brand-primary/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-primary-light hover:from-brand-primary/30 hover:to-brand-violet/30 transition-all disabled:opacity-50"
+                    >
+                        {isScanning ? (
+                            <Wand2 className="animate-pulse" size={14} />
+                        ) : (
+                            <Camera size={14} />
+                        )}
+                        {isScanning ? 'Escaneando...' : 'Escanear IA'}
+                    </motion.button>
+                </div>
 
                 <div className="space-y-4">
                     <div>
@@ -418,5 +567,18 @@ function AssignRoutineModal({ onClose, onAssign }) {
                 </div>
             </motion.div>
         </motion.div>
+    );
+}
+
+// Quick Stat Box Component
+function QuickStat({ label, value, icon: Icon, color }) {
+    return (
+        <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-5 border border-white/5 text-center shadow-lg shadow-black/20 group hover:border-white/10 transition-colors">
+            <div className={`p-2 bg-slate-800/50 rounded-xl w-fit mx-auto mb-3 border border-white/5 ${color || 'text-slate-400'}`}>
+                {Icon && <Icon size={16} />}
+            </div>
+            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1 leading-none">{label}</div>
+            <div className="text-xl font-['Outfit'] font-black text-white">{value}</div>
+        </div>
     );
 }

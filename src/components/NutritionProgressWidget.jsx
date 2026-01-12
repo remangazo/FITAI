@@ -289,62 +289,58 @@ export default function NutritionProgressWidget({ activities: externalActivities
                             ))}
                         </div>
 
-                        {/* Weekly Micro Chart/Indicator */}
-                        {calorieSummary && (
-                            <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/5">
-                                <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                        <span>Consistencia Semanal</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Dumbbell size={10} className="text-indigo-400" />
-                                        <span className="text-indigo-400">
-                                            {weeklyProgress?.training?.workoutsThisWeek || 0} entrenos
-                                        </span>
-                                    </div>
+                        <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    <span>Consistencia Semanal</span>
                                 </div>
-                                <div className="flex gap-1.5 h-2">
-                                    {(calorieSummary.dailyStats || [0, 1, 2, 3, 4, 5, 6]).map((day, i) => {
-                                        // Extraer fecha del día de la semana (Lunes es 0)
-                                        const weekStart = getWeekStart();
-                                        const d = new Date(weekStart);
-                                        d.setDate(weekStart.getDate() + i);
-                                        const dayStr = getLocalDateString(d);
-                                        const todayStr = getLocalDateString();
+                                <div className="flex items-center gap-2">
+                                    <Dumbbell size={10} className="text-indigo-400" />
+                                    <span className="text-indigo-400">
+                                        {weeklyProgress?.training?.workoutsThisWeek || 0} entrenos
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex gap-1.5 h-2">
+                                {(calorieSummary?.dailyStats || [0, 1, 2, 3, 4, 5, 6]).map((day, i) => {
+                                    // Determinar fecha para este índice (0 = Lunes)
+                                    const weekStart = getWeekStart();
+                                    const d = new Date(weekStart);
+                                    d.setDate(weekStart.getDate() + i);
+                                    const dayStr = getLocalDateString(d);
+                                    const todayStr = getLocalDateString();
 
-                                        // Verificar entrenamiento para ese día específico en los datos ya cargados
-                                        const hasTraining = weeklyProgress?.training?.workouts?.some(w => {
-                                            const wDate = w.startTime instanceof Date ? w.startTime :
-                                                (w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime));
-                                            return getLocalDateString(wDate) === dayStr;
-                                        });
+                                    // Si no hay datos, usar el objeto 'day' si existe, o verificar entrenamientos
+                                    const hasTraining = day?.hasTraining || weeklyProgress?.training?.workouts?.some(w => {
+                                        const wDate = w.startTime instanceof Date ? w.startTime :
+                                            (w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime));
+                                        return getLocalDateString(wDate) === dayStr;
+                                    });
 
-                                        const isAdherent = day?.isOnTarget || hasTraining;
-                                        const isTracked = day?.isTracked || hasTraining; // Un día con entreno es un día registrado
-                                        const isFuture = dayStr > todayStr;
+                                    const isAdherent = day?.isOnTarget || hasTraining;
+                                    const isTracked = day?.isTracked || hasTraining;
+                                    const isFuture = dayStr > todayStr;
 
-                                        return (
-                                            <div
-                                                key={i}
-                                                className={`flex-1 rounded-full transition-all duration-700 ${isAdherent
+                                    return (
+                                        <div
+                                            key={i}
+                                            className={`flex-1 rounded-full transition-all duration-700 ${isAdherent
                                                     ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
                                                     : isTracked
                                                         ? 'bg-red-500/40'
                                                         : isFuture
                                                             ? 'bg-white/5'
                                                             : 'bg-white/[0.03]'
-                                                    }`}
-                                                title={`${dayStr}: ${hasTraining ? 'Entrenado' : ''} ${day?.isOnTarget ? 'En objetivo' : ''}`}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                                <div className="mt-3 flex justify-between text-[9px] font-black text-slate-600 uppercase tracking-widest px-0.5">
-                                    <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
-                                </div>
+                                                }`}
+                                        />
+                                    );
+                                })}
                             </div>
-                        )}
+                            <div className="mt-3 flex justify-between text-[9px] font-black text-slate-600 uppercase tracking-widest px-0.5">
+                                <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

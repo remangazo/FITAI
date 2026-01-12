@@ -398,13 +398,20 @@ export const getNutritionHistory = async (userId, days = 7) => {
  * @returns {Object} - Weekly stats
  */
 export const getWeeklyNutritionStats = async (userId) => {
+    const weekStart = getWeekStart();
     const history = await getNutritionHistory(userId, 7);
 
     if (history.length === 0) {
         return null;
     }
 
-    const daysWithData = history.filter(h => h.completedMeals?.length > 0 || h.customFoods?.length > 0);
+    // Filter only current week (Mon-Sun)
+    const thisWeekHistory = history.filter(h => {
+        const logDate = new Date(h.date + 'T00:00:00');
+        return logDate >= weekStart;
+    });
+
+    const daysWithData = thisWeekHistory.filter(h => h.completedMeals?.length > 0 || h.customFoods?.length > 0);
 
     if (daysWithData.length === 0) {
         return null;
@@ -429,18 +436,22 @@ export const getWeeklyNutritionStats = async (userId) => {
     };
 };
 
+import { getWeekStart } from '../utils/dateUtils';
+
 /**
- * Get all activities (extra cardio, etc) for the last 7 days
+ * Get all activities (extra cardio, etc) for the current week (starting Monday)
  * @param {string} userId - User ID
  * @returns {Array} - Array of activity objects
  */
 export const getWeeklyActivities = async (userId) => {
     try {
+        const weekStart = getWeekStart();
         const history = await getNutritionHistory(userId, 7);
         const allActivities = [];
 
         history.forEach(log => {
-            if (log.activities && Array.isArray(log.activities)) {
+            const logDate = new Date(log.date + 'T00:00:00'); // Ensure local time parsing
+            if (logDate >= weekStart && log.activities && Array.isArray(log.activities)) {
                 log.activities.forEach(activity => {
                     allActivities.push({
                         ...activity,

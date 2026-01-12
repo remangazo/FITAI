@@ -250,7 +250,7 @@ async function handleGenerateRoutine(userData) {
         daysRequested = parseInt(freqMatch[1]);
     }
 
-    const systemPrompt = `Eres FITAI Master Coach, experto en culturismo profesional.
+    const systemPrompt = `Eres FITAI Master Coach, experto en culturismo profesional y recomposición corporal.
 Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido. Sin texto adicional, sin explicaciones, sin bloques de código markdown.
 
 ESTILO PROFESIONAL:
@@ -261,6 +261,10 @@ ESTILO PROFESIONAL:
 - Circuito de Core/ABS al final de cada día.
 - Entre 6 y 8 ejercicios POR DÍA.
 
+REGLA DE CARDIO:
+- Si el objetivo es perder grasa o recomposición, DEBES incluir una sección de cardio específica al final de CADA día (ej. "30 min caminata inclinada", "20 min HIIT en bici").
+- El cardio se guarda en el campo "cardio" de cada día.
+
 SPLITS OBLIGATORIOS:
 - 5 días: Pecho-Tríceps, Espalda-Bíceps, Hombros, Piernas, Pecho-Hombros-Brazos
 
@@ -270,7 +274,7 @@ REGLA CRÍTICA: Genera TODOS los días solicitados, cada uno con sus propios eje
 Objetivo: ${goal}. Experiencia: ${experience}. Equipo: ${location}.
 
 IMPORTANTE: El array "days" DEBE contener EXACTAMENTE ${daysRequested} objetos, uno por cada día de entrenamiento.
-Cada día debe tener entre 6 y 8 ejercicios con todos sus detalles.
+Cada día debe tener entre 6 y 8 ejercicios con todos sus detalles y la sección de cardio si aplica.
 
 Responde SOLO con JSON válido (sin texto antes ni después):
 {
@@ -278,8 +282,14 @@ Responde SOLO con JSON válido (sin texto antes ni después):
   "description": "Plan profesional de ${daysRequested} días enfocado en ${goal}",
   "daysPerWeek": ${daysRequested},
   "days": [
-    {"day": "Día 1: Pecho y Tríceps", "focus": "...", "warmup": "...", "exercises": [{"name": "Press inclinado Smith 35°", "sets": 4, "reps": "12-10-10-8", "rest": "90s", "muscleGroup": "Pectoral", "machineName": "Smith Machine", "notes": "..."}], "stretching": "..."},
-    {"day": "Día 2", "...": "..."}
+    {
+      "day": "Día 1: Pecho y Tríceps", 
+      "focus": "...", 
+      "warmup": "...", 
+      "exercises": [{"name": "Press inclinado Smith 35°", "sets": 4, "reps": "12-10-10-8", "rest": "90s", "muscleGroup": "Pectoral", "machineName": "Smith Machine", "notes": "..."}], 
+      "cardio": "30 min de caminata rápida",
+      "stretching": "..."
+    }
   ],
   "progression": {"tips": "..."}
 }`;
@@ -390,30 +400,44 @@ Responde SOLO con JSON:
 }
 
 async function handleAnalyzeProgress(data) {
-    const { weeklyStats = {}, recentWorkouts = [], userProfile = {} } = data;
+    const { weeklyStats = {}, recentWorkouts = [], userProfile = {}, extraActivities = [] } = data;
+
+    const cardioActivities = extraActivities.filter(a => a.category === 'cardio');
+    const totalCardioMinutes = cardioActivities.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0);
+    const isFatLoss = Array.isArray(userProfile?.primaryGoal)
+        ? userProfile.primaryGoal.includes('fat')
+        : userProfile?.primaryGoal === 'fat';
+    const cardioMeta = isFatLoss ? 180 : 120;
 
     const systemPrompt = `Eres FITAI Elite Coach. Analiza consistencia y rendimiento.
-Responde ÚNICAMENTE con un objeto JSON válido.
+IMPORTANTE: Menciona ocasionalmente que la carga de datos (entrenamientos, pesos, comidas) es CRÍTICA.
+REGLA DE CARDIO: La meta semanal es de ${cardioMeta} minutos de actividad aeróbica. Evalúa el progreso basado en esto.
 
-ESTRUCTURA JSON:
+Responde ÚNICAMENTE con un objeto JSON válido.
 {
     "overallAssessment": "Análisis corto",
-    "progressScore": 1-100,
+    "progressScore": 1-100 (basado en pesas + cardio),
+    "cardioProgress": 0-100 (según meta de ${cardioMeta}m),
     "strengths": ["..."],
     "areasToImprove": ["..."],
     "weeklyGoals": ["..."]
 }`;
 
     const userPrompt = `Analiza mi progreso:
-- Entrenamientos esta semana: ${weeklyStats.workoutsThisWeek || 0}
-- Volumen: ${((weeklyStats.totalVolume || 0) / 1000).toFixed(1)}k kg
+- Entrenamientos de pesas: ${weeklyStats.workoutsThisWeek || 0} de ${userProfile.trainingFrequency || 3} planeados.
+- Minutos de Cardio: ${totalCardioMinutes} de ${cardioMeta} minutos objetivo.
 - Objetivo: ${userProfile.primaryGoal || 'Mejora general'}
 - Últimos entrenos: ${JSON.stringify(recentWorkouts.slice(0, 3))}`;
 
     const response = await callOpenRouter(userPrompt, systemPrompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-        return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
+        const result = JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
+        // Asegurar que devolvemos el campo cardioProgress calculado por la IA o forzado
+        if (result.cardioProgress === undefined) {
+            result.cardioProgress = Math.min(100, Math.round((totalCardioMinutes / cardioMeta) * 100));
+        }
+        return result;
     }
     return { recommendations: response };
 }

@@ -71,15 +71,38 @@ export const generateLocalAnalysis = (data) => {
     let score = Math.min(100, Math.round((workouts / goal) * 100));
     if (streak > 2) score += 5;
 
+    const extraActivities = data.extraActivities || [];
+    const cardioActivities = extraActivities.filter(a => a.category === 'cardio');
+
+    // Calcular minutos totales de cardio esta semana
+    const totalMinutes = Math.max(0, cardioActivities.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0));
+
+    // Meta dinámica: 180 min si busca perder grasa, 120 min otros.
+    const userGoal = data.userProfile?.primaryGoal;
+    const isFatLoss = Array.isArray(userGoal)
+        ? userGoal.includes('fat')
+        : userGoal === 'fat';
+    const cardioMeta = isFatLoss ? 180 : 120;
+
+    const cardioProgress = cardioMeta > 0 ? Math.min(100, (totalMinutes / cardioMeta) * 100) : 0;
+
     return {
         overallAssessment: workouts >= goal
             ? "¡Excelente semana! Has cumplido tu objetivo de frecuencia."
             : `Llevas ${workouts} entrenamientos. Mantén el ritmo.`,
         activePlanSummary: activeRoutine?.title || "Entrenamiento General",
         progressScore: Math.min(100, score),
+        cardioProgress: Math.round(cardioProgress),
+        cardioSessions: cardioActivities.length,
+        cardioMinutes: Math.round(totalMinutes),
+        cardioGoalMinutes: cardioMeta,
         strengths: workouts >= 1 ? ["Constancia semanal iniciada"] : ["Primeros pasos"],
-        areasToImprove: workouts < 3 ? ["Aumentar frecuencia"] : ["Mantener intensidad"],
-        weeklyGoals: [{ text: "Mantener la intensidad", completed: workouts >= goal }],
+        areasToImprove: workouts < 3 ? ["Aumentar frecuencia", "Registrar más pesajes"] : ["Mantener intensidad"],
+        weeklyGoals: [
+            { text: "Mantener la intensidad", completed: workouts >= goal },
+            { text: "Registrar todos los entrenamientos", completed: workouts > 0 },
+            { text: `Completar ${cardioMeta} min de cardio`, completed: totalMinutes >= cardioMeta }
+        ],
         motivationalMessage: "La disciplina vence al talento.",
         recoveryAlert: { needsDeload: false, reason: "", recommendation: "" },
         isFallback: true

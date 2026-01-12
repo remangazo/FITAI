@@ -222,6 +222,13 @@ const RoutineModal = ({ routine, onSave, onSaveAndActivate, onClose, isNew = tru
                                                         )}
                                                     </div>
 
+                                                    {day.cardio && (
+                                                        <div className="text-sm bg-amber-500/5 p-3 rounded-xl border border-amber-500/10">
+                                                            <div className="text-amber-500 font-bold mb-1 flex items-center gap-1">🏃 Cardio Recomendado</div>
+                                                            <p className="text-slate-300 italic">{day.cardio}</p>
+                                                        </div>
+                                                    )}
+
                                                     {day.stretching && (
                                                         <div className="text-sm">
                                                             <div className="text-green-400 font-bold mb-1 flex items-center gap-1">🧘 Estiramiento</div>

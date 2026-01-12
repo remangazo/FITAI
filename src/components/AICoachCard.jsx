@@ -21,26 +21,30 @@ import { getActiveRoutine } from '../services/routineService';
 import { getWeeklyActivities } from '../services/nutritionService';
 import { useNavigate } from 'react-router-dom';
 
-const ActivityRings = ({ score = 0, workouts = 0, goals = 4 }) => {
-    const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
+const ActivityRings = ({ score = 0, workouts = 0, goals = 4, cardioProgress = 0 }) => {
+    const safeScore = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const safeWorkouts = Math.max(0, Number(workouts) || 0);
     const safeGoals = Math.max(1, Number(goals) || 4);
-    const workoutProgress = (safeWorkouts / safeGoals) * 100;
+    const safeCardio = Math.max(0, Math.min(100, Math.round(Number(cardioProgress) || 0)));
+    const workoutProgress = Math.min(100, (safeWorkouts / safeGoals) * 100);
 
     // Radius and Circumference
     const r1 = 70;
     const c1 = 2 * Math.PI * r1;
     const r2 = 54;
     const c2 = 2 * Math.PI * r2;
+    const r3 = 38;
+    const c3 = 2 * Math.PI * r3;
 
     return (
         <div className="relative w-48 h-48 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 192 192">
-                {/* Background Ring - Progress Score */}
-                <circle
-                    cx="96" cy="96" r={r1}
-                    stroke="rgba(255,255,255,0.03)" strokeWidth="12" fill="none"
-                />
+                {/* Background Rings */}
+                <circle cx="96" cy="96" r={r1} stroke="rgba(255,255,255,0.03)" strokeWidth="12" fill="none" />
+                <circle cx="96" cy="96" r={r2} stroke="rgba(255,255,255,0.03)" strokeWidth="10" fill="none" />
+                <circle cx="96" cy="96" r={r3} stroke="rgba(255,255,255,0.03)" strokeWidth="8" fill="none" />
+
+                {/* Progress Score Ring */}
                 <motion.circle
                     cx="96" cy="96" r={r1}
                     stroke="url(#scoreGradient)" strokeWidth="12" fill="none"
@@ -50,11 +54,7 @@ const ActivityRings = ({ score = 0, workouts = 0, goals = 4 }) => {
                     transition={{ duration: 2, ease: "easeOut" }}
                 />
 
-                {/* Inner Ring - Weekly Sessions */}
-                <circle
-                    cx="96" cy="96" r={r2}
-                    stroke="rgba(255,255,255,0.03)" strokeWidth="10" fill="none"
-                />
+                {/* Weekly Sessions Ring */}
                 <motion.circle
                     cx="96" cy="96" r={r2}
                     stroke="url(#workoutGradient)" strokeWidth="10" fill="none"
@@ -62,6 +62,16 @@ const ActivityRings = ({ score = 0, workouts = 0, goals = 4 }) => {
                     initial={{ strokeDasharray: c2, strokeDashoffset: c2 }}
                     animate={{ strokeDashoffset: c2 - (c2 * Math.min(100, workoutProgress) / 100) }}
                     transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                />
+
+                {/* Cardio Progress Ring */}
+                <motion.circle
+                    cx="96" cy="96" r={r3}
+                    stroke="url(#cardioGradient)" strokeWidth="8" fill="none"
+                    strokeLinecap="round"
+                    initial={{ strokeDasharray: c3, strokeDashoffset: c3 }}
+                    animate={{ strokeDashoffset: c3 - (c3 * safeCardio / 100) }}
+                    transition={{ duration: 1.2, delay: 1, ease: "easeOut" }}
                 />
 
                 <defs>
@@ -72,6 +82,10 @@ const ActivityRings = ({ score = 0, workouts = 0, goals = 4 }) => {
                     <linearGradient id="workoutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#10b981" />
                         <stop offset="100%" stopColor="#34d399" />
+                    </linearGradient>
+                    <linearGradient id="cardioGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#f59e0b" />
+                        <stop offset="100%" stopColor="#fbbf24" />
                     </linearGradient>
                 </defs>
             </svg>
@@ -138,7 +152,11 @@ const ScoreExplanationModal = ({ onClose }) => (
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                            <span className="text-[10px] text-slate-300 font-bold">ANILLO INTERIOR: SESIONES SEMANALES</span>
+                            <span className="text-[10px] text-slate-300 font-bold">ANILLO MEDIO: SESIONES SEMANALES</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-amber-500" />
+                            <span className="text-[10px] text-slate-300 font-bold">ANILLO INTERIOR: MINUTOS DE CARDIO (META: 120-180m)</span>
                         </div>
                     </div>
                 </div>
@@ -237,12 +255,16 @@ const InsightCard = ({ icon: Icon, title, items, color = "indigo" }) => {
                 <h4 className="font-black text-sm text-white uppercase tracking-widest">{title}</h4>
             </div>
             <ul className="space-y-4 flex-1">
-                {items?.map((item, i) => (
+                {Array.isArray(items) ? items.map((item, i) => (
                     <li key={i} className="text-sm text-slate-300 font-medium flex items-start gap-4 leading-snug">
                         <span className={`w-1.5 h-1.5 rounded-full bg-${color}-500 mt-2 flex-shrink-0 shadow-[0_0_8px] shadow-${color}-500/50`} />
                         {item}
                     </li>
-                ))}
+                )) : (
+                    <li className="text-xs text-slate-500 italic">
+                        {typeof items === 'string' ? items : 'Sin datos disponibles'}
+                    </li>
+                )}
             </ul>
         </div>
     );
@@ -293,16 +315,26 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
         if (!user || loading) return;
         setLoading(true);
 
+        let stats = {}, recentWorkouts = [], personalRecords = {}, activeRoutine = null, extraActivities = [];
+        let workoutCount = 0;
+
         try {
             console.log('[AICoach] Starting analysis for user:', user.uid);
 
-            const [stats, recentWorkouts, personalRecords, activeRoutine, extraActivities] = await Promise.all([
+            const results = await Promise.all([
                 getWeeklyStats(user.uid),
                 getWorkoutHistory(user.uid, 10),
                 getAllPersonalRecords(user.uid),
                 getActiveRoutine(user.uid),
                 getWeeklyActivities(user.uid)
             ]);
+
+            stats = results[0] || {};
+            recentWorkouts = results[1] || [];
+            personalRecords = results[2] || {};
+            activeRoutine = results[3] || null;
+            extraActivities = results[4] || [];
+            workoutCount = recentWorkouts.length;
 
             // Smart Cache Check inside function (double check before API call if not forced)
             if (!force) {
@@ -338,7 +370,7 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                 extraCount: extraActivities?.length || 0
             });
 
-            const workoutCount = recentWorkouts?.length || 0;
+            workoutCount = recentWorkouts?.length || 0;
 
             console.log('[AICoach] Calling AI API...');
             const aiPromise = analyzeProgressWithAI({
@@ -388,8 +420,8 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                         completed: false
                     },
                     {
-                        text: "Mantener hidratación óptima (>2.5L)",
-                        completed: false
+                        text: "Registrar entrenamientos para mejorar mi IA",
+                        completed: stats?.workoutsThisWeek > 0
                     }
                 ];
             }
@@ -432,33 +464,47 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
             }
         } catch (error) {
             console.error('[AICoach] Analysis error:', error);
-            console.error('[AICoach] Error stack:', error.stack);
 
-            // Si no hay recomendaciones previas, ponemos un hard-fallback INTELIGENTE
-            if (!recommendations) {
-                console.warn('[AICoach] Using smart local fallback due to error');
+            try {
+                // FALLBACK DE SEGUNDO NIVEL: Si falla el análisis, forzar uno local ultra-básico
+                if (!recommendations) {
+                    console.warn('[AICoach] Emergency fallback activated');
+                    const ultraStats = stats || { workoutsThisWeek: 0 };
+                    const ultraProfile = profile || { trainingFrequency: 3 };
 
-                // Intentamos re-fetch rápido de stats si no existen
-                const safeStats = stats || await getWeeklyStats(user.uid).catch(() => ({}));
-                const safeProfile = profile || {};
-                const safeRoutine = activeRoutine || null;
+                    const localFallback = generateLocalAnalysis({
+                        weeklyStats: ultraStats,
+                        userProfile: ultraProfile,
+                        activeRoutine: activeRoutine || null,
+                        extraActivities: extraActivities || []
+                    });
 
-                const localFallback = generateLocalAnalysis({
-                    weeklyStats: safeStats,
-                    userProfile: safeProfile,
-                    activeRoutine: safeRoutine
+                    // Asegurar que no hay undefined en campos críticos
+                    localFallback.strengths = localFallback.strengths || ["Iniciando programa"];
+                    localFallback.areasToImprove = localFallback.areasToImprove || ["Completar perfil"];
+                    localFallback.weeklyGoals = localFallback.weeklyGoals || [{ text: "Completar entrenamiento", completed: false }];
+
+                    setRecommendations({
+                        ...localFallback,
+                        weeklyWorkouts: ultraStats.workoutsThisWeek || 0,
+                        extraActivities: extraActivities?.length || 0,
+                        personalRecordsCount: Object.keys(personalRecords || {}).length,
+                        streak: ultraStats.streak || 0
+                    });
+                }
+            } catch (fallbackError) {
+                console.error('[AICoach] Catastrophic fallback error:', fallbackError);
+                setRecommendations({
+                    overallAssessment: "Optimizando tu plan...",
+                    progressScore: 0,
+                    weeklyWorkouts: 0,
+                    extraActivities: 0,
+                    personalRecordsCount: 0,
+                    strengths: ["Preparando datos"],
+                    areasToImprove: ["Cargando información"],
+                    weeklyGoals: [],
+                    streak: 0
                 });
-
-                // Enriquecer fallback con datos extra que tengamos
-                localFallback.totalWorkouts = workoutCount || 0;
-                localFallback.weeklyWorkouts = safeStats.workoutsThisWeek || 0;
-                localFallback.extraActivities = extraActivities?.length || 0;
-                localFallback.personalRecordsCount = personalRecords ? Object.keys(personalRecords).length : 0;
-                localFallback.streak = safeStats.streak || 0;
-
-                setRecommendations(localFallback);
-            } else {
-                console.warn('[AICoach] Keeping previous recommendations due to error');
             }
         } finally {
             setLoading(false);
@@ -483,7 +529,18 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
         );
     }
 
-    if (!recommendations) return null;
+    if (!recommendations && !loading) {
+        return (
+            <div className="p-8 rounded-[40px] bg-slate-950 border border-white/5 flex flex-col items-center justify-center space-y-4">
+                <button
+                    onClick={() => analyzeProgress(true)}
+                    className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-bold"
+                >
+                    Reintentar Conexión
+                </button>
+            </div>
+        );
+    }
 
     return (
         <motion.div
@@ -501,9 +558,10 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                     {/* Hero Section: Progress Rings */}
                     <div className="flex-shrink-0 relative">
                         <ActivityRings
-                            score={recommendations.progressScore}
-                            workouts={recommendations.weeklyWorkouts}
-                            goals={4}
+                            score={recommendations?.progressScore}
+                            workouts={recommendations?.weeklyWorkouts}
+                            goals={profile?.trainingFrequency || 3}
+                            cardioProgress={recommendations?.cardioProgress || 0}
                         />
                         <button
                             onClick={() => setShowScoreInfo(true)}
@@ -560,8 +618,8 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                             {[
                                 { icon: Dumbbell, label: "Entrenos", value: recommendations.weeklyWorkouts, color: "blue" },
                                 { icon: Sparkles, label: "Extra", value: recommendations.extraActivities, color: "emerald" },
-                                { icon: Award, label: "Récords", value: recommendations.personalRecordsCount, color: "amber" },
-                                { icon: Zap, label: "Cumplimiento", value: `${Math.min(100, Math.round((recommendations.weeklyWorkouts / 4) * 100))}%`, color: "indigo" }
+                                { icon: Award, label: "Récords", value: recommendations.personalRecordsCount || 0, color: "amber" },
+                                { icon: Zap, label: "Cumplimiento", value: `${Math.min(100, Math.round(((Number(recommendations.weeklyWorkouts) || 0) / (Number(profile?.trainingFrequency) || 4)) * 100))}%`, color: "indigo" }
                             ].map((stat, i) => (
                                 <div key={i} className="p-3 rounded-3xl bg-white/[0.03] border border-white/5 flex items-center gap-3">
                                     <div className={`p-2 rounded-xl bg-${stat.color}-500/10 text-${stat.color}-400`}>
@@ -591,21 +649,23 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                             <div className="flex items-center justify-between mb-6">
                                 <h4 className="font-black text-sm text-white uppercase tracking-widest">Misiones Semanales</h4>
                                 <div className="px-3 py-1 rounded-full bg-indigo-500 text-[10px] font-black text-white">
-                                    {recommendations.weeklyGoals?.filter(g => g.completed).length || 0} / {recommendations.weeklyGoals?.length || 0}
+                                    {Array.isArray(recommendations.weeklyGoals) ? recommendations.weeklyGoals.filter(g => g.completed).length : 0} / {Array.isArray(recommendations.weeklyGoals) ? recommendations.weeklyGoals.length : 0}
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                {recommendations.weeklyGoals?.map((goal, i) => (
+                                {Array.isArray(recommendations.weeklyGoals) ? recommendations.weeklyGoals.map((goal, i) => (
                                     <div key={i} className="flex items-start gap-4 group">
-                                        <div className={`mt-0.5 w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all duration-500 ${goal.completed ? "bg-indigo-500 border-indigo-500 scale-110 shadow-lg shadow-indigo-500/20" : "border-white/10 group-hover:border-indigo-500/30"
+                                        <div className={`mt-0.5 w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all duration-500 ${goal?.completed ? "bg-indigo-500 border-indigo-500 scale-110 shadow-lg shadow-indigo-500/20" : "border-white/10 group-hover:border-indigo-500/30"
                                             }`}>
-                                            {goal.completed && <Check size={12} strokeWidth={4} className="text-white" />}
+                                            {goal?.completed && <Check size={12} strokeWidth={4} className="text-white" />}
                                         </div>
-                                        <span className={`text-sm font-medium leading-tight ${goal.completed ? "text-slate-500 line-through" : "text-slate-200"}`}>
-                                            {goal.text}
+                                        <span className={`text-sm font-medium leading-tight ${goal?.completed ? "text-slate-500 line-through" : "text-slate-200"}`}>
+                                            {typeof goal === 'string' ? goal : (goal?.text || 'Misión pendiente')}
                                         </span>
                                     </div>
-                                ))}
+                                )) : (
+                                    <p className="text-slate-500 text-xs italic">Cargando misiones...</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -631,7 +691,7 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                     )}
 
                     {/* Ajustes Sugeridos */}
-                    {recommendations.weightRecommendations?.length > 0 && (
+                    {Array.isArray(recommendations.weightRecommendations) && recommendations.weightRecommendations.length > 0 && (
                         <div className="p-6 rounded-[32px] bg-slate-900/50 border border-white/5 backdrop-blur-sm flex flex-col justify-between">
                             <div>
                                 <h4 className="font-black text-xs text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -640,11 +700,11 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                                 <div className="space-y-3">
                                     {recommendations.weightRecommendations.slice(0, 3).map((rec, i) => (
                                         <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                                            <span className="text-[11px] font-bold text-slate-300">{rec.exercise}</span>
+                                            <span className="text-[11px] font-bold text-slate-300">{rec?.exercise}</span>
                                             <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-white/5">
-                                                <span className="text-[10px] text-slate-500">{rec.currentWeight}kg</span>
+                                                <span className="text-[10px] text-slate-500">{rec?.currentWeight}kg</span>
                                                 <ChevronRight size={10} className="text-slate-700" />
-                                                <span className="text-[10px] font-black text-emerald-400">{rec.recommendedWeight}kg</span>
+                                                <span className="text-[10px] font-black text-emerald-400">{rec?.recommendedWeight}kg</span>
                                             </div>
                                         </div>
                                     ))}

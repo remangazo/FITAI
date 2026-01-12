@@ -237,178 +237,227 @@ module.exports = async (req, res) => {
 
 // Action handlers
 async function handleGenerateRoutine(userData) {
-    // Robust field mapping
-    const gender = userData.gender || 'atleta';
-    const age = userData.age || (userData.birthYear ? (new Date().getFullYear() - parseInt(userData.birthYear)) : 30);
-    const weight = userData.weight || 75;
-    const height = userData.height || 175;
-    const goal = userData.goal || userData.primaryGoal || 'fitness general';
-    const level = userData.experienceYears || userData.level || 'principiante';
-    const days = userData.daysPerWeek || userData.trainingFrequency || 3;
-    const equipment = userData.equipment || userData.availableEquipment || ['mancuernas', 'barra'];
+    const name = userData.name || 'el atleta';
+    const goal = userData.primaryGoal || userData.goal || 'fitness general';
+    const experience = userData.experienceYears || userData.level || 'principiante';
+    const location = userData.trainingLocation || userData.equipment || 'gimnasio';
 
-    const prompt = `Genera una rutina de entrenamiento personalizada en formato JSON.
-    
-Usuario:
-- Género: ${gender}
-- Edad: ${age} años
-- Peso: ${weight} kg
-- Altura: ${height} cm
-- Objetivo: ${goal}
-- Nivel: ${level}
-- Días por semana: ${days}
-- Equipamiento: ${Array.isArray(equipment) ? equipment.join(', ') : equipment}
-
-Responde SOLO con JSON válido, sin markdown, siguiendo esta estructura exacta:
-{
-  "title": "Nombre de la Rutina",
-  "description": "Breve descripción",
-  "days": [
-    {
-      "day": "Día 1",
-      "focus": "Pecho y Tríceps",
-      "exercises": [
-        { "name": "Press de Banca", "sets": 3, "reps": "10", "rest": "60s" }
-      ]
+    // Extraer número de días de forma robusta
+    let daysRequested = 5;
+    const freqValue = userData.trainingFrequency || userData.frequency || userData.daysPerWeek || "5";
+    const freqMatch = String(freqValue).match(/(\d+)/);
+    if (freqMatch) {
+        daysRequested = parseInt(freqMatch[1]);
     }
-  ]
+
+    const systemPrompt = `Eres FITAI Master Coach, experto en culturismo profesional.
+Tu respuesta debe ser ÚNICAMENTE un objeto JSON válido. Sin texto adicional, sin explicaciones, sin bloques de código markdown.
+
+ESTILO PROFESIONAL:
+- Series piramidales: "4x12-10-10-8", "3x12-10-8".
+- Técnicas de intensidad: Dropsets (+1 drop 50%fallo), Superseries (S/S).
+- Nombres de máquinas: "Press inclinado Smith 35°", "Hack Squat", "Remo T", "Prensa 45°", "Polea alta".
+- Primer ejercicio de cada día: compuesto con 2x15 de calentamiento.
+- Circuito de Core/ABS al final de cada día.
+- Entre 6 y 8 ejercicios POR DÍA.
+
+SPLITS OBLIGATORIOS:
+- 5 días: Pecho-Tríceps, Espalda-Bíceps, Hombros, Piernas, Pecho-Hombros-Brazos
+
+REGLA CRÍTICA: Genera TODOS los días solicitados, cada uno con sus propios ejercicios completos. NO generes 1 solo día.`;
+
+    const userPrompt = `Genera un plan de entrenamiento COMPLETO de ${daysRequested} DÍAS para ${name}.
+Objetivo: ${goal}. Experiencia: ${experience}. Equipo: ${location}.
+
+IMPORTANTE: El array "days" DEBE contener EXACTAMENTE ${daysRequested} objetos, uno por cada día de entrenamiento.
+Cada día debe tener entre 6 y 8 ejercicios con todos sus detalles.
+
+Responde SOLO con JSON válido (sin texto antes ni después):
+{
+  "title": "Protocolo ${daysRequested} Días - ${name}",
+  "description": "Plan profesional de ${daysRequested} días enfocado en ${goal}",
+  "daysPerWeek": ${daysRequested},
+  "days": [
+    {"day": "Día 1: Pecho y Tríceps", "focus": "...", "warmup": "...", "exercises": [{"name": "Press inclinado Smith 35°", "sets": 4, "reps": "12-10-10-8", "rest": "90s", "muscleGroup": "Pectoral", "machineName": "Smith Machine", "notes": "..."}], "stretching": "..."},
+    {"day": "Día 2", "...": "..."}
+  ],
+  "progression": {"tips": "..."}
 }`;
 
-    const systemPrompt = "Eres un entrenador personal experto. Responde solo con JSON válido.";
-    const response = await callOpenRouter(prompt, systemPrompt);
+    const response = await callOpenRouter(userPrompt, systemPrompt);
 
     // Try to parse JSON from response
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        let cleanText = jsonMatch[0];
+        // Clean trailing commas
+        cleanText = cleanText.replace(/,\s*([\]\}])/g, '$1');
+        return JSON.parse(cleanText);
     }
     throw new Error("Failed to parse routine from AI response");
 }
 
 async function handleGenerateDiet(userData) {
-    const calories = userData.targetCalories || userData.bmr || 2000;
-    const goal = userData.goal || userData.primaryGoal || 'mantenimiento';
-    const protein = userData.macros?.protein || 150;
-    const carbs = userData.macros?.carbs || 200;
-    const fats = userData.macros?.fats || 65;
+    const weightRaw = parseFloat(userData.weight) || 70;
+    const heightRaw = parseFloat(userData.height) || 170;
+    const birthYear = userData.birthYear || (new Date().getFullYear() - 25);
+    const age = new Date().getFullYear() - parseInt(birthYear);
+    const gender = userData.gender || 'Masculino';
 
-    const prompt = `Genera un plan de comidas diario en formato JSON para un día completo (desayuno, almuerzo, merienda, cena).
+    // Simple metabolic calculation
+    const weightInKg = userData.weightUnit === 'lb' ? weightRaw * 0.453592 : weightRaw;
+    const heightInCm = userData.heightUnit === 'ft' ? heightRaw / 0.032808 : heightRaw;
+
+    let tmb = gender === 'Masculino' ? ((10 * weightInKg) + (6.25 * heightInCm) - (5 * age) + 5) : ((10 * weightInKg) + (6.25 * heightInCm) - (5 * age) - 161);
+
+    let activityFactor = 1.2;
+    const freq = (userData.trainingFrequency || '').toLowerCase();
+    if (freq.includes('5-6') || freq.includes('diario')) activityFactor = 1.725;
+    else if (freq.includes('3-4')) activityFactor = 1.55;
+    else if (freq.includes('1-2')) activityFactor = 1.375;
+
+    const tdee = Math.round(tmb * activityFactor);
+    let targetCalories = tdee;
+    const goal = (userData.primaryGoal || '').toLowerCase();
+    if (goal.includes('muscle') || goal.includes('volumen')) targetCalories += 300;
+    else if (goal.includes('fat') || goal.includes('perder')) targetCalories -= 500;
+
+    targetCalories = Math.max(1200, Math.min(6000, targetCalories));
+    const proteinG = Math.round(weightInKg * 2.0);
+    const fatsG = Math.round(weightInKg * 0.9);
+    const remainingCals = targetCalories - (proteinG * 4) - (fatsG * 9);
+    const carbsG = Math.max(0, Math.round(remainingCals / 4));
+
+    const systemPrompt = `Eres el SIMULADOR DE NUTRICIÓN CLÍNICA DE FITAI. Tu especialidad es la DIETA ARGENTINA DE ALTO RENDIMIENTO.
+Tu única función es transformar macros en recetas exactas y realistas. 
+NO generes texto genérico. Generas RECETAS DE PRECISIÓN con pesajes exactos.
+REGLA DE ORO: Si no incluyes gramos (g) en cada ingrediente de CADA plato, el plan es un fracaso.
+Responde SOLAMENTE en formato JSON.`;
+
+    const userPrompt = `Genera un PLAN NUTRICIONAL PROFESIONAL DE 7 DÍAS enfocado en CULTURA ARGENTINA.
     
-Usuario:
-- Calorías objetivo: ${calories} kcal
-- Objetivo: ${goal}
-- Macronutrientes sugeridos: Proteína ${protein}g, Carbohidratos ${carbs}g, Grasas ${fats}g
+OBJETIVOS DIARIOS:
+- CALORÍAS: ${targetCalories} kcal
+- PROTEÍNA: ${proteinG}g
+- CARBOHIDRATOS: ${carbsG}g
+- GRASAS: ${fatsG}g
+- COMIDAS: ${userData.mealsPerDay || 4} comidas diarias.
 
-Responde SOLO con JSON válido, sin markdown.`;
+FORMATO DE SALIDA (JSON PURO):
+{
+    "title": "Protocolo Argentino: ${targetCalories} kcal",
+    "description": "Plan ultra-específico de alto rendimiento.",
+    "weeklyPlan": {
+        "Lunes": [ { "name": "...", "time": "hh:mm", "description": "- 200g de Lomo\\n- 150g Papas...", "calories": 0, "macros": { "protein": 0, "carbs": 0, "fats": 0 } } ]
+    },
+    "weeklyMacros": { "calories": ${targetCalories}, "protein": ${proteinG}, "carbs": ${carbsG}, "fats": ${fatsG} },
+    "hydration": "Mínimo 3.5 litros diarios.",
+    "shoppingList": ["..."],
+    "tips": ["..."]
+}`;
 
-    const systemPrompt = "Eres un nutricionista experto. Responde solo con JSON válido.";
-    const response = await callOpenRouter(prompt, systemPrompt);
+    const response = await callOpenRouter(userPrompt, systemPrompt);
 
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        let cleanText = jsonMatch[0].replace(/,\s*([\]\}])/g, '$1');
+        return JSON.parse(cleanText);
     }
     throw new Error("Failed to parse diet from AI response");
 }
 
 async function handleCalculateMacros(data) {
-    const prompt = `Calcula los macronutrientes para: "${data.foodDescription}"
-
+    const prompt = `Calcula los macronutrientes para: "${data.foodDescription}" (Si no hay cantidad, asume porción estándar).
+    
 Responde SOLO con JSON:
 {
   "name": "nombre del alimento",
   "calories": número,
-  "protein": número en gramos,
-  "carbs": número en gramos,
-  "fats": número en gramos,
-  "quantity": cantidad,
-  "unit": "unidad (g, ml, unidad, etc)"
+  "protein": número,
+  "carbs": número,
+  "fats": número,
+  "quantity": "cantidad",
+  "unit": "unidad"
 }`;
 
-    const response = await callOpenRouter(prompt);
+    const systemPrompt = "Eres un nutricionista experto. Responde solo con JSON.";
+    const response = await callOpenRouter(prompt, systemPrompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
     }
     throw new Error("Failed to calculate macros");
 }
 
 async function handleAnalyzeProgress(data) {
-    const prompt = `Analiza el progreso de entrenamiento y da recomendaciones.
-    
-Datos: ${JSON.stringify(data)}
+    const { weeklyStats = {}, recentWorkouts = [], userProfile = {} } = data;
 
-Responde con recomendaciones personalizadas.`;
+    const systemPrompt = `Eres FITAI Elite Coach. Analiza consistencia y rendimiento.
+Responde ÚNICAMENTE con un objeto JSON válido.
 
-    const response = await callOpenRouter(prompt);
+ESTRUCTURA JSON:
+{
+    "overallAssessment": "Análisis corto",
+    "progressScore": 1-100,
+    "strengths": ["..."],
+    "areasToImprove": ["..."],
+    "weeklyGoals": ["..."]
+}`;
+
+    const userPrompt = `Analiza mi progreso:
+- Entrenamientos esta semana: ${weeklyStats.workoutsThisWeek || 0}
+- Volumen: ${((weeklyStats.totalVolume || 0) / 1000).toFixed(1)}k kg
+- Objetivo: ${userProfile.primaryGoal || 'Mejora general'}
+- Últimos entrenos: ${JSON.stringify(recentWorkouts.slice(0, 3))}`;
+
+    const response = await callOpenRouter(userPrompt, systemPrompt);
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+        return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
+    }
     return { recommendations: response };
 }
 
 async function handleVerifyProof(data) {
-    const prompt = `Verifica si esta imagen es una prueba válida de actividad física o ejercicio. 
-    Contexto: El usuario dice que esto es "${data.activityName || 'un entrenamiento'}".
-    
-    Analiza la imagen y responde SOLO con un JSON:
+    const prompt = `¿Es esta imagen una prueba válida de actividad física (${data.activityName || 'entrenamiento'})?
+    Analiza la imagen y responde SOLO JSON:
     {
       "verified": boolean,
       "confidence": number (0-1),
-      "reason": "breve explicación de por qué sí o no"
-    }
-    
-    Si la imagen no es clara, es de baja calidad, o no parece relacionada con fitness, marca verified: false.`;
+      "reason": "explicación"
+    }`;
 
-    const systemPrompt = "Eres un verificador de actividad física AI. Eres estricto pero justo.";
+    const systemPrompt = "Eres un verificador de actividad física AI estricto.";
 
-    // data.image must be a base64 string including data URI scheme e.g. "data:image/jpeg;base64,..."
     const response = await callOpenRouter(prompt, systemPrompt, data.image);
 
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
     }
-    // Fallback if no JSON
-    if (response.toLowerCase().includes("true") || response.toLowerCase().includes("verified")) {
-        return { verified: true, confidence: 0.8, reason: "Verificado por análisis de texto (fallback)." };
-    }
-
-    return { verified: false, confidence: 0, reason: "No se pudo analizar la respuesta de la IA." };
+    return { verified: response.toLowerCase().includes("true"), confidence: 0.5, reason: "Análisis básico" };
 }
 
 async function handleAnalyzeRoutineFromImage(data) {
-    const prompt = `Analiza esta imagen de una rutina de entrenamiento y extrae la información en formato JSON.
-    
-    Busca:
-    1. Un título sugerido para la rutina.
-    2. Una descripción breve.
-    3. Los días de entrenamiento.
-    4. Los ejercicios con sus series (sets), repeticiones (reps) y descanso (rest).
-    
-    Responde SOLO con un JSON válido siguiendo esta estructura:
+    const prompt = `Analiza esta imagen de rutina y extrae JSON:
     {
-      "name": "Título de la rutina",
-      "description": "Descripción breve",
+      "name": "Título",
+      "description": "...",
       "days": [
         {
-          "day": "Día (ej: Lunes o Día 1)",
-          "focus": "Enfoque (ej: Piernas)",
-          "exercises": [
-            { "name": "Ejercicio", "sets": 4, "reps": "12", "rest": "60s" }
-          ]
+          "day": "Día",
+          "focus": "...",
+          "exercises": [ { "name": "...", "sets": 3, "reps": "12", "rest": "60s" } ]
         }
-      ],
-      "notes": "Cualquier información adicional encontrada que no encaje en la estructura"
-    }
-    
-    Si la imagen no es una rutina, devuelve un objeto indicando error.`;
+      ]
+    }`;
 
-    const systemPrompt = "Eres un experto en lectura de rutinas de fitness. Extraes datos con precisión milimétrica.";
-
-    // data.image must be a base64 string
+    const systemPrompt = "Eres un experto en lectura de rutinas de fitness.";
     const response = await callOpenRouter(prompt, systemPrompt, data.image);
 
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
     }
-    throw new Error("No se pudo extraer el JSON de la respuesta de la IA.");
+    throw new Error("No se pudo extraer el JSON de la imagen.");
 }

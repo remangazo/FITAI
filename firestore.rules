@@ -19,15 +19,20 @@ service cloud.firestore {
     function hasRequiredFields(fields) {
       return request.resource.data.keys().hasAll(fields);
     }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
     
     // ========== USER PROFILES ==========
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      allow read: if isAuthenticated(); // Permite ver perfiles para funciones sociales
       allow create: if isOwner(userId);
-      // Prevent users from modifying their own premium status
+      // Prevent users from modifying their own premium status or role
       allow update: if isOwner(userId) 
         && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus']));
+            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus', 'role']));
       allow delete: if isOwner(userId);
     }
     
@@ -120,9 +125,8 @@ service cloud.firestore {
     // --- GAMIFICATION ---
     match /challenges/{challengeId} {
       allow read: if isAuthenticated();
-      // Allow write mainly for admin, but for MVP allowing basic management if needed or rely on seeding logic from secure context.
-      // For strictly secure apps, this would be admin only.
-      allow write: if isAuthenticated(); 
+      // Only Admins can manage global challenges
+      allow write: if isAdmin(); 
       
       match /participants/{participantId} {
         allow read: if isAuthenticated();
@@ -192,13 +196,13 @@ service cloud.firestore {
 
     // ========== TEAM CHALLENGES (Trainer's internal challenges) ==========
     match /teamChallenges/{challengeId} {
-      // Only trainer who created it can manage
+      // Only trainer who created it can manage, or Admin
       allow create: if isAuthenticated() 
-        && request.resource.data.coachId == request.auth.uid;
+        && (request.resource.data.coachId == request.auth.uid || isAdmin());
       // Members of the team can read (students with matching coachId)
       allow read: if isAuthenticated();
       allow update, delete: if isAuthenticated() 
-        && resource.data.coachId == request.auth.uid;
+        && (resource.data.coachId == request.auth.uid || isAdmin());
       
       match /participants/{participantId} {
         allow read: if isAuthenticated();

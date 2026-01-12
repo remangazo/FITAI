@@ -16,6 +16,8 @@ import {
 import { calculateActivityCalories } from './metabolicCalculator';
 import { addActivityToLog } from './nutritionService';
 import { getWeekStart } from '../utils/dateUtils';
+import { progressiveOverloadService } from './progressiveOverloadService';
+import { badgeService } from './badgeService';
 
 /**
  * Start a new workout session
@@ -57,11 +59,14 @@ export const startWorkout = async (userId, routine, dayIndex) => {
         createdAt: Timestamp.now()
     };
 
-    // Get suggested weights from history
+    // Get suggested weights from "The Brain" (Progressive Overload Service)
     for (let i = 0; i < workoutData.exercises.length; i++) {
         const exerciseName = workoutData.exercises[i].name;
-        const lastWeight = await getLastWeightForExercise(userId, exerciseName);
-        workoutData.exercises[i].suggestedWeight = lastWeight;
+        const suggestion = await progressiveOverloadService.calculateNextWeight(userId, exerciseName, routine.goal || 'hypertrophy');
+
+        workoutData.exercises[i].suggestedWeight = suggestion.suggestedWeight;
+        workoutData.exercises[i].progressionReason = suggestion.reason;
+        workoutData.exercises[i].progressionTrend = suggestion.trend;
     }
 
     const docRef = await addDoc(collection(db, 'workouts'), workoutData);
@@ -186,6 +191,19 @@ export const completeWorkout = async (workoutId, notes = '') => {
         console.log('[WorkoutService] Calories synced with Nutrition log:', activityResult.caloriesBurned);
     } catch (syncError) {
         console.error('[WorkoutService] Error syncing with Nutrition:', syncError);
+    }
+
+    // GAMIFICATION: Verificar y otorgar insignias
+    try {
+        const stats = await getWeeklyStats(workout.userId);
+        const prs = await getAllPersonalRecords(workout.userId);
+        const newBadges = await badgeService.checkAndAwardBadges(workout.userId, stats, prs);
+
+        if (newBadges.length > 0) {
+            console.log('[WorkoutService] Achievement Unlocked!', newBadges);
+        }
+    } catch (gamifyError) {
+        console.error('[WorkoutService] Error in gamification flow:', gamifyError);
     }
 
     return {

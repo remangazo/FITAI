@@ -369,6 +369,29 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                     text: g,
                     completed: stats?.workoutsThisWeek >= 3 && g.toLowerCase().includes('entren')
                 }));
+            } else if (!result.weeklyGoals || result.weeklyGoals.length === 0) {
+                // GENERATE DYNAMIC MISSIONS (NEW)
+                const prList = Object.keys(personalRecords || {});
+                const hasWorkouts = stats?.workoutsThisWeek > 0;
+
+                result.weeklyGoals = [
+                    {
+                        text: stats?.workoutsThisWeek < (profile?.trainingFrequency || 3)
+                            ? `Entrenar ${profile?.trainingFrequency || 3} días esta semana`
+                            : "¡Objetivo de frecuencia cumplido!",
+                        completed: stats?.workoutsThisWeek >= (profile?.trainingFrequency || 3)
+                    },
+                    {
+                        text: prList.length > 0
+                            ? `Superar PR en ${prList[Math.floor(Math.random() * prList.length)]}`
+                            : "Establecer tu primer Récord Personal (PR)",
+                        completed: false
+                    },
+                    {
+                        text: "Mantener hidratación óptima (>2.5L)",
+                        completed: false
+                    }
+                ];
             }
 
             console.log('[AICoach] Enriched result:', result);

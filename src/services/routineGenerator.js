@@ -141,6 +141,18 @@ const INJURY_KEYWORDS = {
 };
 
 /**
+ * Mapeo de equipo desde el Onboarding a constantes internas
+ */
+const UI_EQUIPMENT_MAP = {
+    'Barra': EQUIPMENT.BARBELL,
+    'Mancuernas': EQUIPMENT.DUMBBELL,
+    'Poleas': EQUIPMENT.CABLE,
+    'Máquinas': EQUIPMENT.MACHINE,
+    'Rack / Smith': EQUIPMENT.SMITH,
+    'Peso Corporal': EQUIPMENT.BODYWEIGHT
+};
+
+/**
  * Calcular peso sugerido basado en benchmarks del usuario
  */
 const calculateSuggestedWeight = (exercise, benchmarks, goalConfig) => {
@@ -331,12 +343,28 @@ const generateDay = (dayTemplate, usedExerciseIds, config) => {
     const exercises = [];
 
     const basePerMuscle = levelConfig.exercisesPerMuscle;
-    const exercisesPerMuscle = muscles.length === 1 ? basePerMuscle + 2 :
+    let exercisesPerMuscle = muscles.length === 1 ? basePerMuscle + 2 :
         muscles.length === 2 ? basePerMuscle :
             Math.max(2, basePerMuscle - 1);
 
+    // AJUSTE POR DURACIÓN (NUEVO)
+    const duration = config.sessionDuration || '60 min';
+    if (duration.includes('30') || duration.includes('45')) {
+        exercisesPerMuscle = Math.max(1, exercisesPerMuscle - 1);
+    } else if (duration.includes('90')) {
+        exercisesPerMuscle += 1;
+    }
+
     muscles.forEach(muscle => {
-        const muscleExercises = selectExercisesForMuscle(muscle, exercisesPerMuscle, usedExerciseIds, config);
+        // AJUSTE POR FOCO MUSCULAR O DEBILIDAD (NUEVO)
+        let count = exercisesPerMuscle;
+        const isFocus = config.trainingFocus === muscle;
+        const isWeakness = config.weaknesses?.includes(muscle);
+
+        if (isFocus) count += 1;
+        if (isWeakness && !isFocus) count += 1; // Solo +1 si no es ya el foco principal
+
+        const muscleExercises = selectExercisesForMuscle(muscle, count, usedExerciseIds, config);
         exercises.push(...muscleExercises);
         muscleExercises.forEach(ex => usedExerciseIds.push(ex.id));
     });
@@ -349,6 +377,19 @@ const generateDay = (dayTemplate, usedExerciseIds, config) => {
         warmup: '5 min cardio ligero + movilidad articular',
         exercises: exercises.map(ex => {
             const suggestedWeight = calculateSuggestedWeight(ex, benchmarks, goalConfig);
+
+            // NOTAS DE INTENSIDAD (NUEVO)
+            let customNotes = ex.notes || '';
+            if (config.intensityPreference === 'high') {
+                customNotes += ' 🔥 ALTA INTENSIDAD: Lleva la serie al fallo técnico. RPE 10.';
+            } else {
+                customNotes += ' ⚖️ RPE 8-9: Deja 1-2 reps en reserva.';
+            }
+
+            if (config.trainingFocus === ex.muscleGroup) {
+                customNotes += ' ✨ FOCO DEL MES: Conexión mente-músculo máxima.';
+            }
+
             return {
                 name: cleanString(ex.name),
                 sets: parseInt(ex.defaultSets) + (goalConfig.setsModifier || 0),
@@ -357,7 +398,7 @@ const generateDay = (dayTemplate, usedExerciseIds, config) => {
                 suggestedWeight: suggestedWeight || null,
                 muscleGroup: cleanString((ex.muscleGroup || '').replace('chest', 'Pectoral').replace('back', 'Dorsal').replace('shoulders', 'Hombros').replace('legs_quad', 'Cuadriceps').replace('legs_ham', 'Isquiotibiales').replace('biceps', 'Biceps').replace('triceps', 'Triceps').replace('_', ' ')),
                 machineName: cleanString((ex.equipment || '').replace('smith_machine', 'Smith Machine').replace('cable', 'Polea').replace('machine', 'Maquina').replace('dumbbell', 'Mancuernas').replace('barbell', 'Barra').replace('bodyweight', 'Peso corporal')),
-                notes: cleanString(ex.notes)
+                notes: cleanString(customNotes)
             };
         }),
         absCircuit: absCircuit.map(ex => ({
@@ -404,24 +445,57 @@ export const generateRoutine = (userProfile = {}) => {
     const levelKey = detectLevel(userProfile.experienceYears);
     const levelConfig = LEVEL_CONFIG[levelKey];
 
-    // 4. Detectar equipo disponible
-    const equipmentKey = userProfile.trainingLocation?.toLowerCase().includes('casa') ? 'home' :
-        userProfile.trainingLocation?.toLowerCase().includes('minimal') ? 'minimal' : 'gym';
-    const allowedEquipment = EQUIPMENT_MAP[equipmentKey] || EQUIPMENT_MAP['gym'];
+    // 4. Detectar equipo DISPONIBLE REAL (NUEVO)
+    let allowedEquipment = [];
+    if (userProfile.availableEquipment && userProfile.availableEquipment.length > 0) {
+        allowedEquipment = userProfile.availableEquipment
+            .map(item => UI_EQUIPMENT_MAP[item])
+            .filter(Boolean);
+        // Siempre permitir peso corporal
+        if (!allowedEquipment.includes(EQUIPMENT.BODYWEIGHT)) {
+            allowedEquipment.push(EQUIPMENT.BODYWEIGHT);
+        }
+    } else {
+        const equipmentKey = userProfile.trainingLocation?.toLowerCase().includes('casa') ? 'home' :
+            userProfile.trainingLocation?.toLowerCase().includes('minimal') ? 'minimal' : 'gym';
+        allowedEquipment = EQUIPMENT_MAP[equipmentKey] || EQUIPMENT_MAP['gym'];
+    }
 
     // 5. Detectar lesiones
     const injuredMuscles = detectInjuredMuscles(userProfile.injuries);
 
-    // 6. Extraer benchmarks (NUEVO)
-    const benchmarks = {
-        benchmarkBenchPress: userProfile.benchmarkBenchPress,
-        benchmarkShoulderPress: userProfile.benchmarkShoulderPress,
-        benchmarkDeadlift: userProfile.benchmarkDeadlift,
-        benchmarkSquat: userProfile.benchmarkSquat,
-        benchmarkPullups: userProfile.benchmarkPullups
+    // 6. Mapeo de debilidades a grupos musculares (NUEVO)
+    const weaknesses = (userProfile.weaknesses || []).map(w => {
+        const text = w.toLowerCase();
+        if (text.includes('pecho')) return MUSCLE_GROUPS.CHEST;
+        if (text.includes('espalda')) return MUSCLE_GROUPS.BACK;
+        if (text.includes('hombro')) return MUSCLE_GROUPS.SHOULDERS;
+        if (text.includes('pierna') || text.includes('cuad')) return MUSCLE_GROUPS.LEGS_QUAD;
+        if (text.includes('isquio') || text.includes('femoral')) return MUSCLE_GROUPS.LEGS_HAM;
+        if (text.includes('bicep')) return MUSCLE_GROUPS.BICEPS;
+        if (text.includes('tricep')) return MUSCLE_GROUPS.TRICEPS;
+        return null;
+    }).filter(Boolean);
+
+    // 7. Configuración extendida
+    const config = {
+        goalConfig,
+        levelConfig,
+        allowedEquipment,
+        injuredMuscles,
+        benchmarks: {
+            benchmarkBenchPress: userProfile.benchmarkBenchPress,
+            benchmarkShoulderPress: userProfile.benchmarkShoulderPress,
+            benchmarkDeadlift: userProfile.benchmarkDeadlift,
+            benchmarkSquat: userProfile.benchmarkSquat,
+            benchmarkPullups: userProfile.benchmarkPullups
+        },
+        trainingFocus: userProfile.trainingFocus,
+        intensityPreference: userProfile.intensityPreference,
+        sessionDuration: userProfile.sessionDuration,
+        weaknesses
     };
 
-    const config = { goalConfig, levelConfig, allowedEquipment, injuredMuscles, benchmarks };
     const split = SPLITS[daysRequested];
     const usedExerciseIds = [];
 
@@ -438,11 +512,13 @@ export const generateRoutine = (userProfile = {}) => {
         level: cleanString(levelConfig.name),
         days: days,
         progression: {
-            tips: cleanString(goalKey === 'strength'
-                ? 'Aumenta peso 2.5-5kg cuando completes todas las reps. Descansos largos entre series pesadas.'
-                : goalKey === 'definition'
-                    ? 'Mantén el ritmo alto y descansos cortos. Prioriza la conexión mente-músculo.'
-                    : 'Sobrecarga progresiva: aumenta peso cuando completes todas las reps con buena técnica.')
+            tips: cleanString(config.intensityPreference === 'high'
+                ? 'ESTRATEGIA ELITE: Prioriza el fallo muscular técnico. Si logras todas las reps con el peso sugerido, sube 2.5kg la próxima sesión sin dudarlo.'
+                : goalKey === 'strength'
+                    ? 'Aumenta peso 2.5-5kg cuando completes todas las reps. Descansos largos entre series pesadas.'
+                    : goalKey === 'definition'
+                        ? 'Mantén el ritmo alto y descansos cortos. Prioriza la conexión mente-músculo.'
+                        : 'Sobrecarga progresiva: aumenta peso cuando completes todas las reps con buena técnica.')
         },
         generatedAt: new Date().toISOString(),
         isLocalGenerated: true

@@ -123,7 +123,14 @@ const PER_DUMBBELL_EXERCISES = [
     'press militar', 'press arnold', 'elevaciones laterales', 'elevaciones frontales',
     'curl', 'curl martillo', 'curl concentrado', 'curl predicador',
     'patada tríceps', 'press inclinado', 'press plano', 'aperturas',
-    'remo', 'pullover', 'pájaros', 'extensión tríceps'
+    'remo', 'pullover', 'pájaros', 'extensión tríceps', 'frontales', 'laterales',
+    'zancadas', 'búlgara', 'goblet'
+];
+
+// Ejercicios que son típicamente de peso corporal
+const BODYWEIGHT_EXERCISES = [
+    'fondos', 'dominadas', 'flexiones', 'plancha', 'push-ups', 'pull-ups', 'dips',
+    'giros rusos', 'elevación de piernas', 'sentadilla búlgara', 'chin-ups', 'burpees'
 ];
 
 /**
@@ -188,13 +195,27 @@ const findRelevantBenchmark = (exerciseName, userProfile) => {
  * Determinar si un ejercicio usa peso por mancuerna
  */
 const isPerDumbbellExercise = (exerciseName, equipment) => {
-    if (!equipment?.toLowerCase().includes('dumbbell') &&
-        !equipment?.toLowerCase().includes('mancuerna')) {
-        return false;
-    }
-
     const normalizedName = exerciseName.toLowerCase();
-    return PER_DUMBBELL_EXERCISES.some(ex => normalizedName.includes(ex));
+    const normalizedEquipment = equipment?.toLowerCase() || '';
+
+    const hasDumbbellKeywords = normalizedEquipment.includes('dumbbell') ||
+        normalizedEquipment.includes('mancuerna') ||
+        normalizedName.includes('mancuerna') ||
+        normalizedName.includes('db');
+
+    return hasDumbbellKeywords && PER_DUMBBELL_EXERCISES.some(ex => normalizedName.includes(ex));
+};
+
+/**
+ * Determinar si un ejercicio es de peso corporal
+ */
+const isBodyweightExercise = (exerciseName, equipment) => {
+    const normalizedName = exerciseName.toLowerCase();
+    const normalizedEquipment = equipment?.toLowerCase() || '';
+
+    return normalizedEquipment.includes('peso corporal') ||
+        normalizedEquipment.includes('bodyweight') ||
+        BODYWEIGHT_EXERCISES.some(ex => normalizedName.includes(ex));
 };
 
 /**
@@ -239,6 +260,16 @@ export const calculateSmartWeight = async (exercise, userProfile, userId = null)
     const technique = userProfile?.techniqueLevel || 'principiante';
 
     const perDumbbell = isPerDumbbellExercise(exerciseName, equipment);
+    const isBodyweight = isBodyweightExercise(exerciseName, equipment);
+
+    if (isBodyweight) {
+        return {
+            weight: 0,
+            source: 'peso corporal',
+            perDumbbell: false,
+            isBodyweight: true
+        };
+    }
 
     // 1. Intentar usar PR histórico del usuario (más preciso)
     if (userId) {
@@ -334,6 +365,11 @@ export const calculateSmartWeightSync = (exercise, userProfile) => {
     const technique = userProfile?.techniqueLevel || 'principiante';
 
     const perDumbbell = isPerDumbbellExercise(exerciseName, equipment);
+    const isBodyweight = isBodyweightExercise(exerciseName, equipment);
+
+    if (isBodyweight) {
+        return { weight: 0, label: 'Peso Corporal', perDumbbell: false, isBodyweight: true };
+    }
 
     // Usar benchmark del onboarding
     const benchmark = findRelevantBenchmark(exerciseName, userProfile);

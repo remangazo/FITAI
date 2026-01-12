@@ -28,8 +28,9 @@ export default function Onboarding() {
         { icon: Heart, title: 'SALUD', color: 'red' },
         { icon: UtensilsCrossed, title: 'NUTRICIÓN', color: 'yellow' },
         { icon: Brain, title: 'MOTIVACIÓN', color: 'indigo' },
-        { icon: GraduationCap, title: 'ENTRENADOR', color: 'cyan' }, // Step 11: Coach Code
-        { icon: Sparkles, title: 'LISTO', color: 'gradient' },      // Step 12: Confirmation
+        { icon: Sparkles, title: 'ENFOQUE', color: 'orange' }, // Step 11: Extra Customization
+        { icon: GraduationCap, title: 'ENTRENADOR', color: 'cyan' }, // Step 12: Coach Code
+        { icon: Check, title: 'LISTO', color: 'gradient' },      // Step 13: Confirmation
     ];
 
     const TOTAL_STEPS = stepConfig.length;
@@ -101,10 +102,14 @@ export default function Onboarding() {
         previousAttempts: '',
         biggestChallenge: '',
 
-        // Step 12: Coach Code (optional)
+        // Step 12: Extra Customization (NUEVO)
+        trainingFocus: 'balanced', // balanced, chest, back, shoulders, legs, arms, core
+        intensityPreference: 'standard', // standard, high (RPE 9-10)
+
+        // Step 13: Coach Code (optional)
         coachCode: '',
 
-        // Step 13: Confirmation
+        // Step 14: Confirmation
     });
 
     const [validatedCoach, setValidatedCoach] = useState(null);
@@ -921,8 +926,58 @@ export default function Onboarding() {
                                     </StepContainer>
                                 )}
 
-                                {/* Step 11: Coach Code (Optional) */}
+                                {/* Step 11: Extra Customization (NUEVO) */}
                                 {currentStep === 11 && (
+                                    <StepContainer icon={Sparkles} title="Enfoque Profesional" subtitle="Personaliza el 'ADN' de tu próxima rutina">
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Prioridad Muscular del Mes</label>
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                    {[
+                                                        { id: 'balanced', label: 'Equilibrado' },
+                                                        { id: 'chest', label: 'Pecho' },
+                                                        { id: 'back', label: 'Espalda' },
+                                                        { id: 'shoulders', label: 'Hombros' },
+                                                        { id: 'legs', label: 'Piernas' },
+                                                        { id: 'arms', label: 'Brazos' },
+                                                        { id: 'core', label: 'Core / Abs' },
+                                                    ].map(focus => (
+                                                        <SelectCard
+                                                            key={focus.id}
+                                                            selected={formData.trainingFocus === focus.id}
+                                                            onClick={() => updateField('trainingFocus', focus.id)}
+                                                            label={focus.label}
+                                                            compact
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <p className="mt-2 text-[10px] text-slate-500 italic">FITAI añadirá volumen extra y ejercicios 'Elite' al grupo que elijas.</p>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Nivel de Intensidad y Esfuerzo</label>
+                                                <div className="space-y-3">
+                                                    {[
+                                                        { id: 'standard', icon: '⚖️', label: 'Estándar', desc: 'Series controladas, dejando 1-2 reps en reserva (RPE 8-9).' },
+                                                        { id: 'high', icon: '🔥', label: 'Alta (Elite)', desc: 'Cerca del fallo absoluto en todas las series (RPE 9-10). Solo avanzados.' },
+                                                    ].map(intensity => (
+                                                        <GoalCard
+                                                            key={intensity.id}
+                                                            selected={formData.intensityPreference === intensity.id}
+                                                            onClick={() => updateField('intensityPreference', intensity.id)}
+                                                            icon={intensity.icon}
+                                                            label={intensity.label}
+                                                            desc={intensity.desc}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </StepContainer>
+                                )}
+
+                                {/* Step 12: Coach Code (Optional) */}
+                                {currentStep === 12 && (
                                     <StepContainer icon={GraduationCap} title="¿Tenés un Entrenador?" subtitle="Si tu profe te dio un código, ingresalo acá">
                                         <div className="space-y-6">
                                             <div>
@@ -983,9 +1038,9 @@ export default function Onboarding() {
                                     </StepContainer>
                                 )}
 
-                                {/* Step 12: Confirmation */}
-                                {currentStep === 12 && (
-                                    <StepContainer icon={Sparkles} title="¡Todo Listo!" subtitle="Resumen de tu perfil fitness profesional">
+                                {/* Step 13: Confirmation */}
+                                {currentStep === 13 && (
+                                    <StepContainer icon={Check} title="¡Todo Listo!" subtitle="Resumen de tu perfil fitness profesional">
                                         <div className="space-y-4 mb-6">
                                             {/* Datos Personales */}
                                             <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-4">
@@ -1003,8 +1058,8 @@ export default function Onboarding() {
                                                 <h4 className="text-xs text-green-400 font-bold uppercase mb-3">🎯 Objetivos & Biometría</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <SummaryItem label="Objetivo" value={formData.primaryGoal} />
+                                                    <SummaryItem label="Foco Muscular" value={formData.trainingFocus || 'Equilibrado'} />
                                                     <SummaryItem label="Peso Actual" value={`${formData.weight} ${formData.units === 'metric' ? 'kg' : 'lb'}`} />
-                                                    <SummaryItem label="Altura" value={`${formData.height} cm`} />
                                                     <SummaryItem label="Peso Objetivo" value={`${formData.targetWeight} ${formData.units === 'metric' ? 'kg' : 'lb'}`} />
                                                 </div>
                                             </div>
@@ -1068,7 +1123,7 @@ export default function Onboarding() {
                                 onClick={nextStep}
                                 className="w-full bg-white text-slate-950 py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-blue-400 transition-colors"
                             >
-                                {currentStep === 11 && !formData.coachCode ? 'Omitir y Continuar' : 'Continuar'} <ChevronRight size={20} />
+                                {currentStep === 12 && !formData.coachCode ? 'Omitir y Continuar' : 'Continuar'} <ChevronRight size={20} />
                             </button>
                         ) : (
                             <button

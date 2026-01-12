@@ -44,7 +44,8 @@ const Social = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [myFollowing, setMyFollowing] = useState(new Set());
     const [feedPosts, setFeedPosts] = useState([]);
-    const [demoMode, setDemoMode] = useState(true); // Demo mode enabled by default
+    const [demoMode, setDemoMode] = useState(false); // Demo mode disabled by default
+    const [liveUsersList, setLiveUsersList] = useState([]);
     const [leaderboardCategory, setLeaderboardCategory] = useState('workouts');
 
     // Load who I follow to update button states correctly
@@ -79,8 +80,15 @@ const Social = () => {
     useEffect(() => {
         if (activeTab === 'feed' && !demoMode) {
             loadFeed();
+            loadLiveUsers();
         }
     }, [activeTab, demoMode]);
+
+    const loadLiveUsers = async () => {
+        if (!user) return;
+        const live = await socialService.getLiveTrainers(user.uid);
+        setLiveUsersList(live);
+    };
 
     const loadFeed = async () => {
         const posts = await socialService.getSocialFeed();
@@ -97,8 +105,8 @@ const Social = () => {
         // Navigate to chat or send connection request
     };
 
-    // Get live users from demo data
-    const liveUsers = demoMode ? DEMO_USERS.filter(u => u.isLive) : [];
+    // Get live users
+    const liveUsers = demoMode ? DEMO_USERS.filter(u => u.isLive) : liveUsersList;
 
     // Tabs config
     const tabs = [

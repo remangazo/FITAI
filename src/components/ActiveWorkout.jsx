@@ -18,6 +18,9 @@ import {
 import { markDayAsCompleted, getRoutineProgress, isDayCompletedThisWeek } from '../services/routineTrackingService';
 import { getBestExerciseImage } from '../services/exerciseImageService';
 import { calculateSmartWeightSync } from '../services/weightSuggestionService';
+import { EXERCISES } from '../data/exercises';
+import { getExerciseVideo } from '../services/exerciseMappingService';
+import { Video } from 'lucide-react';
 
 export default function ActiveWorkout({ routine, onClose, onComplete }) {
     const { user, profile } = useAuth();
@@ -599,8 +602,12 @@ function ExerciseLogger({ exercise, exerciseIndex, isActive, onActivate, onLogSe
     const [currentWeight, setCurrentWeight] = useState(defaultWeight || 20);
     const [currentReps, setCurrentReps] = useState(10);
 
-    // Determine if weight is per dumbbell
+    // Determine if weight is per dumbbell or bodyweight
     const isPerDumbbell = smartWeight.perDumbbell;
+    const isBodyweight = smartWeight.isBodyweight;
+
+    // Find exercise video using intelligent mapping
+    const videoUrl = getExerciseVideo(exercise.name);
 
     useEffect(() => {
         setExpanded(isActive);
@@ -669,6 +676,18 @@ function ExerciseLogger({ exercise, exerciseIndex, isActive, onActivate, onLogSe
                             {exercise.personalRecord && (
                                 <Trophy size={14} className="text-yellow-500" />
                             )}
+                            {videoUrl && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(videoUrl, '_blank');
+                                    }}
+                                    className="p-1.5 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg transition-colors"
+                                    title="Ver Tutorial"
+                                >
+                                    <Video size={14} />
+                                </button>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <p className="text-xs text-slate-400">
@@ -727,35 +746,43 @@ function ExerciseLogger({ exercise, exerciseIndex, isActive, onActivate, onLogSe
                                 <div className="bg-slate-800/50 rounded-2xl p-4">
                                     <div className="text-xs text-slate-500 font-bold uppercase mb-3">
                                         Serie {completedSets + 1}
-                                        {defaultWeight && (
+                                        {!isBodyweight && defaultWeight > 0 && (
                                             <span className="text-blue-400 ml-2 normal-case font-normal">
                                                 (Sugerido: {defaultWeight}kg{isPerDumbbell ? ' c/u' : ''} • basado en {smartWeight.source || 'tu perfil'})
+                                            </span>
+                                        )}
+                                        {isBodyweight && (
+                                            <span className="text-emerald-400 ml-2 normal-case font-normal">
+                                                (Usa tu peso corporal)
                                             </span>
                                         )}
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                                         {/* Weight input */}
-                                        <div className="bg-slate-700/30 p-2 rounded-xl border border-white/5">
+                                        <div className={`bg-slate-700/30 p-2 rounded-xl border border-white/5 ${isBodyweight ? 'opacity-50 grayscale' : ''}`}>
                                             <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1 px-1">
-                                                Peso (kg){isPerDumbbell ? ' c/mancuerna' : ''}
+                                                {isBodyweight ? 'PESO CORPORAL' : isPerDumbbell ? 'PESO X MANCUERNA (KG)' : 'Peso (kg)'}
                                             </label>
                                             <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={() => adjustWeight(-2.5)}
-                                                    className="w-10 h-10 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-lg flex items-center justify-center transition-all"
+                                                    disabled={isBodyweight}
+                                                    className="w-10 h-10 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-lg flex items-center justify-center transition-all disabled:opacity-50"
                                                 >
                                                     <Minus size={16} />
                                                 </button>
                                                 <input
                                                     type="number"
                                                     value={currentWeight}
+                                                    disabled={isBodyweight}
                                                     onChange={(e) => setCurrentWeight(parseFloat(e.target.value) || 0)}
-                                                    className="flex-1 min-w-0 bg-transparent text-center text-xl font-bold py-1 focus:outline-none"
+                                                    className="flex-1 min-w-0 bg-transparent text-center text-xl font-bold py-1 focus:outline-none disabled:text-slate-500"
                                                 />
                                                 <button
                                                     onClick={() => adjustWeight(2.5)}
-                                                    className="w-10 h-10 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-lg flex items-center justify-center transition-all"
+                                                    disabled={isBodyweight}
+                                                    className="w-10 h-10 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-lg flex items-center justify-center transition-all disabled:opacity-50"
                                                 >
                                                     <Plus size={16} />
                                                 </button>

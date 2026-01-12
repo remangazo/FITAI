@@ -12,6 +12,7 @@ import { BottomNav, BackButton } from '../components/Navigation';
 import { getDailyNutritionLog, getWeeklyNutritionStats, addActivityToLog, removeActivityFromLog } from '../services/nutritionService';
 import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
 import { generateWeeklyPlan } from '../services/mealGenerator';
+import { getLocalDateString } from '../utils/dateUtils';
 import DailyMealPlan from '../components/DailyMealPlan';
 import ActivityTracker from '../components/ActivityTracker';
 import AIThinkingModal from '../components/AIThinkingModal';
@@ -74,7 +75,7 @@ export default function Nutrition() {
 
     const loadTodayLog = async () => {
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const log = await getDailyNutritionLog(user.uid, today);
             if (log.activities) setDailyActivities(log.activities);
         } catch (error) {

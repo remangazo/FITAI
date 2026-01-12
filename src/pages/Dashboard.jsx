@@ -14,6 +14,7 @@ import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
 import { generateQuickPlan } from '../services/mealGenerator';
 import { aiService } from '../services/aiService';
 import { addActivityToLog, getDailyNutritionLog } from '../services/nutritionService';
+import { getLocalDateString } from '../utils/dateUtils';
 import { challengeService } from '../services/challengeService';
 // Lazy load NotificationCenter to prevent circular dependency
 const NotificationCenter = React.lazy(() => import('../components/NotificationCenter'));
@@ -169,7 +170,7 @@ export default function Dashboard() {
     const loadDailyActivities = async () => {
         if (!user?.uid) return;
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const log = await getDailyNutritionLog(user.uid, today);
             setTodayActivities(log.activities || []);
         } catch (error) {
@@ -180,7 +181,7 @@ export default function Dashboard() {
     const handleActivityAdded = async (activity) => {
         if (!user?.uid) return;
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             await addActivityToLog(user.uid, today, activity);
             setTodayActivities(prev => [...prev, activity]);
 
@@ -399,21 +400,16 @@ export default function Dashboard() {
             const metabolicProfile = calculateFullMetabolicProfile(profile);
             const result = generateQuickPlan(metabolicProfile, profile.culture || 'Argentina');
 
-            console.log('[Dashboard] Diet generated:', result.title);
+            // Actualizar el perfil en Firestore de forma COMPLETA
+            await updateProfile({
+                currentDietPlan: result,
+                lastDietGenerated: new Date().toISOString()
+            });
 
-            // Guardar en el perfil del usuario (igual que en Nutrition.jsx)
-            const userLocalStorageKey = `fitai_diet_plan_${user.uid}`;
-            localStorage.setItem(userLocalStorageKey, JSON.stringify(result));
-
-            // Actualizar el perfil en Firestore
-            const { updateProfile } = await import('../context/AuthContext');
-            // Como no tenemos acceso directo a updateProfile aquí, guardamos en localStorage
-            // y el NutritionProgressWidget lo leerá
-
-            // Actualizar el state local para mostrar inmediatamente
+            // Actualizar el state local para feedback inmediato
             setDiets([{ ...result, id: 'current-diet' }]);
 
-            alert('¡Dieta generada! Ve a la sección de Nutrición para verla.');
+            alert('¡Dieta generada y activada! Ve a la sección de Nutrición para ver los detalles.');
 
         } catch (err) {
             console.error("Diet Generation Error:", err);

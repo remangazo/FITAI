@@ -20,7 +20,8 @@ import {
  * @returns {Object} - Daily nutrition log
  */
 export const getDailyNutritionLog = async (userId, date = null) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -62,7 +63,8 @@ export const getDailyNutritionLog = async (userId, date = null) => {
  * @param {boolean} completed - Completed status
  */
 export const toggleMealCompletion = async (userId, date, mealIndex, completed = true) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -99,7 +101,8 @@ export const toggleMealCompletion = async (userId, date, mealIndex, completed = 
  * @param {Object} food - { name, calories, protein, carbs, fats, quantity, unit }
  */
 export const addCustomFood = async (userId, date, food) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -136,7 +139,8 @@ export const addCustomFood = async (userId, date, food) => {
  * @param {Object} activity - { name, caloriesBurned, durationMinutes, category }
  */
 export const addActivityToLog = async (userId, date, activity) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -169,7 +173,8 @@ export const addActivityToLog = async (userId, date, activity) => {
  * @param {string} activityId - Activity ID to remove
  */
 export const removeActivityFromLog = async (userId, date, activityId) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -196,7 +201,8 @@ export const removeActivityFromLog = async (userId, date, activityId) => {
  * @param {string} foodId - Food ID to remove
  */
 export const removeCustomFood = async (userId, date, foodId) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -227,7 +233,8 @@ export const removeCustomFood = async (userId, date, foodId) => {
  * @param {Object} targets - { calories, protein, carbs, fats }
  */
 export const setDailyTargetMacros = async (userId, date, targets) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -251,7 +258,8 @@ export const setDailyTargetMacros = async (userId, date, targets) => {
  * @param {Array} meals - Array of meal objects
  */
 export const setDailyMeals = async (userId, date, meals) => {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = date || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const logId = `${userId}_${dateStr}`;
 
     try {
@@ -367,7 +375,7 @@ export const getNutritionHistory = async (userId, days = 7) => {
         const logs = [];
 
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().split('T')[0];
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             try {
                 const log = await getDailyNutritionLog(userId, dateStr);
                 logs.push(log);

@@ -120,15 +120,15 @@ const addTrainingDaysToNutrition = (nutritionPlan, weeklyRoutine) => {
         const isTrainingDay = trainingDays.has(dayLower);
 
         if (enhancedPlan.weeklyPlan[day]) {
-            enhancedPlan.weeklyPlan[day] = {
-                ...enhancedPlan.weeklyPlan[day],
-                isTrainingDay,
-                workoutInfo: isTrainingDay ? {
-                    type: weeklyRoutine[dayLower].type,
-                    exercises: weeklyRoutine[dayLower].exercises.map(e => e.name),
-                    estimatedDuration: calculateWorkoutDuration(weeklyRoutine[dayLower].exercises)
-                } : null
-            };
+            // NOTA: Mantenemos el array pero le adjuntamos propiedades de metadatos
+            // para que .map() siga funcionado en la UI
+            const meals = enhancedPlan.weeklyPlan[day];
+            meals.isTrainingDay = isTrainingDay;
+            meals.workoutInfo = isTrainingDay ? {
+                type: weeklyRoutine[dayLower].type,
+                exercises: weeklyRoutine[dayLower].exercises.map(e => e.name),
+                estimatedDuration: calculateWorkoutDuration(weeklyRoutine[dayLower].exercises)
+            } : null;
         }
     });
 

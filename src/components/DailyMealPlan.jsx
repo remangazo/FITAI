@@ -18,6 +18,7 @@ import {
 } from '../services/nutritionService';
 import { calculateFoodMacros } from '../services/openrouterService';
 import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
+import { getLocalDateString, getDayName } from '../utils/dateUtils';
 
 export default function DailyMealPlan({ dietPlan, targetMacros = null }) {
     const { user, profile } = useAuth();
@@ -33,8 +34,7 @@ export default function DailyMealPlan({ dietPlan, targetMacros = null }) {
 
     const getInitialDay = () => {
         try {
-            const currentDayName = new Date().toLocaleDateString('es-ES', { weekday: 'long' });
-            const capitalizedDay = currentDayName.charAt(0).toUpperCase() + currentDayName.slice(1);
+            const capitalizedDay = getDayName();
             const normalized = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             const found = days.find(d => normalized(d) === normalized(capitalizedDay));
             return found || 'Lunes';
@@ -65,9 +65,9 @@ export default function DailyMealPlan({ dietPlan, targetMacros = null }) {
             const targetDate = new Date(today);
             targetDate.setDate(today.getDate() + diff);
 
-            return targetDate.toISOString().split('T')[0];
+            return getLocalDateString(targetDate);
         } catch (error) {
-            return new Date().toISOString().split('T')[0];
+            return getLocalDateString();
         }
     };
 

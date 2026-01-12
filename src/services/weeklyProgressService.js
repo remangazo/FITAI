@@ -12,7 +12,7 @@ import { collection, query, where, getDocs, orderBy, limit } from 'firebase/fire
  */
 const getWeekStart = () => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0); // Local midnight
     const day = today.getDay();
     // Monday as start (1), Sunday as end (0 -> 7)
     const diff = today.getDate() - (day === 0 ? 6 : day - 1);
@@ -28,9 +28,10 @@ const getWeekDates = () => {
     const weekStart = getWeekStart();
     const dates = [];
     for (let i = 0; i < 7; i++) {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + i);
-        dates.push(date.toISOString().split('T')[0]);
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        dates.push(dateStr);
     }
     return dates;
 };
@@ -46,7 +47,8 @@ export const getWeeklyCalorieSummary = async (userId, targetCalories = 2000) => 
 
     try {
         const weekDates = getWeekDates();
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
         // Obtener logs de nutrición de la semana
         const nutritionLogs = [];

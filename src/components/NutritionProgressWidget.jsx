@@ -27,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
 import { getDailyNutritionLog, setDailyMeals, setDailyTargetMacros } from '../services/nutritionService';
 import { getWeeklyProgressSummary } from '../services/weeklyProgressService';
+import { getLocalDateString, getDayName } from '../utils/dateUtils';
 
 export default function NutritionProgressWidget({ activities: externalActivities }) {
     const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function NutritionProgressWidget({ activities: externalActivities
 
     const loadAllProgress = async () => {
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             const metabolic = profile ? calculateFullMetabolicProfile(profile) : null;
             const fallbackTarget = metabolic ? metabolic.metabolism.targetCalories : 2000;
 
@@ -64,11 +65,14 @@ export default function NutritionProgressWidget({ activities: externalActivities
 
             let log = await getDailyNutritionLog(user.uid, today);
 
-            // AUTO-SYNC: If log has no meals but we have an active diet plan, initialize it
             const activeDiet = profile?.currentDietPlan;
-            const currentDayName = new Date().toLocaleDateString('es-ES', { weekday: 'long' });
-            const capitalizedDay = currentDayName.charAt(0).toUpperCase() + currentDayName.slice(1);
-            const planForToday = activeDiet?.weeklyPlan?.[capitalizedDay] || activeDiet?.meals || [];
+            const capitalizedDay = getDayName();
+            const dayPlanEntry = activeDiet?.weeklyPlan?.[capitalizedDay] ||
+                activeDiet?.weeklyPlan?.[capitalizedDay.toLowerCase()];
+
+            // Extract meals logically: handles both direct array and object { meals: [...] }
+            const planForToday = Array.isArray(dayPlanEntry) ? dayPlanEntry :
+                (dayPlanEntry?.meals || activeDiet?.meals || []);
 
             if ((!log.meals || log.meals.length === 0) && planForToday.length > 0) {
                 console.log('[NutritionWidget] Syncing meals from active diet plan...');

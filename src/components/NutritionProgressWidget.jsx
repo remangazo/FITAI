@@ -21,7 +21,10 @@ import {
     Calendar,
     CheckCircle2,
     XCircle,
-    BarChart3
+    BarChart3,
+    Beef,
+    Wheat,
+    Droplets
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
@@ -255,15 +258,21 @@ export default function NutritionProgressWidget({ activities: externalActivities
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <div className="flex-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
-                                    <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Restante</div>
+                                <div className="flex-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 group/stat">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Zap size={10} className="text-indigo-400" />
+                                        <div className="text-[10px] text-slate-500 font-bold uppercase">Restante</div>
+                                    </div>
                                     <div className={`text-sm font-black ${remaining > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                         {remaining} <span className="text-[8px] opacity-70">kcal</span>
                                     </div>
                                 </div>
                                 {burned > 0 && (
-                                    <div className="flex-1 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                                        <div className="text-[10px] text-emerald-500/70 font-bold uppercase mb-1">Bonus Actividad</div>
+                                    <div className="flex-1 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 group/stat">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Flame size={10} className="text-emerald-400" />
+                                            <div className="text-[10px] text-emerald-500/70 font-bold uppercase">Bonus Actividad</div>
+                                        </div>
                                         <div className="text-sm font-black text-emerald-400">
                                             +{burned} <span className="text-[8px] opacity-70">kcal</span>
                                         </div>
@@ -278,11 +287,14 @@ export default function NutritionProgressWidget({ activities: externalActivities
                         {/* Macro Pills */}
                         <div className="grid grid-cols-3 gap-3">
                             {[
-                                { label: 'Proteína', val: todayProgress?.totalMacros?.protein || 0, target: targetMacros.protein, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                                { label: 'Carbos', val: todayProgress?.totalMacros?.carbs || 0, target: targetMacros.carbs, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                                { label: 'Grasas', val: todayProgress?.totalMacros?.fats || 0, target: targetMacros.fats, color: 'text-amber-400', bg: 'bg-amber-500/10' }
+                                { label: 'Proteína', val: todayProgress?.totalMacros?.protein || 0, target: targetMacros.protein, color: 'text-indigo-400', bg: 'bg-indigo-500/10', icon: Beef },
+                                { label: 'Carbos', val: todayProgress?.totalMacros?.carbs || 0, target: targetMacros.carbs, color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: Wheat },
+                                { label: 'Grasas', val: todayProgress?.totalMacros?.fats || 0, target: targetMacros.fats, color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Droplets }
                             ].map((macro, i) => (
-                                <div key={i} className={`p-3 rounded-3xl ${macro.bg} border border-white/5 text-center`}>
+                                <div key={i} className={`p-3 rounded-3xl ${macro.bg} border border-white/5 text-center group/macro transition-all duration-300 hover:border-white/10`}>
+                                    <div className="flex justify-center mb-1.5">
+                                        <macro.icon size={14} className={macro.color} />
+                                    </div>
                                     <div className={`text-sm font-black ${macro.color}`}>{macro.val}g</div>
                                     <div className="text-[8px] text-slate-500 font-bold uppercase mt-1">/ {macro.target}g {macro.label}</div>
                                 </div>
@@ -326,12 +338,12 @@ export default function NutritionProgressWidget({ activities: externalActivities
                                         <div
                                             key={i}
                                             className={`flex-1 rounded-full transition-all duration-700 ${isAdherent
-                                                    ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
-                                                    : isTracked
-                                                        ? 'bg-red-500/40'
-                                                        : isFuture
-                                                            ? 'bg-white/5'
-                                                            : 'bg-white/[0.03]'
+                                                ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+                                                : isTracked
+                                                    ? 'bg-red-500/40'
+                                                    : isFuture
+                                                        ? 'bg-white/5'
+                                                        : 'bg-white/[0.03]'
                                                 }`}
                                         />
                                     );

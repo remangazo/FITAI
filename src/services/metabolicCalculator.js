@@ -100,9 +100,16 @@ const MEAL_DISTRIBUTIONS = {
  * @param {number} weightKg - Peso en kilogramos
  * @param {number} heightCm - Altura en centímetros
  * @param {number} age - Edad en años
- * @param {string} gender - 'male' o 'female'
+ * @param {string} gender - 'male' u 'female'
  * @returns {number} TMB en kcal/día
  */
+
+const safeLower = (val) => {
+    if (!val) return "";
+    if (Array.isArray(val)) return val.join(' ').toLowerCase();
+    return String(val).toLowerCase();
+};
+
 export const calculateTMB = (weightKg, heightCm, age, gender) => {
     // Validación de inputs
     const weight = Math.max(30, Math.min(300, parseFloat(weightKg) || 70));
@@ -113,9 +120,9 @@ export const calculateTMB = (weightKg, heightCm, age, gender) => {
     // Hombres: TMB = (10 × peso en kg) + (6.25 × altura en cm) − (5 × edad en años) + 5
     // Mujeres: TMB = (10 × peso en kg) + (6.25 × altura en cm) − (5 × edad en años) − 161
 
-    const isMale = gender?.toLowerCase() === 'male' ||
-        gender?.toLowerCase() === 'masculino' ||
-        gender?.toLowerCase() === 'm';
+    const isMale = safeLower(gender) === 'male' ||
+        safeLower(gender) === 'masculino' ||
+        safeLower(gender) === 'm';
 
     const tmb = (10 * weight) + (6.25 * height) - (5 * ageVal) + (isMale ? 5 : -161);
 
@@ -142,7 +149,7 @@ export const calculateTDEE = (tmb, activityLevel = 'moderate') => {
  * @returns {string} Nivel de actividad
  */
 export const getActivityLevelFromFrequency = (trainingFrequency) => {
-    const freq = (trainingFrequency || '').toLowerCase();
+    const freq = safeLower(trainingFrequency);
 
     if (freq.includes('0') || freq.includes('nunca') || freq.includes('sedentario')) {
         return 'sedentary';
@@ -171,7 +178,7 @@ export const getActivityLevelFromFrequency = (trainingFrequency) => {
  * @returns {Object} { targetCalories, deficit/surplus, explanation }
  */
 export const calculateTargetCalories = (tdee, goal) => {
-    const goalLower = (goal || '').toLowerCase();
+    const goalLower = safeLower(goal);
 
     let adjustment = 0;
     let type = 'maintenance';
@@ -224,7 +231,7 @@ export const calculateTargetCalories = (tdee, goal) => {
  * @returns {Object} { protein, carbs, fats } en gramos
  */
 export const calculateMacros = (targetCalories, weightKg, goal) => {
-    const goalLower = (goal || '').toLowerCase();
+    const goalLower = safeLower(goal);
 
     let distribution = MACRO_DISTRIBUTIONS.maintenance;
 

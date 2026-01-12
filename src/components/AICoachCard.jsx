@@ -156,7 +156,7 @@ const ScoreExplanationModal = ({ onClose }) => (
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full bg-amber-500" />
-                            <span className="text-[10px] text-slate-300 font-bold">ANILLO INTERIOR: MINUTOS DE CARDIO (META: 120-180m)</span>
+                            <span className="text-[10px] text-slate-300 font-bold">ANILLO INTERIOR: CALORÍAS DE CARDIO (RECOMENDADO SEGÚN PESO)</span>
                         </div>
                     </div>
                 </div>

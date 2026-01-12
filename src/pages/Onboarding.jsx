@@ -1043,29 +1043,74 @@ export default function Onboarding() {
                                     <StepContainer icon={Check} title="¡Todo Listo!" subtitle="Resumen de tu perfil fitness profesional">
                                         <div className="space-y-4 mb-6">
                                             {/* Datos Personales */}
-                                            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-4">
+                                            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/5" translate="no">
                                                 <h4 className="text-xs text-blue-400 font-bold uppercase mb-3">📋 Datos Personales</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <SummaryItem label="Nombre" value={formData.name} />
-                                                    <SummaryItem label="País" value={formData.country || '-'} />
+                                                    <SummaryItem
+                                                        label="País"
+                                                        value={[
+                                                            { code: 'AR', name: 'Argentina 🇦🇷' },
+                                                            { code: 'MX', name: 'México 🇲🇽' },
+                                                            { code: 'CO', name: 'Colombia 🇨🇴' },
+                                                            { code: 'CL', name: 'Chile 🇨🇱' },
+                                                            { code: 'PE', name: 'Perú 🇵🇪' },
+                                                            { code: 'ES', name: 'España 🇪🇸' },
+                                                            { code: 'UY', name: 'Uruguay 🇺🇾' },
+                                                            { code: 'VE', name: 'Venezuela 🇻🇪' },
+                                                            { code: 'EC', name: 'Ecuador 🇪🇨' },
+                                                            { code: 'US', name: 'USA 🇺🇸' },
+                                                        ].find(c => c.code === formData.country)?.name || formData.country || '-'}
+                                                    />
                                                     <SummaryItem label="Nacimiento" value={formData.birthYear} />
                                                     <SummaryItem label="Género" value={formData.gender} />
                                                 </div>
                                             </div>
 
                                             {/* Objetivos y Biometría */}
-                                            <div className="bg-gradient-to-br from-green-500/10 to-cyan-500/10 border border-white/10 rounded-2xl p-4">
+                                            <div className="bg-gradient-to-br from-green-500/10 to-cyan-500/10 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/5" translate="no">
                                                 <h4 className="text-xs text-green-400 font-bold uppercase mb-3">🎯 Objetivos & Biometría</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
-                                                    <SummaryItem label="Objetivo" value={formData.primaryGoal} />
-                                                    <SummaryItem label="Foco Muscular" value={formData.trainingFocus || 'Equilibrado'} />
-                                                    <SummaryItem label="Peso Actual" value={`${formData.weight} ${formData.units === 'metric' ? 'kg' : 'lb'}`} />
-                                                    <SummaryItem label="Peso Objetivo" value={`${formData.targetWeight} ${formData.units === 'metric' ? 'kg' : 'lb'}`} />
+                                                    <SummaryItem
+                                                        label="Objetivo"
+                                                        value={(() => {
+                                                            const goals = Array.isArray(formData.primaryGoal) ? formData.primaryGoal : [formData.primaryGoal];
+                                                            const mapping = {
+                                                                'muscle': 'Ganar Músculo',
+                                                                'fat': 'Perder Grasa',
+                                                                'strength': 'Aumentar Fuerza',
+                                                                'health': 'Mejorar Salud',
+                                                                'athletic': 'Rendimiento Atlético',
+                                                                'endurance': 'Resistencia'
+                                                            };
+                                                            return goals.map(g => mapping[g] || g).join(', ') || '-';
+                                                        })()}
+                                                    />
+                                                    <SummaryItem
+                                                        label="Foco Muscular"
+                                                        value={{
+                                                            'balanced': 'Equilibrado',
+                                                            'chest': 'Pecho',
+                                                            'back': 'Espalda',
+                                                            'shoulders': 'Hombros',
+                                                            'legs': 'Piernas',
+                                                            'arms': 'Brazos',
+                                                            'core': 'Core / Abs'
+                                                        }[formData.trainingFocus] || formData.trainingFocus || 'Equilibrado'}
+                                                    />
+                                                    <SummaryItem
+                                                        label="Peso Actual"
+                                                        value={formData.weight ? `${formData.weight} ${formData.units === 'metric' ? 'kg' : 'lb'}` : '-'}
+                                                    />
+                                                    <SummaryItem
+                                                        label="Peso Objetivo"
+                                                        value={formData.targetWeight ? `${formData.targetWeight} ${formData.units === 'metric' ? 'kg' : 'lb'}` : '-'}
+                                                    />
                                                 </div>
                                             </div>
 
                                             {/* Experiencia y Fuerza */}
-                                            <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-white/10 rounded-2xl p-4">
+                                            <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/5" translate="no">
                                                 <h4 className="text-xs text-amber-400 font-bold uppercase mb-3">💪 Experiencia & Fuerza</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <SummaryItem label="Experiencia" value={formData.experienceYears} />
@@ -1086,13 +1131,20 @@ export default function Onboarding() {
                                             </div>
 
                                             {/* Disponibilidad */}
-                                            <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-4">
+                                            <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/5" translate="no">
                                                 <h4 className="text-xs text-pink-400 font-bold uppercase mb-3">📅 Disponibilidad</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <SummaryItem label="Días" value={formData.availableDays.join(', ') || '-'} />
                                                     <SummaryItem label="Duración" value={formData.sessionDuration} />
                                                     <SummaryItem label="Horario" value={formData.preferredTime} />
-                                                    <SummaryItem label="Lugar" value={formData.trainingLocation} />
+                                                    <SummaryItem
+                                                        label="Lugar"
+                                                        value={{
+                                                            'gym': 'Gimnasio',
+                                                            'home': 'Casa',
+                                                            'outdoor': 'Exterior'
+                                                        }[formData.trainingLocation] || formData.trainingLocation || '-'}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -1277,7 +1329,7 @@ function GoalCard({ selected, onClick, icon, label, desc }) {
 
 function SummaryItem({ label, value }) {
     return (
-        <div>
+        <div className="notranslate" translate="no">
             <div className="text-[10px] text-slate-500 uppercase font-bold">{label}</div>
             <div className="font-bold text-white truncate">{value || '—'}</div>
         </div>

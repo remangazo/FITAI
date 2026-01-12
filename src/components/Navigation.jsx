@@ -6,33 +6,69 @@ import {
 } from 'lucide-react';
 
 // Bottom Navigation for Mobile
+// Bottom Navigation for Mobile
 export function BottomNav() {
     const navigate = useNavigate();
     const location = useLocation();
+    const [showMore, setShowMore] = React.useState(false);
 
-    const navItems = [
+    const mainItems = [
         { path: '/dashboard', icon: Home, label: 'Panel' },
         { path: '/routines', icon: Dumbbell, label: 'Entreno' },
         { path: '/nutrition', icon: UtensilsCrossed, label: 'Dieta' },
         { path: '/progress', icon: TrendingUp, label: 'Progreso' },
+    ];
+
+    const moreItems = [
         { path: '/community', icon: Users, label: 'Social' },
         { path: '/shop', icon: ShoppingBag, label: 'Tienda' },
         { path: '/tools', icon: Settings, label: 'Tools' },
-        { path: '/profile', icon: User, label: 'Perfil' }
+        { path: '/profile', icon: User, label: 'Perfil' },
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-            <div className="bg-slate-950/90 backdrop-blur-xl border-t border-white/5 px-2 pb-safe">
-                <div className="flex justify-around items-center h-16">
-                    {navItems.map((item) => {
+        <nav className="fixed bottom-0 left-0 right-0 z-[100] md:hidden">
+            {/* Popover Menu "More" */}
+            <motion.div
+                initial={false}
+                animate={{
+                    height: showMore ? 'auto' : 0,
+                    opacity: showMore ? 1 : 0,
+                    y: showMore ? 0 : 20
+                }}
+                className="mx-4 mb-2 overflow-hidden bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[32px] shadow-2xl"
+            >
+                <div className="p-4 grid grid-cols-2 gap-4">
+                    {moreItems.map((item) => (
+                        <button
+                            key={item.path}
+                            onClick={() => {
+                                navigate(item.path);
+                                setShowMore(false);
+                            }}
+                            className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:text-white transition-all active:scale-95"
+                        >
+                            <item.icon size={18} />
+                            <span className="text-[10px] font-black uppercase tracking-wider">{item.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </motion.div>
+
+            {/* Main Bar */}
+            <div className="bg-slate-950/90 backdrop-blur-xl border-t border-white/5 px-4 pb-safe">
+                <div className="flex justify-between items-center h-16 max-w-lg mx-auto">
+                    {mainItems.map((item) => {
                         const isActive = location.pathname === item.path ||
                             (item.path === '/dashboard' && location.pathname === '/');
                         return (
                             <button
                                 key={item.path}
-                                onClick={() => navigate(item.path)}
-                                className="flex flex-col items-center justify-center w-16 h-full relative"
+                                onClick={() => {
+                                    navigate(item.path);
+                                    setShowMore(false);
+                                }}
+                                className="flex flex-col items-center justify-center flex-1 h-full relative"
                             >
                                 {isActive && (
                                     <motion.div
@@ -41,17 +77,39 @@ export function BottomNav() {
                                     />
                                 )}
                                 <item.icon
-                                    size={22}
+                                    size={20}
                                     className={`transition-all duration-300 ${isActive ? 'text-brand-indigo scale-110' : 'text-slate-500'}`}
                                 />
-                                <span className={`text-[10px] mt-1 font-extrabold uppercase tracking-tight ${isActive ? 'text-slate-200' : 'text-slate-600'}`}>
+                                <span className={`text-[9px] mt-1 font-black uppercase tracking-tight ${isActive ? 'text-slate-200' : 'text-slate-600'}`}>
                                     {item.label}
                                 </span>
                             </button>
                         );
                     })}
+
+                    {/* Toggle "More" Button */}
+                    <button
+                        onClick={() => setShowMore(!showMore)}
+                        className="flex flex-col items-center justify-center flex-1 h-full relative group"
+                    >
+                        <Menu
+                            size={20}
+                            className={`transition-all duration-300 ${showMore ? 'text-brand-indigo scale-110 rotate-90' : 'text-slate-500'}`}
+                        />
+                        <span className={`text-[9px] mt-1 font-black uppercase tracking-tight ${showMore ? 'text-slate-200' : 'text-slate-600'}`}>
+                            MÁS
+                        </span>
+                    </button>
                 </div>
             </div>
+
+            {/* Backdrop for More Menu */}
+            {showMore && (
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10"
+                    onClick={() => setShowMore(false)}
+                />
+            )}
         </nav>
     );
 }

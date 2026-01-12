@@ -513,7 +513,7 @@ export default function Dashboard() {
                 <Loader2 className="animate-spin text-blue-500" size={48} />
             </div>
         }>
-            <div className="min-h-screen bg-slate-950 text-white font-sans pb-24 md:pb-0">
+            <div className="min-h-screen bg-slate-950 text-white font-sans pb-24 md:pb-0 overflow-x-hidden">
                 {/* Header with Background Glow */}
                 <div className="relative">
                     {showTutorial && <InteractiveGuide onComplete={handleTutorialComplete} />}

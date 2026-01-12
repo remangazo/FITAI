@@ -52,15 +52,20 @@ export const validateUserProfile = (profile) => {
 
     // Género
     const validGenders = ['male', 'female', 'masculino', 'femenino', 'm', 'f'];
-    if (!validGenders.includes(profile.gender?.toLowerCase())) {
+    const genderLower = String(profile.gender || '').toLowerCase();
+    if (!validGenders.includes(genderLower)) {
         errors.push("Género debe ser masculino o femenino");
     }
 
     // === OBJETIVOS ===
 
-    const validGoals = ['muscle', 'strength', 'weight_loss', 'endurance', 'mobility'];
+    const validGoals = ['muscle', 'strength', 'weight_loss', 'endurance', 'mobility', 'fat', 'health', 'athletic'];
 
-    if (!profile.primaryGoal || !validGoals.includes(profile.primaryGoal)) {
+    const primaryGoals = Array.isArray(profile.primaryGoal)
+        ? profile.primaryGoal
+        : (profile.primaryGoal ? [profile.primaryGoal] : []);
+
+    if (primaryGoals.length === 0 || !primaryGoals.every(g => validGoals.includes(g))) {
         errors.push("Objetivo primario inválido");
     }
 

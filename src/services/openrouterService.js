@@ -74,36 +74,72 @@ export const generateLocalAnalysis = (data) => {
     const extraActivities = data.extraActivities || [];
     const cardioActivities = extraActivities.filter(a => a.category === 'cardio');
 
-    // Calcular minutos totales de cardio esta semana
-    const totalMinutes = Math.max(0, cardioActivities.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0));
+    // Calcular calorías totales de cardio esta semana
+    const totalKcal = Math.max(0, cardioActivities.reduce((sum, a) => sum + (Number(a.caloriesBurned) || 0), 0));
 
-    // Meta dinámica: 180 min si busca perder grasa, 120 min otros.
+    // Meta dinámica: Basada en fisiología real (Calorías y Tiempo Sostenible)
+    const currentWeight = parseFloat(data.userProfile?.weight) || 70;
+    const targetWeight = parseFloat(data.userProfile?.targetWeight) || currentWeight;
+    const weightDiff = Math.max(0, currentWeight - targetWeight);
+
+    // Tasa de pérdida saludable: 0.7% del peso corporal por semana
+    const healthyWeeklyLossKg = currentWeight * 0.007;
+    // Semanas necesarias (Mínimo 4 para ajustes pequeños, máximo según división saludable)
+    const sustainableWeeks = Math.max(8, Math.ceil(weightDiff / Math.max(0.1, healthyWeeklyLossKg)));
+
+    // Calorías totales a perder a través del ejercicio (30% del déficit total estimado)
+    let cardioKcalMeta = 1000; // Base de salud mínima
+
     const userGoal = data.userProfile?.primaryGoal;
     const isFatLoss = Array.isArray(userGoal)
-        ? userGoal.includes('fat')
-        : userGoal === 'fat';
-    const cardioMeta = isFatLoss ? 180 : 120;
+        ? userGoal.includes('fat') || userGoal.includes('weight_loss')
+        : (userGoal === 'fat' || userGoal === 'weight_loss');
 
-    const cardioProgress = cardioMeta > 0 ? Math.min(100, (totalMinutes / cardioMeta) * 100) : 0;
+    if (isFatLoss && weightDiff > 0) {
+        const totalKcalToLose = weightDiff * 7700;
+        const totalExerciseKcal = totalKcalToLose * 0.3; // 30% vía deporte para conservar metabolismo
+        const calculatedKcalPerWeek = Math.round(totalExerciseKcal / sustainableWeeks);
+
+        // Limitar meta semanal (800 kcal min / 4000 kcal max para seguridad y realismo)
+        cardioKcalMeta = Math.min(4000, Math.max(800, calculatedKcalPerWeek));
+    } else if (isFatLoss) {
+        cardioKcalMeta = 1500;
+    } else {
+        cardioKcalMeta = 800;
+    }
+
+    const cardioProgress = cardioKcalMeta > 0 ? Math.min(100, (totalKcal / cardioKcalMeta) * 100) : 0;
 
     return {
-        overallAssessment: workouts >= goal
-            ? "¡Excelente semana! Has cumplido tu objetivo de frecuencia."
-            : `Llevas ${workouts} entrenamientos. Mantén el ritmo.`,
+        overallAssessment: workouts === 0
+            ? "¡Bienvenido a FitAI! Tu viaje comienza hoy. Haz clic para iniciar tu primer entrenamiento."
+            : workouts >= goal
+                ? "¡Excelente semana! Has cumplido tu objetivo de frecuencia."
+                : `Llevas ${workouts} entrenamientos. Mantén el ritmo y sigue progresando.`,
         activePlanSummary: activeRoutine?.title || "Entrenamiento General",
         progressScore: Math.min(100, score),
         cardioProgress: Math.round(cardioProgress),
         cardioSessions: cardioActivities.length,
-        cardioMinutes: Math.round(totalMinutes),
-        cardioGoalMinutes: cardioMeta,
-        strengths: workouts >= 1 ? ["Constancia semanal iniciada"] : ["Primeros pasos"],
-        areasToImprove: workouts < 3 ? ["Aumentar frecuencia", "Registrar más pesajes"] : ["Mantener intensidad"],
+        cardioKcal: Math.round(totalKcal),
+        cardioGoalKcal: cardioKcalMeta,
+        strengths: workouts >= 1 ? ["Constancia semanal iniciada"] : ["Perfil completado", "Listo para el Día 1"],
+        areasToImprove: workouts === 0
+            ? ["Comenzar rutina", "Registrar peso inicial"]
+            : workouts < 3
+                ? ["Aumentar frecuencia", "Registrar más pesajes"]
+                : ["Mantener intensidad"],
         weeklyGoals: [
-            { text: "Mantener la intensidad", completed: workouts >= goal },
-            { text: "Registrar todos los entrenamientos", completed: workouts > 0 },
-            { text: `Completar ${cardioMeta} min de cardio`, completed: totalMinutes >= cardioMeta }
+            {
+                text: workouts === 0 ? "Completar tu primer entrenamiento" : "Mantener la intensidad",
+                completed: workouts > 0
+            },
+            {
+                text: workouts === 0 ? "Registrar tus medidas iniciales" : "Registrar todos los entrenamientos",
+                completed: workouts > 0
+            },
+            { text: `Quemar ${cardioKcalMeta} kcal de cardio`, completed: totalKcal >= cardioKcalMeta }
         ],
-        motivationalMessage: "La disciplina vence al talento.",
+        motivationalMessage: workouts === 0 ? "El éxito es la suma de pequeños esfuerzos diarios." : "La disciplina vence al talento.",
         recoveryAlert: { needsDeload: false, reason: "", recommendation: "" },
         isFallback: true
     };

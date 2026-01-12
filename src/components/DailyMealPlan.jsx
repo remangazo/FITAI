@@ -409,6 +409,13 @@ function MealItem({ meal, index, completed, expanded, extras, onToggle, onExpand
 
     const baseCals = Number(meal.calories || meal.macros?.calories || 0);
     const baseProt = Number(meal.macros?.protein || 0);
+    const baseCarb = Number(meal.macros?.carbs || 0);
+    const baseFat = Number(meal.macros?.fats || 0);
+
+    const totalCals = baseCals + extraCals;
+    const totalProt = baseProt + extraProt;
+    const totalCarb = baseCarb + (extras.reduce((sum, e) => sum + Number(e.carbs || 0), 0));
+    const totalFat = baseFat + (extras.reduce((sum, e) => sum + Number(e.fats || 0), 0));
 
     return (
         <motion.div
@@ -417,53 +424,74 @@ function MealItem({ meal, index, completed, expanded, extras, onToggle, onExpand
         >
             {completed && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />}
 
-            <div className="p-4 sm:p-8 flex items-center gap-3 sm:gap-6 relative z-10">
-                <button
-                    onClick={onToggle}
-                    className={`w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg ${completed ? 'bg-emerald-500 text-white' : 'bg-white/[0.03] border border-white/10 text-slate-700 hover:text-indigo-400 hover:border-indigo-400/30'
-                        }`}
-                >
-                    {completed ? <Check size={20} className="sm:w-6 sm:h-6" /> : <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-current opacity-30" />}
-                </button>
+            <div className="p-5 sm:p-8 flex flex-col gap-4 relative z-10">
+                <div className="flex items-center gap-3 sm:gap-6">
+                    <button
+                        onClick={onToggle}
+                        className={`w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg ${completed ? 'bg-emerald-500 text-white' : 'bg-white/[0.03] border border-white/10 text-slate-700 hover:text-indigo-400 hover:border-indigo-400/30'
+                            }`}
+                    >
+                        {completed ? <Check size={20} className="sm:w-6 sm:h-6" /> : <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-current opacity-30" />}
+                    </button>
 
-                <div className="flex-1 cursor-pointer group min-w-0" onClick={onExpand}>
-                    <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-1">
-                        <div className="text-slate-400 group-hover:text-indigo-400 transition-colors mt-0.5 sm:mt-0 flex-shrink-0">
-                            {mealIcons[index] || mealIcons[2]}
+                    <div className="flex-1 cursor-pointer group min-w-0" onClick={onExpand}>
+                        <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-1">
+                            <div className="text-slate-400 group-hover:text-indigo-400 transition-colors mt-0.5 sm:mt-0 flex-shrink-0">
+                                {mealIcons[index] || mealIcons[2]}
+                            </div>
+                            <h5 className={`font-black uppercase tracking-tight leading-tight text-sm sm:text-base ${completed ? 'text-slate-400 line-through' : 'text-white'}`}>
+                                {meal.name}
+                            </h5>
                         </div>
-                        <h5 className={`font-black uppercase tracking-tight leading-tight text-xs sm:text-base ${completed ? 'text-slate-400 line-through' : 'text-white'}`}>
-                            {meal.name}
-                        </h5>
+                        {meal.time && (
+                            <div className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 ml-7 sm:ml-8">
+                                <Clock size={10} className="text-indigo-500/50 sm:w-3 sm:h-3" /> {meal.time}
+                            </div>
+                        )}
                     </div>
-                    {meal.time && (
-                        <div className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 ml-7 sm:ml-8">
-                            <Clock size={10} className="text-indigo-500/50 sm:w-3 sm:h-3" /> {meal.time}
-                        </div>
-                    )}
+
+                    <div className="flex-shrink-0 flex items-center gap-1.5 sm:gap-3">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onAddExtra(); }}
+                            className="p-2.5 sm:p-3 bg-white/[0.03] hover:bg-emerald-500/10 text-slate-600 hover:text-emerald-400 rounded-xl sm:rounded-2xl transition-all"
+                        >
+                            <Plus size={18} className="sm:w-5 sm:h-5" />
+                        </button>
+                        <button
+                            onClick={onExpand}
+                            className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all ${expanded ? 'bg-indigo-500/10 text-indigo-400' : 'text-slate-700 hover:text-white'}`}
+                        >
+                            {expanded ? <ChevronUp size={18} className="sm:w-5 sm:h-5" /> : <ChevronDown size={18} className="sm:w-5 sm:h-5" />}
+                        </button>
+                    </div>
                 </div>
 
-                <div className="text-right hidden sm:block">
-                    <div className={`text-xl font-black tracking-tighter ${completed ? 'text-slate-500' : 'text-white'}`}>
-                        {baseCals + extraCals} <span className="text-[10px] text-slate-500 italic">kcal</span>
+                {/* Nutrition Summary Table - Visible on Mobile and Desktop */}
+                <div className="grid grid-cols-4 gap-2 ml-1 sm:ml-20">
+                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-2 sm:p-3 text-center transition-all hover:bg-white/[0.04]">
+                        <div className={`text-sm sm:text-lg font-black tracking-tighter ${completed ? 'text-slate-500' : 'text-white'}`}>
+                            {totalCals}
+                        </div>
+                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-500">Kcal</div>
                     </div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400/60">
-                        {baseProt + extraProt}g proteína
+                    <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-2 sm:p-3 text-center transition-all hover:bg-indigo-500/10">
+                        <div className={`text-sm sm:text-lg font-black tracking-tighter ${completed ? 'text-indigo-400/50' : 'text-indigo-400'}`}>
+                            {totalProt}g
+                        </div>
+                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-indigo-400/50 text-center">Proteína</div>
                     </div>
-                </div>
-
-                <div className="flex-shrink-0 flex items-center gap-1.5 sm:gap-3">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onAddExtra(); }}
-                        className="p-2.5 sm:p-3 bg-white/[0.03] hover:bg-emerald-500/10 text-slate-600 hover:text-emerald-400 rounded-xl sm:rounded-2xl transition-all"
-                    >
-                        <Plus size={18} className="sm:w-5 sm:h-5" />
-                    </button>
-                    <button
-                        onClick={onExpand}
-                        className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all ${expanded ? 'bg-indigo-500/10 text-indigo-400' : 'text-slate-700 hover:text-white'}`}
-                    >
-                        {expanded ? <ChevronUp size={18} className="sm:w-5 sm:h-5" /> : <ChevronDown size={18} className="sm:w-5 sm:h-5" />}
-                    </button>
+                    <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2 sm:p-3 text-center transition-all hover:bg-emerald-500/10">
+                        <div className={`text-sm sm:text-lg font-black tracking-tighter ${completed ? 'text-emerald-400/50' : 'text-emerald-400'}`}>
+                            {totalCarb}g
+                        </div>
+                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-emerald-400/50">Carbos</div>
+                    </div>
+                    <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-2 sm:p-3 text-center transition-all hover:bg-amber-500/10">
+                        <div className={`text-sm sm:text-lg font-black tracking-tighter ${completed ? 'text-amber-400/50' : 'text-amber-400'}`}>
+                            {totalFat}g
+                        </div>
+                        <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-amber-400/50">Grasas</div>
+                    </div>
                 </div>
             </div>
 

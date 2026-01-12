@@ -429,19 +429,41 @@ export default function Nutrition() {
                                     <DailyMealPlan dietPlan={dietPlan} targetMacros={targets} />
                                 </div>
                             ) : (
-                                <div className="bg-slate-900 border border-white/5 rounded-[40px] p-20 text-center space-y-6">
-                                    <div className="w-24 h-24 bg-white/[0.03] rounded-[32px] flex items-center justify-center mx-auto mb-8 border border-white/5">
-                                        <UtensilsCrossed size={48} className="text-slate-700" />
+                                <div className="relative overflow-hidden bg-slate-900 border border-white/5 rounded-[40px] p-8 md:p-20 text-center">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+
+                                    <div className="relative z-10 space-y-8">
+                                        <div className="w-20 h-20 md:w-24 md:h-24 bg-white/[0.03] rounded-[32px] flex items-center justify-center mx-auto border border-white/5 shadow-2xl">
+                                            <UtensilsCrossed size={40} className="text-indigo-400" />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight">Personaliza tu Nutrición</h3>
+                                            <p className="text-slate-400 max-w-sm mx-auto font-medium text-sm md:text-base leading-relaxed">
+                                                Analizaremos tu metabolismo actual para generar un plan de alimentación optimizado 100% por IA.
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            onClick={handleGenerateDiet}
+                                            disabled={isGenerating}
+                                            className="group relative bg-indigo-500 hover:bg-indigo-400 text-white px-8 md:px-12 py-5 rounded-2xl font-black text-sm md:text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-indigo-500/40 flex items-center gap-3 mx-auto overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                                            <Sparkles size={20} className="relative z-10" />
+                                            <span className="relative z-10 uppercase tracking-wider">Crear mi Dieta IA</span>
+                                        </button>
+
+                                        <div className="flex items-center justify-center gap-6 pt-4 text-slate-500">
+                                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                                                <Brain size={14} className="text-indigo-500" /> IA Generativa
+                                            </div>
+                                            <div className="w-1 h-1 rounded-full bg-slate-800" />
+                                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                                                <Zap size={14} className="text-amber-500" /> Instantáneo
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h3 className="text-3xl font-black text-white">Sin Plan Activo</h3>
-                                    <p className="text-slate-400 max-w-sm mx-auto font-medium">Genera una guía de alimentación optimizada matemáticamente para tu perfil actual.</p>
-                                    <button
-                                        onClick={handleGenerateDiet}
-                                        disabled={isGenerating}
-                                        className="bg-indigo-500 hover:bg-indigo-400 shadow-xl shadow-indigo-500/20 px-10 py-5 rounded-[22px] font-black text-lg inline-flex items-center gap-3 transition-all"
-                                    >
-                                        <Sparkles size={24} /> CREAR MI DIETA IA
-                                    </button>
                                 </div>
                             )}
                         </motion.div>

@@ -43,7 +43,8 @@ export default function Settings() {
     const [settings, setSettings] = useState({
         language: 'es',
         units: 'metric',
-        avatarUrl: ''
+        avatarUrl: '',
+        isPrivate: false
     });
 
     const [notifStatus, setNotifStatus] = useState(null);
@@ -128,7 +129,8 @@ export default function Settings() {
                 setSettings({
                     language: i18n?.language || profile?.language || 'es',
                     units: profile?.units || 'metric',
-                    avatarUrl: profile?.avatarUrl || ''
+                    avatarUrl: profile?.avatarUrl || '',
+                    isPrivate: profile?.isPrivate || false
                 });
                 setLoading(false);
                 setNotifStatus(checkNotificationStatus());
@@ -151,6 +153,7 @@ export default function Settings() {
                 units: settings.units,
                 language: settings.language,
                 avatarUrl: settings.avatarUrl,
+                isPrivate: settings.isPrivate,
                 updatedAt: new Date()
             });
 
@@ -533,11 +536,29 @@ export default function Settings() {
                         </div>
                         <div>
                             <h3 className="font-bold text-white">Privacidad y Datos</h3>
-                            <p className="text-[10px] text-slate-500">Cumplimiento GDPR</p>
+                            <p className="text-[10px] text-slate-500">Ajustes de visibilidad y GDPR</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
+                        <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 flex items-center justify-between">
+                            <div className="flex-1">
+                                <h4 className="font-bold text-sm">Perfil Privado</h4>
+                                <p className="text-[10px] text-slate-500">
+                                    No aparecerás en el Ranking ni en el muro de actividades.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSettings(s => ({ ...s, isPrivate: !s.isPrivate }))}
+                                className={`w-12 h-6 rounded-full transition-colors relative ${settings.isPrivate ? 'bg-purple-500' : 'bg-slate-700'}`}
+                            >
+                                <motion.div
+                                    className="w-4 h-4 bg-white rounded-full absolute top-1 left-1"
+                                    animate={{ x: settings.isPrivate ? 24 : 0 }}
+                                />
+                            </button>
+                        </div>
+
                         <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5">
                             <h4 className="font-bold text-sm mb-2">Exportar mis datos</h4>
                             <p className="text-[10px] text-slate-500 mb-3">

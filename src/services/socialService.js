@@ -115,6 +115,7 @@ export const socialService = {
         const usersRef = collection(db, 'users');
         const q = query(
             usersRef,
+            where('isPrivate', '!=', true),
             where('displayName', '>=', searchTerm),
             where('displayName', '<=', searchTerm + '\uf8ff'),
             limit(10)
@@ -160,7 +161,7 @@ export const socialService = {
      * Create activity post from completed workout
      */
     async createActivityPost(userId, userData, workoutData) {
-        if (!userId || !workoutData) return;
+        if (!userId || !workoutData || userData?.isPrivate) return;
 
         const postData = {
             userId,
@@ -206,7 +207,14 @@ export const socialService = {
 
         // This is a simplified version - in production use aggregated data
         const usersRef = collection(db, 'users');
-        const usersSnap = await getDocs(query(usersRef, orderBy('totalWorkouts', 'desc'), limit(10)));
+        const q = query(
+            usersRef,
+            where('isPrivate', '!=', true),
+            orderBy('isPrivate'),
+            orderBy('totalWorkouts', 'desc'),
+            limit(10)
+        );
+        const usersSnap = await getDocs(q);
 
         return usersSnap.docs.map((d, i) => ({
             rank: i + 1,
@@ -239,7 +247,7 @@ export const socialService = {
         const liveUsers = await Promise.all(
             liveWorkouts.map(async w => {
                 const userDoc = await getDoc(doc(db, 'users', w.userId));
-                if (userDoc.exists()) {
+                if (userDoc.exists() && !userDoc.data().isPrivate) {
                     return {
                         id: w.userId,
                         ...userDoc.data(),

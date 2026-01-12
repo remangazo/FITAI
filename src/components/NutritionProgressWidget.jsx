@@ -210,21 +210,21 @@ export default function NutritionProgressWidget({ activities: externalActivities
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div className="flex flex-col lg:flex-row gap-8 items-center">
                     {/* Left: Circle & Main Stats */}
-                    <div className="flex items-center gap-8">
-                        <div className="relative w-32 h-32 flex-shrink-0">
-                            <svg className="w-full h-full transform -rotate-90">
+                    <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 w-full lg:w-auto">
+                        <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex-shrink-0">
+                            <svg className="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 128 128">
                                 <circle
-                                    cx="64" cy="64" r="56"
-                                    stroke="rgba(255,255,255,0.05)" strokeWidth="12" fill="none"
+                                    cx="64" cy="64" r="54"
+                                    stroke="rgba(255,255,255,0.05)" strokeWidth="6" fill="none"
                                 />
                                 <motion.circle
-                                    cx="64" cy="64" r="56"
-                                    stroke="url(#nutriGradient)" strokeWidth="12" fill="none"
+                                    cx="64" cy="64" r="54"
+                                    stroke="url(#nutriGradient)" strokeWidth="8" fill="none"
                                     strokeLinecap="round"
-                                    initial={{ strokeDasharray: "351.8", strokeDashoffset: 351.8 }}
-                                    animate={{ strokeDashoffset: 351.8 - (351.8 * Math.min(100, progress) / 100) }}
+                                    initial={{ strokeDasharray: "339.29", strokeDashoffset: 339.29 }}
+                                    animate={{ strokeDashoffset: 339.29 - (339.29 * Math.min(100, progress) / 100) }}
                                     transition={{ duration: 1.5, ease: "easeOut" }}
                                 />
                                 <defs>
@@ -257,24 +257,28 @@ export default function NutritionProgressWidget({ activities: externalActivities
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className="flex-1 p-3 rounded-2xl bg-white/[0.03] border border-white/5 group/stat">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Zap size={10} className="text-indigo-400" />
-                                        <div className="text-[10px] text-slate-500 font-bold uppercase">Restante</div>
+                            <div className="flex items-stretch gap-4">
+                                <div className="flex-1 p-4 rounded-3xl bg-white/[0.03] border border-white/5 group/stat flex flex-col justify-center">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <div className="w-5 h-5 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                            <Zap size={10} className="text-indigo-400" />
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Restante</div>
                                     </div>
-                                    <div className={`text-sm font-black ${remaining > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {remaining} <span className="text-[8px] opacity-70">kcal</span>
+                                    <div className={`text-lg font-black ${remaining > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {remaining} <span className="text-[10px] opacity-70">kcal</span>
                                     </div>
                                 </div>
                                 {burned > 0 && (
-                                    <div className="flex-1 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 group/stat">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Flame size={10} className="text-emerald-400" />
-                                            <div className="text-[10px] text-emerald-500/70 font-bold uppercase">Bonus Actividad</div>
+                                    <div className="flex-1 p-4 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 group/stat flex flex-col justify-center">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <div className="w-5 h-5 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                                <Flame size={10} className="text-emerald-400" />
+                                            </div>
+                                            <div className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-wider">Bonus Entreno</div>
                                         </div>
-                                        <div className="text-sm font-black text-emerald-400">
-                                            +{burned} <span className="text-[8px] opacity-70">kcal</span>
+                                        <div className="text-lg font-black text-emerald-400">
+                                            +{burned} <span className="text-[10px] opacity-70">kcal</span>
                                         </div>
                                     </div>
                                 )}
@@ -356,6 +360,6 @@ export default function NutritionProgressWidget({ activities: externalActivities
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </motion.div >
     );
 }

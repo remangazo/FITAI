@@ -212,12 +212,16 @@ export const completeWorkout = async (workoutId, notes = '') => {
         const userDoc = await getDoc(doc(db, 'users', workout.userId));
         const userData = userDoc.exists() ? userDoc.data() : null;
 
-        await socialService.createActivityPost(workout.userId, userData, {
-            ...workout,
-            duration,
-            caloriesBurned: duration > 0 ? Math.round(0.08 * (workout.userWeight || 70) * duration) : 0
-        });
-        console.log('[WorkoutService] Workout posted to Community Feed');
+        if (userData && !userData.isPrivate) {
+            await socialService.createActivityPost(workout.userId, userData, {
+                ...workout,
+                duration,
+                caloriesBurned: duration > 0 ? Math.round(0.08 * (workout.userWeight || 70) * duration) : 0
+            });
+            console.log('[WorkoutService] Workout posted to Community Feed');
+        } else {
+            console.log('[WorkoutService] Skipping social post due to privacy settings');
+        }
     } catch (socialError) {
         console.error('[WorkoutService] Error posting to social feed:', socialError);
     }

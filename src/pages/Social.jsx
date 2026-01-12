@@ -341,20 +341,28 @@ const Social = () => {
                             <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl">
-                                        {profile?.name?.charAt(0) || '👤'}
+                                        {profile?.avatarUrl ? (
+                                            <img src={profile.avatarUrl} alt="Me" className="w-full h-full object-cover rounded-xl" />
+                                        ) : (
+                                            profile?.name?.charAt(0) || '👤'
+                                        )}
                                     </div>
                                     <div className="flex-1">
                                         <div className="font-bold text-white">{profile?.name || 'Tú'}</div>
-                                        <div className="text-xs text-slate-400">Tu posición actual</div>
+                                        <div className="text-xs text-slate-400">
+                                            {profile?.isPrivate ? 'Tu perfil es privado' : 'Tu posición actual'}
+                                        </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-2xl font-black text-blue-400">
-                                            #{!demoMode && leaderboardData.length > 0
-                                                ? (leaderboardData.findIndex(u => u.id === user?.uid) + 1 || '?')
-                                                : '6'}
+                                        <div className={`text-2xl font-black ${profile?.isPrivate ? 'text-slate-500' : 'text-blue-400'}`}>
+                                            {profile?.isPrivate
+                                                ? 'Oculto'
+                                                : (!demoMode && leaderboardData.length > 0
+                                                    ? (leaderboardData.findIndex(u => u.id === user?.uid) + 1 || '?')
+                                                    : '6')}
                                         </div>
                                         <div className="text-[10px] text-slate-500">
-                                            {!demoMode && leaderboardData.length > 0 ? 'En tiempo real' : '+2 esta semana'}
+                                            {profile?.isPrivate ? 'Activa la visibilidad en ajustes' : (!demoMode && leaderboardData.length > 0 ? 'En tiempo real' : '+2 esta semana')}
                                         </div>
                                     </div>
                                 </div>

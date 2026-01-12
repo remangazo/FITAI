@@ -456,8 +456,9 @@ export const generateRoutine = (userProfile = {}) => {
             allowedEquipment.push(EQUIPMENT.BODYWEIGHT);
         }
     } else {
-        const equipmentKey = userProfile.trainingLocation?.toLowerCase().includes('casa') ? 'home' :
-            userProfile.trainingLocation?.toLowerCase().includes('minimal') ? 'minimal' : 'gym';
+        const loc = String(userProfile.trainingLocation || '').toLowerCase();
+        const equipmentKey = loc.includes('casa') ? 'home' :
+            loc.includes('minimal') ? 'minimal' : 'gym';
         allowedEquipment = EQUIPMENT_MAP[equipmentKey] || EQUIPMENT_MAP['gym'];
     }
 

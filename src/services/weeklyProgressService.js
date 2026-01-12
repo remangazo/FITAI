@@ -6,20 +6,8 @@
 
 import { db } from '../config/firebase';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-
-/**
- * Obtener el inicio de la semana actual (lunes)
- */
-const getWeekStart = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Local midnight
-    const day = today.getDay();
-    // Monday as start (1), Sunday as end (0 -> 7)
-    const diff = today.getDate() - (day === 0 ? 6 : day - 1);
-    const monday = new Date(today);
-    monday.setDate(diff);
-    return monday;
-};
+import { getLocalDateString, getWeekStart } from '../utils/dateUtils';
+import { getWeeklyStats } from './workoutService';
 
 /**
  * Obtener array de fechas de la semana actual
@@ -30,8 +18,7 @@ const getWeekDates = () => {
     for (let i = 0; i < 7; i++) {
         const d = new Date(weekStart);
         d.setDate(weekStart.getDate() + i);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        dates.push(dateStr);
+        dates.push(getLocalDateString(d));
     }
     return dates;
 };
@@ -47,8 +34,7 @@ export const getWeeklyCalorieSummary = async (userId, targetCalories = 2000) => 
 
     try {
         const weekDates = getWeekDates();
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const today = getLocalDateString();
 
         // Obtener logs de nutrición de la semana
         const nutritionLogs = [];
@@ -77,36 +63,36 @@ export const getWeeklyCalorieSummary = async (userId, targetCalories = 2000) => 
             }
         }
 
-        // Calcular déficit acumulado
+        // Calcular déficit acumulado y estados diarios
         let totalDeficit = 0;
         let daysOnTarget = 0;
         let daysTracked = 0;
+        const dailyStats = weekDates.map(date => ({
+            date,
+            isTracked: false,
+            isOnTarget: false,
+            isFuture: date > today
+        }));
 
-        nutritionLogs.forEach(log => {
-            if (log.date > today) return;
-
+        nutritionLogs.forEach((log, index) => {
             const consumed = log.totalMacros?.calories || 0;
             const activities = log.activities || [];
             const burned = activities.reduce((sum, act) => sum + (act.caloriesBurned || 0), 0);
-
-            // Prioritize target from the log itself, fallback to profile target
             const dayTarget = Math.round(log.targetMacros?.calories || targetCalories);
 
-            // Solo contar el día si el usuario interactuó con la app (comió o entrenó)
             const hasActivity = consumed > 0 || activities.length > 0;
 
-            if (hasActivity) {
-                // Net = What you ate - What you burned extra
+            if (hasActivity && log.date <= today) {
                 const netCalories = consumed - burned;
                 const deficit = dayTarget - netCalories;
 
                 totalDeficit += deficit;
                 daysTracked++;
+                dailyStats[index].isTracked = true;
 
-                // En objetivo = dentro de un margen razonable del target (-200 a +100 kcal)
-                // O si simplemente no excedió drásticamente
                 if (netCalories <= dayTarget + 100 && netCalories >= dayTarget - 300) {
                     daysOnTarget++;
+                    dailyStats[index].isOnTarget = true;
                 }
             }
         });
@@ -116,6 +102,7 @@ export const getWeeklyCalorieSummary = async (userId, targetCalories = 2000) => 
             daysOnTarget,
             daysTracked,
             weekDates,
+            dailyStats,
             isDeficit: totalDeficit > 0
         };
     } catch (error) {
@@ -265,15 +252,17 @@ export const getExerciseProgression = async (userId) => {
  * Obtener resumen completo de progreso semanal
  */
 export const getWeeklyProgressSummary = async (userId, targetCalories) => {
-    const [calorieSummary, todayWorkout, exerciseProgression] = await Promise.all([
+    const [calorieSummary, todayWorkout, exerciseProgression, trainingStats] = await Promise.all([
         getWeeklyCalorieSummary(userId, targetCalories),
         getTodayWorkout(userId),
-        getExerciseProgression(userId)
+        getExerciseProgression(userId),
+        getWeeklyStats(userId)
     ]);
 
     return {
         calories: calorieSummary,
         todayWorkout,
-        progression: exerciseProgression
+        progression: exerciseProgression,
+        training: trainingStats
     };
 };

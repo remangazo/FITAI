@@ -292,22 +292,41 @@ export default function NutritionProgressWidget({ activities: externalActivities
                         {/* Weekly Micro Chart/Indicator */}
                         {calorieSummary && (
                             <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/5">
-                                <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-widest">
-                                    <span className="text-slate-500">Adherencia Semanal</span>
-                                    <span className="text-indigo-400">{calorieSummary.daysOnTarget}/7 DÍAS</span>
+                                <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        <span>Consistencia Semanal</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Dumbbell size={10} className="text-indigo-400" />
+                                        <span className="text-indigo-400">
+                                            {weeklyProgress?.training?.workoutsThisWeek || 0} entrenos
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="flex gap-1.5 h-2">
-                                    {[0, 1, 2, 3, 4, 5, 6].map(i => (
-                                        <div
-                                            key={i}
-                                            className={`flex-1 rounded-full transition-all duration-700 ${i < calorieSummary.daysOnTarget
-                                                ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
-                                                : i < calorieSummary.daysTracked
-                                                    ? 'bg-red-500/40'
-                                                    : 'bg-white/5'
-                                                }`}
-                                        />
-                                    ))}
+                                    {(calorieSummary.dailyStats || [0, 1, 2, 3, 4, 5, 6]).map((day, i) => {
+                                        const isAdherent = day?.isOnTarget;
+                                        const isTracked = day?.isTracked;
+                                        const isFuture = day?.isFuture;
+
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`flex-1 rounded-full transition-all duration-700 ${isAdherent
+                                                    ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+                                                    : isTracked
+                                                        ? 'bg-red-500/40' // Marked but missed goal
+                                                        : isFuture
+                                                            ? 'bg-white/5'
+                                                            : 'bg-white/[0.03]' // Past day without log
+                                                    }`}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-3 flex justify-between text-[9px] font-black text-slate-600 uppercase tracking-widest px-0.5">
+                                    <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
                                 </div>
                             </div>
                         )}

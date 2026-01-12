@@ -14,6 +14,19 @@ export const getLocalDateString = (date = new Date()) => {
 };
 
 /**
+ * Obtener el inicio de la semana actual (lunes) en hora local
+ */
+export const getWeekStart = (date = new Date()) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay();
+    // Monday as 1, Sunday as 7. If Sunday (0), we need to go back 6 days.
+    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
+    d.setDate(diff);
+    return d;
+};
+
+/**
  * Get weekday name in Spanish
  */
 export const getDayName = (date = new Date()) => {

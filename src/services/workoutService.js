@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { calculateActivityCalories } from './metabolicCalculator';
 import { addActivityToLog } from './nutritionService';
+import { getWeekStart } from '../utils/dateUtils';
 
 /**
  * Start a new workout session
@@ -355,12 +356,12 @@ export const getWeeklyStats = async (userId) => {
     try {
         const workouts = await getWorkoutHistory(userId, 20);
 
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const weekStart = getWeekStart();
 
         const thisWeek = workouts.filter(w => {
-            const date = w.startTime instanceof Date ? w.startTime : new Date(w.startTime);
-            return date >= oneWeekAgo;
+            const date = w.startTime instanceof Date ? w.startTime :
+                (w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime));
+            return date >= weekStart;
         });
         const totalVolume = thisWeek.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
         const avgDuration = thisWeek.length > 0

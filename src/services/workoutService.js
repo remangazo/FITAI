@@ -18,6 +18,7 @@ import { addActivityToLog } from './nutritionService';
 import { getWeekStart } from '../utils/dateUtils';
 import { progressiveOverloadService } from './progressiveOverloadService';
 import { badgeService } from './badgeService';
+import { socialService } from './socialService';
 
 /**
  * Start a new workout session
@@ -204,6 +205,21 @@ export const completeWorkout = async (workoutId, notes = '') => {
         }
     } catch (gamifyError) {
         console.error('[WorkoutService] Error in gamification flow:', gamifyError);
+    }
+
+    // SOCIAL: Publicar entrenamiento en el muro de la comunidad
+    try {
+        const userDoc = await getDoc(doc(db, 'users', workout.userId));
+        const userData = userDoc.exists() ? userDoc.data() : null;
+
+        await socialService.createActivityPost(workout.userId, userData, {
+            ...workout,
+            duration,
+            caloriesBurned: duration > 0 ? Math.round(0.08 * (workout.userWeight || 70) * duration) : 0
+        });
+        console.log('[WorkoutService] Workout posted to Community Feed');
+    } catch (socialError) {
+        console.error('[WorkoutService] Error posting to social feed:', socialError);
     }
 
     return {

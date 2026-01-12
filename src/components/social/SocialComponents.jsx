@@ -90,8 +90,11 @@ export const ActivityCard = ({ activity, onKudos }) => {
             <div className="p-5 flex items-center gap-4 relative z-10">
                 <div className="relative">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20">
-                        <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-xl overflow-hidden">
-                            {user.avatar}
+                        <div
+                            className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-xl overflow-hidden bg-cover bg-center"
+                            style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : {}}
+                        >
+                            {!user.avatarUrl && user.avatar}
                         </div>
                     </div>
                     {user.isPremium && (
@@ -295,8 +298,11 @@ export const LeaderboardCard = ({ data, category, onCategoryChange }) => {
                         className="flex-1 flex flex-col justify-end group cursor-pointer"
                     >
                         <div className="text-center mb-2 group-hover:-translate-y-1 transition-transform">
-                            <div className="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-slate-400 mx-auto flex items-center justify-center text-3xl shadow-xl shadow-slate-900/40">
-                                {data[1].avatar}
+                            <div
+                                className="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-slate-400 mx-auto flex items-center justify-center text-3xl shadow-xl shadow-slate-900/40 overflow-hidden bg-cover bg-center"
+                                style={data[1].avatarUrl ? { backgroundImage: `url(${data[1].avatarUrl})` } : {}}
+                            >
+                                {!data[1].avatarUrl && data[1].avatar}
                             </div>
                             <div className="mt-3">
                                 <span className="block text-[10px] font-black text-white uppercase tracking-tighter truncate px-1">{data[1].name.split(' ')[0]}</span>
@@ -327,8 +333,11 @@ export const LeaderboardCard = ({ data, category, onCategoryChange }) => {
 
                         <div className="text-center mb-2 group-hover:-translate-y-2 transition-transform duration-500">
                             <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[2px] shadow-2xl shadow-amber-500/20 mx-auto animate-pulse-subtle">
-                                <div className="w-full h-full rounded-[26px] bg-slate-900 flex items-center justify-center text-5xl border border-white/10">
-                                    {data[0].avatar}
+                                <div
+                                    className="w-full h-full rounded-[26px] bg-slate-900 flex items-center justify-center text-5xl border border-white/10 overflow-hidden bg-cover bg-center"
+                                    style={data[0].avatarUrl ? { backgroundImage: `url(${data[0].avatarUrl})` } : {}}
+                                >
+                                    {!data[0].avatarUrl && data[0].avatar}
                                 </div>
                             </div>
                             <div className="mt-4">
@@ -352,8 +361,11 @@ export const LeaderboardCard = ({ data, category, onCategoryChange }) => {
                         className="flex-1 flex flex-col justify-end group cursor-pointer"
                     >
                         <div className="text-center mb-2 group-hover:-translate-y-1 transition-transform">
-                            <div className="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-amber-800/60 mx-auto flex items-center justify-center text-3xl shadow-xl shadow-slate-900/40">
-                                {data[2].avatar}
+                            <div
+                                className="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-amber-800/60 mx-auto flex items-center justify-center text-3xl shadow-xl shadow-slate-900/40 overflow-hidden bg-cover bg-center"
+                                style={data[2].avatarUrl ? { backgroundImage: `url(${data[2].avatarUrl})` } : {}}
+                            >
+                                {!data[2].avatarUrl && data[2].avatar}
                             </div>
                             <div className="mt-3">
                                 <span className="block text-[10px] font-black text-white uppercase tracking-tighter truncate px-1">{data[2].name.split(' ')[0]}</span>
@@ -378,8 +390,11 @@ export const LeaderboardCard = ({ data, category, onCategoryChange }) => {
                         className="flex items-center gap-4 bg-white/[0.03] p-3 rounded-2xl border border-white/5 hover:bg-white/[0.06] transition-all hover:translate-x-1 group"
                     >
                         <div className="w-6 text-[10px] font-black text-slate-500 text-center group-hover:text-white transition-colors">#{i + 4}</div>
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center shadow-lg text-xl">
-                            {user.avatar}
+                        <div
+                            className="w-10 h-10 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center shadow-lg text-xl overflow-hidden bg-cover bg-center"
+                            style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : {}}
+                        >
+                            {!user.avatarUrl && user.avatar}
                         </div>
                         <div className="flex-1 min-w-0">
                             <span className="block text-[13px] font-bold text-white truncate tracking-tight">{user.name}</span>
@@ -425,8 +440,11 @@ export const LiveTrainingSection = ({ liveUsers }) => {
                             <div className="absolute inset-0 rounded-[20px] bg-slate-950 z-[1]" />
 
                             {/* Avatar Container */}
-                            <div className="relative z-[2] w-16 h-16 rounded-[18px] overflow-hidden bg-slate-800 flex items-center justify-center text-3xl border border-white/10 shadow-inner">
-                                {user.avatar}
+                            <div
+                                className="relative z-[2] w-16 h-16 rounded-[18px] overflow-hidden bg-slate-800 flex items-center justify-center text-3xl border border-white/10 shadow-inner bg-cover bg-center"
+                                style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : {}}
+                            >
+                                {!user.avatarUrl && user.avatar}
 
                                 {/* Live Indicator Overlay */}
                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />

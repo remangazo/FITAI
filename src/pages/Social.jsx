@@ -44,6 +44,7 @@ const Social = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [myFollowing, setMyFollowing] = useState(new Set());
     const [feedPosts, setFeedPosts] = useState([]);
+    const [leaderboardData, setLeaderboardData] = useState([]);
     const [demoMode, setDemoMode] = useState(false); // Demo mode disabled by default
     const [liveUsersList, setLiveUsersList] = useState([]);
     const [leaderboardCategory, setLeaderboardCategory] = useState('workouts');
@@ -82,7 +83,10 @@ const Social = () => {
             loadFeed();
             loadLiveUsers();
         }
-    }, [activeTab, demoMode]);
+        if (activeTab === 'leaderboard' && !demoMode) {
+            loadLeaderboard();
+        }
+    }, [activeTab, demoMode, leaderboardCategory]);
 
     const loadLiveUsers = async () => {
         if (!user) return;
@@ -90,14 +94,73 @@ const Social = () => {
         setLiveUsersList(live);
     };
 
+    const loadLeaderboard = async () => {
+        try {
+            const data = await socialService.getLeaderboard(leaderboardCategory);
+            const mapped = data.map(u => ({
+                id: u.id,
+                name: u.displayName || 'Atleta',
+                avatar: u.displayName?.charAt(0) || '👤',
+                avatarUrl: u.photoURL,
+                value: leaderboardCategory === 'workouts' ? (u.totalWorkouts || 0) : (u.totalVolume || 0),
+                unit: leaderboardCategory === 'workouts' ? 'Wkts' : 'kg',
+                level: u.level || 1
+            }));
+            setLeaderboardData(mapped);
+        } catch (error) {
+            console.error('[Social] Error loading leaderboard:', error);
+        }
+    };
+
+    const formatTimeAgo = (date) => {
+        if (!date) return 'Recientemente';
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) return 'Hace un momento';
+        if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)}m`;
+        if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)}h`;
+        return date.toLocaleDateString();
+    };
+
     const loadFeed = async () => {
-        const posts = await socialService.getSocialFeed();
-        setFeedPosts(posts);
+        try {
+            const posts = await socialService.getSocialFeed();
+            // Map posts to ActivityCard format
+            const mappedPosts = posts.map(post => ({
+                id: post.id,
+                type: 'workout',
+                user: {
+                    name: post.userName || 'Usuario',
+                    avatarUrl: post.userPhoto,
+                    avatar: post.userName?.charAt(0) || 'U',
+                    level: post.userLevel || 1,
+                    isPremium: false,
+                    isLive: false // Feed posts are historical
+                },
+                workout: {
+                    name: post.workout?.name || 'Entrenamiento',
+                    duration: post.workout?.duration || 0,
+                    calories: post.workout?.calories || 0,
+                    totalSets: post.workout?.totalSets || 0,
+                    exercises: post.workout?.exercises || [],
+                    prs: post.workout?.prs || []
+                },
+                timeAgo: formatTimeAgo(post.createdAt?.toDate?.() || post.createdAt)
+            }));
+            setFeedPosts(mappedPosts);
+        } catch (error) {
+            console.error('[Social] Error loading feed:', error);
+        }
     };
 
     const handleKudos = (activityId) => {
         console.log('Kudos given to:', activityId);
-        // In real mode, call socialService.giveKudos(user.uid, activityId)
+        if (!user) return;
+        socialService.giveKudos(user.uid, activityId, {
+            displayName: profile?.name || user.displayName,
+            photoURL: profile?.photoURL || user.photoURL
+        });
     };
 
     const handleConnectBuddy = (buddy) => {
@@ -156,7 +219,7 @@ const Social = () => {
                 </div>
 
                 {/* Stories Style Section */}
-                {demoMode && liveUsers.length > 0 && (
+                {liveUsers.length > 0 && (
                     <div className="py-2">
                         <LiveTrainingSection liveUsers={liveUsers} />
                     </div>
@@ -228,23 +291,33 @@ const Social = () => {
                                         ))}
                                     </div>
                                 </>
-                            ) : feedPosts.length > 0 ? (
-                                feedPosts.map(post => (
-                                    <div key={post.id} className="bg-slate-800/30 border border-white/5 rounded-2xl p-4">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-8 h-8 rounded-full bg-slate-700 bg-cover" style={{ backgroundImage: `url(${post.userPhoto})` }} />
-                                            <span className="font-bold text-white text-sm">{post.userName}</span>
-                                            <span className="text-xs text-slate-500">• {new Date(post.createdAt?.toDate()).toLocaleDateString()}</span>
-                                        </div>
-                                        <p className="text-slate-300 text-sm mb-2">{post.content}</p>
-                                    </div>
-                                ))
                             ) : (
-                                <EmptyFeedEnhanced
-                                    onExplore={() => setActiveTab('explore')}
-                                    onInvite={() => console.log('Invite friends')}
-                                    onEnableDemo={() => setDemoMode(true)}
-                                />
+                                <div className="space-y-4">
+                                    {/* Real Posts First */}
+                                    {feedPosts.map(post => (
+                                        <ActivityCard
+                                            key={post.id}
+                                            activity={post}
+                                            onKudos={() => handleKudos(post.id)}
+                                        />
+                                    ))}
+
+                                    {/* Then Fill with Demo */}
+                                    <div className="pt-4 border-t border-white/5">
+                                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 px-2">
+                                            Sugerencias de la Comunidad
+                                        </h3>
+                                        <div className="space-y-4 opacity-80">
+                                            {DEMO_ACTIVITIES.slice(0, 3).map(activity => (
+                                                <ActivityCard
+                                                    key={activity.id}
+                                                    activity={activity}
+                                                    onKudos={() => handleKudos(activity.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </motion.div>
                     )}
@@ -258,25 +331,11 @@ const Social = () => {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-4"
                         >
-                            {demoMode ? (
-                                <LeaderboardCard
-                                    data={DEMO_LEADERBOARD[leaderboardCategory]}
-                                    category={leaderboardCategory}
-                                    onCategoryChange={setLeaderboardCategory}
-                                />
-                            ) : (
-                                <div className="text-center py-12 bg-slate-800/30 rounded-2xl border border-dashed border-white/10">
-                                    <Trophy size={32} className="mx-auto mb-3 text-slate-500" />
-                                    <h3 className="text-white font-medium mb-1">Leaderboard no disponible</h3>
-                                    <p className="text-slate-500 text-sm">Activa el modo demo para ver el ranking</p>
-                                    <button
-                                        onClick={() => setDemoMode(true)}
-                                        className="mt-4 text-blue-400 text-sm font-bold hover:underline"
-                                    >
-                                        Activar demo
-                                    </button>
-                                </div>
-                            )}
+                            <LeaderboardCard
+                                data={demoMode ? DEMO_LEADERBOARD[leaderboardCategory] : (leaderboardData.length > 0 ? leaderboardData : DEMO_LEADERBOARD[leaderboardCategory])}
+                                category={leaderboardCategory}
+                                onCategoryChange={setLeaderboardCategory}
+                            />
 
                             {/* Your Position */}
                             <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-4">
@@ -289,8 +348,14 @@ const Social = () => {
                                         <div className="text-xs text-slate-400">Tu posición actual</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-2xl font-black text-blue-400">#6</div>
-                                        <div className="text-[10px] text-slate-500">+2 esta semana</div>
+                                        <div className="text-2xl font-black text-blue-400">
+                                            #{!demoMode && leaderboardData.length > 0
+                                                ? (leaderboardData.findIndex(u => u.id === user?.uid) + 1 || '?')
+                                                : '6'}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500">
+                                            {!demoMode && leaderboardData.length > 0 ? 'En tiempo real' : '+2 esta semana'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

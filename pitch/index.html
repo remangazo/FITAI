@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitAI Pitch | The Future of Fitness</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700;800&family=Outfit:wght@900&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #030712;
+            --primary: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --card-glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --glow: rgba(99, 102, 241, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #818cf8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Visual Elements */
+        .blob {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .grid-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Layout */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: 0;
+        }
+
+        .badge-premium {
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 10vw, 7rem);
+            line-height: 0.85;
+            margin-bottom: 2rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            font-weight: 500;
+        }
+
+        /* Grid System */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .glass-card {
+            background: var(--card-glass);
+            border: 1px solid var(--border);
+            border-radius: 2.5rem;
+            padding: 3.5rem;
+            backdrop-filter: blur(12px);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(129, 140, 248, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-8px);
+        }
+
+        .glass-card i {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .glass-card h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .glass-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Revenue Items */
+        .revenue-list {
+            margin-top: 1.5rem;
+            list-style: none;
+        }
+
+        .revenue-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .revenue-list li span {
+            flex: 1;
+        }
+
+        .revenue-list li i {
+            color: var(--secondary);
+            margin-bottom: 0;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        /* Special Bento Sizes */
+        .col-6 {
+            grid-column: span 6;
+        }
+
+        .col-4 {
+            grid-column: span 4;
+        }
+
+        .col-8 {
+            grid-column: span 8;
+        }
+
+        .col-12 {
+            grid-column: span 12;
+        }
+
+        /* CTA Button */
+        .cta-premium {
+            background: var(--text-main);
+            color: var(--bg);
+            padding: 1.25rem 3rem;
+            border-radius: 1rem;
+            font-weight: 800;
+            font-size: 1.05rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .cta-premium:hover {
+            transform: scale(1.05);
+            background: #fff;
+            box-shadow: 0 0 60px rgba(129, 140, 248, 0.3);
+        }
+
+        /* Section Headings */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Footer */
+        footer {
+            padding: 6rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+
+            .col-4,
+            .col-6,
+            .col-8 {
+                grid-column: span 12;
+            }
+
+            .hero h1 {
+                font-size: 4rem;
+            }
+        }
+
+        /* Animation */
+        @keyframes reveal {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal {
+            animation: reveal 1s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="grid-pattern"></div>
+    <div class="blob" style="top: -10%; right: -10%;"></div>
+    <div class="blob" style="bottom: 10%; left: -10%; opacity: 0.5;"></div>
+
+    <!-- Header / Nav -->
+    <nav
+        style="padding: 2rem; display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 1.5rem;">
+            <i data-lucide="zap" fill="white"></i> FITAI <span
+                style="color: var(--primary); font-weight: 400;">PRO</span>
+        </div>
+        <a href="mailto:socios@fitai.com" class="cta-premium"
+            style="padding: 0.75rem 1.5rem; font-size: 0.85rem;">CONVERTIRSE EN SOCIO</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="section hero">
+        <div class="reveal">
+            <span class="badge-premium"><i data-lucide="sparkles" size="14"></i> Oportunidad Founder 2026</span>
+            <h1>Tu Marca es el Activo.<br><span class="gradient-text">FitAI es el Motor.</span></h1>
+            <p>La tecnología diseñada para que los líderes del fitness conviertan su autoridad en un negocio de alto
+                rendimiento, escalable y 100% propio.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="#vision" class="cta-premium">VER PROPUESTA</a>
+                <a href="#audit"
+                    style="color: var(--text-dim); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
+                    AUDITORÍA TECNOLÓGICA <i data-lucide="arrow-right" size="18"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vision / The Problem -->
+    <section id="vision" class="section">
+        <div class="section-header">
+            <span style="color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em;">La
+                Disrupción</span>
+            <h2>El problema de los $0.40 CPM</h2>
+            <p>Vender planes es fácil. Construir una infraestructura tecnológica que automatice tu conocimiento y
+                proteja
+                tu negocio frente a los algoritmos de las redes es lo que te hace un verdadero Founder.</p>
+        </div>
+
+        <div class="bento-grid">
+            <div class="glass-card col-4">
+                <i data-lucide="trending-down" size="32"></i>
+                <h3>Planes Estáticos</h3>
+                <p>El modelo antiguo de vender planes fijos está quedando atrás. El usuario hoy exige personalización
+                    que
+                    evolucione con él.</p>
+            </div>
+            <div class="glass-card col-4">
+                <i data-lucide="users-2" size="32"></i>
+                <h3>Baja Retención</h3>
+                <p>Tener seguidores no es tener una comunidad activa. FitAI crea micro-transacciones y retos que
+                    mantienen al
+                    usuario comprometido a diario.</p>
+            </div>
+            <div class="glass-card col-4">
+                <i data-lucide="lock" size="32"></i>
+                <h3>Propiedad de Datos</h3>
+                <p>Si Instagram cierra hoy, ¿qué te queda? FitAI te da la base de datos, el comportamiento y el control
+                    total.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Middle Statement -->
+    <section class="section"
+        style="text-align: center; background: radial-gradient(circle at center, rgba(129, 140, 248, 0.05) 0%, transparent 70%);">
+        <h2 style="font-size: clamp(2rem, 5vw, 4rem); max-width: 1000px; margin: 0 auto;">"Cualquiera puede crear una
+            app. <br>Pocos pueden convertir su <span class="gradient-text">Marca Personal</span> en una plataforma
+            tecnológica de ingresos pasivos."</h2>
+    </section>
+
+    <!-- Tech Audit Section - Non Technical -->
+    <section id="audit" class="section" style="border-top: 1px solid var(--border);">
+        <div class="section-header">
+            <span
+                style="color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em;">Auditoría
+                Tecnológica</span>
+            <h2>El Motor bajo el Capó</h2>
+            <p>Construimos sobre la misma infraestructura que usan gigantes como Google y Stripe. Potencia total sin
+                complicaciones.</p>
+        </div>
+
+        <div class="bento-grid">
+            <div class="glass-card col-4">
+                <i data-lucide="cpu" size="32"></i>
+                <h3>Cerebro de Nueva Generación</h3>
+                <p>Usamos Inteligencia Artificial avanzada que no solo "responde", sino que entiende tu metodología y la
+                    de tus alumnos de forma personalizada.</p>
+            </div>
+            <div class="glass-card col-4">
+                <i data-lucide="rocket" size="32"></i>
+                <h3>Escalabilidad Infinita</h3>
+                <p>Nuestra plataforma está diseñada para pasar de 100 a 100,000 usuarios en segundos sin caídas. No hay
+                    límites para el tamaño de tu comunidad.</p>
+            </div>
+            <div class="glass-card col-4">
+                <i data-lucide="shield-check" size="32"></i>
+                <h3>Bóveda de Seguridad</h3>
+                <p>Protegemos tu propiedad intelectual y los datos de tus clientes con encriptación de grado militar. Tu
+                    negocio está a salvo de ataques y filtraciones.</p>
+            </div>
+            <div class="glass-card col-12"
+                style="background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, transparent 100%);">
+                <div style="display: flex; gap: 3rem; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <i data-lucide="calculator" size="40"></i>
+                        <h3>Precisión Matemática Determinística</h3>
+                        <p style="font-size: 1.1rem; line-height: 1.8;">A diferencia de otras apps que confían
+                            ciegamente en la IA, FitAI utiliza un <strong>Motor de Cálculo Propietario</strong> que
+                            actúa como filtro de verdad científica. La IA es creativa, pero la nutrición es exacta.</p>
+
+                        <div
+                            style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                            <div>
+                                <h4
+                                    style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                                    El Filtro de Verdad</h4>
+                                <p style="font-size: 0.9rem; color: var(--text-dim);">Nuestro algoritmo interno calcula
+                                    tus macros y requerimientos calóricos con precisión clínica <strong>antes</strong>
+                                    de que la IA genere cualquier receta, eliminando por completo las "alucinaciones" de
+                                    datos nutricionales.</p>
+                            </div>
+                            <div>
+                                <h4
+                                    style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                                    Gestión de Alto Rendimiento</h4>
+                                <p style="font-size: 0.9rem; color: var(--text-dim);">Los servicios internos de la app
+                                    gestionan la carga, el progreso y la evolución del plan automáticamente, permitiendo
+                                    que un solo coach maneje miles de perfiles con precisión individual.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="flex: 0.4; min-width: 250px; background: rgba(0,0,0,0.2); border-radius: 2rem; padding: 2rem; border: 1px solid var(--border);">
+                        <div style="margin-bottom: 1.5rem;">
+                            <span
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--primary); font-weight: 700;">Estado
+                                del Motor</span>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 0.5rem;">
+                                <div
+                                    style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%; box-shadow: 0 0 10px var(--secondary);">
+                                </div>
+                                <span style="font-size: 0.9rem; font-weight: 700;">Precisión > 99.98%</span>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-dim); font-style: italic;">"La IA diseña la
+                            experiencia, nuestra matemática garantiza el resultado."</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card col-12" style="background: rgba(129, 140, 248, 0.05);">
+                <div
+                    style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 2rem; align-items: center;">
+                    <div style="text-align: center;">
+                        <span style="display: block; font-size: 2.5rem; font-weight: 800; color: #fff;">99.9%</span>
+                        <span
+                            style="text-transform: uppercase; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.1em;">Disponibilidad
+                            Total</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="display: block; font-size: 2.5rem; font-weight: 800; color: #fff;">Global</span>
+                        <span
+                            style="text-transform: uppercase; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.1em;">Infraestructura
+                            en la Nube</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="display: block; font-size: 2.5rem; font-weight: 800; color: #fff;">Secure</span>
+                        <span
+                            style="text-transform: uppercase; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.1em;">Pagos
+                            y Datos Protegidos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Models - THE MEAT -->
+    <section id="models" class="section">
+        <div class="section-header">
+            <span style="color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em;">The
+                Growth Engine</span>
+            <h2>Cómo Protagonizas el Mercado</h2>
+            <p>Diseñamos un sistema donde tu imagen es el centro y la tecnología se encarga del resto.</p>
+        </div>
+
+        <div class="bento-grid">
+            <!-- SaaS -->
+            <div class="glass-card col-6">
+                <div>
+                    <i data-lucide="repeat" size="40"></i>
+                    <h3>1. Tu Suscripción Élite</h3>
+                    <p>Ingresos recurrentes directos por tu conocimiento premium y acceso a tu metodología IA.</p>
+                </div>
+                <ul class="revenue-list">
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>Socio Pro</strong>: Plan mensual
+                            para usuarios que buscan resultados rápidos.</span></li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>FitAI Annual</strong>: Máximo LTV
+                            (Lifetime Value) con pago único por adelantado.</span></li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>Family/Team Plans</strong>:
+                            Expansión viral a grupos de amigos y familiares.</span></li>
+                </ul>
+            </div>
+
+            <!-- B2B Brands & Marketplace -->
+            <div class="glass-card col-6"
+                style="background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), transparent);">
+                <i data-lucide="shopping-cart" size="40"></i>
+                <h3>2. Tu Marketplace Global</h3>
+                <p>Monetiza cada recomendación vendiendo tus propios productos o cobrando comisiones a marcas aliadas.
+                </p>
+                <ul class="revenue-list">
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>Tu Merch</strong>: Margen 100% tuyo
+                            integrando tu propia tienda física o digital.</span></li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>Dropshipping</strong>: Comisiones
+                            por cada venta generada a marcas externas.</span></li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>Spotlights</strong>: Notificaciones
+                            directas sugiriendo el producto exacto en su dieta.</span></li>
+                </ul>
+            </div>
+
+            <!-- Coaching Ecosystem -->
+            <div class="glass-card col-4">
+                <i data-lucide="shield-check" size="40"></i>
+                <h3>3. Tu Academia Escalable</h3>
+                <p>Permite que otros coaches usen tu infraestructura para gestionar a sus alumnos.</p>
+                <ul class="revenue-list">
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span>Fee recurrente por usar la plataforma de
+                            gestión.</span></li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span>% de comisión por cada alumno que el coach
+                            traiga.</span></li>
+                </ul>
+            </div>
+
+            <!-- Social Hub / Ecosystem -->
+            <div class="glass-card col-4">
+                <i data-lucide="youtube" size="40"></i>
+                <h3>4. Ecosistema Circular</h3>
+                <p>Tu contenido social es el motor. FitAI lo potencia y lo devuelve con tráfico de alta calidad.</p>
+                <ul class="revenue-list">
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>YouTube Synergy</strong>: Usamos
+                            tus videos para el catálogo, impulsando millones de views a tus canales principales.</span>
+                    </li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span><strong>Streaming Hub</strong>: Anuncia tus
+                            canales de Live (Twitch/YouTube) directamente a los usuarios durante sus sesiones.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Data & Tech -->
+            <div class="glass-card col-4">
+                <i data-lucide="brain-circuit" size="40"></i>
+                <h3>5. Inteligencia de Audiencia</h3>
+                <p>Convierte el comportamiento de tus fans en datos estratégicos para el mercado.</p>
+                <ul class="revenue-list">
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span>Reportes estratégicos de consumo para
+                            marcas.</span></li>
+                    <li><i data-lucide="check-circle-2" size="16"></i> <span>Análisis de mercado en tiempo real.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- White Label -->
+            <div class="glass-card col-12"
+                style="background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, transparent 100%);">
+                <div style="display: flex; gap: 3rem; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <i data-lucide="layers" size="40"></i>
+                        <h3>6. Licencia de tu Metodología</h3>
+                        <p>Venta de tu sistema a grandes corporaciones y cadenas de gimnasios que buscan tu sello de
+                            autoridad.</p>
+                    </div>
+                    <div style="flex: 1; min-width: 300px; display: flex; gap: 1rem;">
+                        <div
+                            style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 1.5rem; text-align: center; flex: 1;">
+                            <span style="font-size: 2rem; font-weight: 800; color: var(--secondary);">$10k+</span>
+                            <span
+                                style="display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim);">Precio
+                                de Licencia Base</span>
+                        </div>
+                        <div
+                            style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 1.5rem; text-align: center; flex: 1;">
+                            <span style="font-size: 2rem; font-weight: 800; color: var(--secondary);">80%</span>
+                            <span
+                                style="display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim);">Margen
+                                Neto Estimado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team / Call to action -->
+    <section class="section" style="padding-bottom: 12rem;">
+        <div class="glass-card col-12"
+            style="padding: 5rem; text-align: center; border-radius: 4rem; background: radial-gradient(circle at top right, rgba(129, 140, 248, 0.2), transparent);">
+            <h2 style="font-size: 4rem; margin-bottom: 2rem;">¿Quieres ser el co-dueño <br>de la próxima gran Tech
+                Fitness?</h2>
+            <p style="font-size: 1.4rem; color: var(--text-dim); max-width: 800px; margin: 0 auto 4rem;">Buscamos
+                alianzas exclusivas con socios que no solo tengan alcance, sino visión. Estamos seleccionando solo 2
+                socios estratégicos para Q1-Q2 2026.</p>
+            <a href="mailto:socios@fitai.com" class="cta-premium" style="padding: 2rem 5rem; font-size: 1.5rem;">APLICAR
+                PARA SOCIO FUNDADOR</a>
+            <p style="margin-top: 2rem; font-weight: 700; color: var(--secondary);">PLAZAS LIMITADAS • SE REQUIERE
+                REVISIÓN DE PERFIL SOCIAL</p>
+        </div>
+    </section>
+
+    <footer>
+        <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 2rem;">
+            <i data-lucide="instagram"></i>
+            <i data-lucide="twitter"></i>
+            <i data-lucide="linkedin"></i>
+        </div>
+        <p style="font-weight: 800; letter-spacing: 0.1em; color: var(--text-dim);">FITAI PRO &copy; 2026 | BUILT FOR
+            LEGENDS</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Simple Intersection Observer for reveal effect
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.glass-card, .section-header').forEach(el => {
+            el.style.opacity = '0'; // Initial state for reveal
+            observer.observe(el);
+        });
+
+        // Add class to handle opacity in CSS
+        document.querySelectorAll('.glass-card, .section-header').forEach(el => {
+            el.classList.add('item-to-reveal');
+        });
+    </script>
+    <style>
+        .item-to-reveal.reveal {
+            opacity: 1 !important;
+            transition: opacity 1s, transform 1s;
+        }
+    </style>
+</body>
+
+</html>

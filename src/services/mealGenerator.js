@@ -69,42 +69,23 @@ FORMATO JSON:
 Responde SOLO con el JSON.`;
 
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': window.location.origin || 'http://localhost:5173',
-                'X-Title': 'FitAI Personal'
-            },
-            body: JSON.stringify({
-                model: OPENROUTER_MODEL,
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.8,
-                max_tokens: 1000
-            })
+        const { generateWithOpenRouter } = await import('./openrouterService');
+
+        // El proxy espera (type, userData) o podemos usar callAiProxy directamente
+        // Para máxima flexibilidad en mealGenerator, usaremos la lógica de openrouterService
+        const response = await generateWithOpenRouter('meal_recipe', {
+            mealType,
+            calories,
+            macros,
+            culture,
+            avoid,
+            dayName,
+            varietySeed,
+            customSystemPrompt: systemPrompt,
+            customUserPrompt: userPrompt
         });
 
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const text = data.choices[0].message.content;
-
-        // Extraer JSON
-        let cleanText = text.trim();
-        const firstBrace = cleanText.indexOf('{');
-        const lastBrace = cleanText.lastIndexOf('}');
-
-        if (firstBrace !== -1 && lastBrace !== -1) {
-            cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-        }
-
-        return JSON.parse(cleanText);
+        return response;
 
     } catch (error) {
         console.error('[MealGenerator] Error:', error);

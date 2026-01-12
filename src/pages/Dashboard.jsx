@@ -29,6 +29,7 @@ const NutritionProgressWidget = React.lazy(() => import('../components/Nutrition
 const InstallAppButton = React.lazy(() => import('../components/InstallAppButton'));
 const ActivityTracker = React.lazy(() => import('../components/ActivityTracker'));
 const InteractiveGuide = React.lazy(() => import('../components/InteractiveGuide'));
+const InfluencerLiveBanner = React.lazy(() => import('../components/InfluencerLiveBanner'));
 import {
     Dumbbell,
     Utensils,
@@ -90,6 +91,13 @@ export default function Dashboard() {
     const [expandedDiet, setExpandedDiet] = useState(null);
     const [workoutSummary, setWorkoutSummary] = useState(null); // Para modal de resumen post-entrenamiento
     const [showAIThinking, setShowAIThinking] = useState(false); // Para animación de "IA pensando"
+    const [streamInfo, setStreamInfo] = useState({
+        isLive: true, // Simulado para demostración
+        platform: 'YouTube',
+        streamUrl: 'https://youtube.com/@fitai_oficial',
+        coachName: 'Coach Pro',
+        coachAvatar: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&q=80&w=150&h=150'
+    });
 
     // Global Modal Back-Button Handler
     useEffect(() => {
@@ -557,13 +565,32 @@ export default function Dashboard() {
                 </nav>
 
                 <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-4 sm:space-y-8">
+                    {/* Streaming Live Banner - Real-time Hub */}
+                    <InfluencerLiveBanner
+                        isLive={streamInfo.isLive}
+                        platform={streamInfo.platform}
+                        streamUrl={streamInfo.streamUrl}
+                        coachName={streamInfo.coachName}
+                        coachAvatar={streamInfo.coachAvatar}
+                    />
                     {/* Welcome Header - Compact on mobile */}
                     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                         <div className="flex items-center gap-3 sm:gap-6">
                             <div className="relative">
                                 <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
                                     <div className="w-full h-full rounded-[10px] sm:rounded-[22px] bg-slate-900 flex items-center justify-center overflow-hidden border border-white/5">
-                                        <User className="text-slate-400" size={20} />
+                                        {profile?.avatarUrl ? (
+                                            <img
+                                                src={profile.avatarUrl}
+                                                alt={profile.name}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'block';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <User className={`${profile?.avatarUrl ? 'hidden' : 'block'} text-slate-400`} size={20} />
                                     </div>
                                 </div>
                             </div>

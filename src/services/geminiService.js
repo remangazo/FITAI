@@ -88,18 +88,18 @@ export const analyzeRoutineFromImage = async (base64Image) => {
     }
 };
 
-// Función para verificar si la API está funcionando
+// Función para verificar si la API está funcionando vía Proxy
 export const testGeminiConnection = async () => {
-    if (!genAI) {
-        return { success: false, error: "API Key no configurada" };
-    }
-
     try {
-        const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-        const result = await model.generateContent("Di exactamente: OK");
-        const text = await result.response.text();
-        return { success: true, model: MODEL_NAME, response: text.trim() };
+        const result = await callAiProxy('calculateMacros', { foodDescription: "1 huevo" });
+        return { success: true, response: "OK", data: result };
     } catch (error) {
-        return { success: false, error: error.message, model: MODEL_NAME };
+        return { success: false, error: error.message };
     }
+};
+
+// Helper interno para consistencia
+const callAiProxy = async (action, data) => {
+    const { callAiProxy: centralProxy } = await import('./openrouterService');
+    return await centralProxy(action, data);
 };

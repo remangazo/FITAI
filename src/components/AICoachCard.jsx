@@ -551,6 +551,24 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
             <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-indigo-600/10 blur-[120px] pointer-events-none" />
             <div className="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-emerald-600/10 blur-[120px] pointer-events-none" />
 
+            {/* Top Right Actions (Absolute) - Optimization per user request to save space on mobile */}
+            <div className="absolute top-4 right-4 md:top-8 md:right-8 z-30 flex items-center gap-2">
+                {recommendations?.streak > 0 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400">
+                        <Flame size={12} fill="currentColor" className="md:w-3.5 md:h-3.5" />
+                        <span className="text-[10px] md:text-xs font-black">{recommendations.streak}d</span>
+                    </div>
+                )}
+                <motion.button
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={handleRefresh}
+                    title="Analizar de nuevo"
+                    className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md"
+                >
+                    <RefreshCw size={14} className={`md:w-[18px] md:h-[18px] ${loading ? "animate-spin" : ""}`} />
+                </motion.button>
+            </div>
+
             {/* Header Content */}
             <div className="relative z-10 p-6 md:p-8">
                 <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -584,23 +602,6 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                                 <p className="text-indigo-400/80 font-bold text-sm">
                                     {recommendations.activePlanSummary || "Optimizando tu progreso"}
                                 </p>
-                            </div>
-
-                            <div className="flex items-center justify-center gap-3">
-                                {recommendations.streak > 0 && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400">
-                                        <Flame size={14} fill="currentColor" />
-                                        <span className="text-xs font-black">{recommendations.streak}d</span>
-                                    </div>
-                                )}
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                    onClick={handleRefresh}
-                                    title="Analizar de nuevo"
-                                    className="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-                                >
-                                    <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                                </motion.button>
                             </div>
                         </div>
 

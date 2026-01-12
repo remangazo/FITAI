@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Check, Plus, X, Clock, Flame, AlertTriangle,
     ChevronDown, ChevronUp, Trash2, Sparkles, Loader2,
-    Calendar, Utensils, Zap, Droplets, Beef, Wheat, Apple
+    Calendar, Utensils, Zap, Droplets, Beef, Wheat, Apple,
+    ShoppingBag, Info
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -528,6 +529,13 @@ function MealItem({ meal, index, completed, expanded, extras, onToggle, onExpand
                                     </div>
                                 </div>
                             )}
+
+                            {/* Contextual Offer - Non-invasive suggestion */}
+                            <ContextualOffer
+                                meal={meal}
+                                index={index}
+                                completedCount={dailyLog.completedMeals?.length || 0}
+                            />
                         </div>
                     </motion.div>
                 )}
@@ -664,5 +672,74 @@ function AddFoodModal({ mealName, onAdd, onClose }) {
                 </div>
             </motion.div>
         </div>
+    );
+}
+
+/**
+ * ContextualOffer Component
+ * Suggests a product based on meal context (time, macros, type)
+ * Designed to be non-obtrusive and helpful.
+ */
+function ContextualOffer({ meal, index, completedCount }) {
+    // 1. Inteligencia Sensorial: No mostrar sugerencias hasta que el usuario haya interactuado mínimamente (mín. 2 comidas completadas hoy)
+    // Esto evita la sensación de "publicidad inmediata" en la primera experiencia.
+    if (completedCount < 2) return null;
+
+    // 2. Frecuencia Controlada: Solo un 30% de probabilidad de aparecer en comidas elegibles
+    // Usamos el índice para que la decisión sea persistente por sesión si se desea, pero aquí usamos random para dinamismo.
+    const showChance = React.useMemo(() => Math.random() > 0.7, []);
+    if (!showChance) return null;
+
+    const getOffer = (meal, idx) => {
+        const protein = Number(meal.macros?.protein || 0);
+        const name = (meal.name || '').toLowerCase();
+
+        // Reglas de Valor Real (Solo sugerir si hay un beneficio claro)
+        if (protein > 25) {
+            return {
+                id: 'creatina',
+                title: 'Refuerzo de Recuperación',
+                desc: 'Esta comida es rica en proteína. La creatina optimiza la síntesis en estas ventanas.',
+                icon: <Zap size={14} className="text-slate-500" />,
+                action: 'Ver más'
+            };
+        }
+
+        if (idx === 0 || name.includes('desayuno')) {
+            return {
+                id: 'preworkout',
+                title: 'Optimización Genética',
+                desc: 'Activa tu metabolismo matutino con micronutrientes específicos.',
+                icon: <Sparkles size={14} className="text-slate-500" />,
+                action: 'Explorar'
+            };
+        }
+
+        return null; // Si no hay un "match" perfecto, mejor no mostrar nada
+    };
+
+    const offer = getOffer(meal, index);
+    if (!offer) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 p-4 rounded-[24px] bg-white/[0.01] border border-white/5 flex items-center gap-4 group cursor-pointer hover:bg-white/[0.03] transition-all"
+        >
+            <div className="p-2.5 bg-slate-900/50 rounded-xl text-slate-600 border border-white/5">
+                {offer.icon}
+            </div>
+            <div className="flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Sugerencia Inteligente</span>
+                </div>
+                <h6 className="text-[12px] font-bold text-slate-400 tracking-tight leading-tight">{offer.title}</h6>
+                <p className="text-[10px] text-slate-500 font-medium leading-tight">{offer.desc}</p>
+            </div>
+            <button className="text-[9px] font-black text-indigo-400/50 uppercase tracking-widest group-hover:text-indigo-400 transition-all px-3">
+                {offer.action}
+            </button>
+        </motion.div>
     );
 }

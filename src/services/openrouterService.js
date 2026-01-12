@@ -33,12 +33,22 @@ const callAiProxy = async (action, data) => {
 };
 
 /**
- * Genera rutinas o dietas
+ * Genera rutinas o dietas (Proxy centralizado)
  */
 export const generateWithOpenRouter = async (type, userData) => {
-    const action = type === 'routine' ? 'generateRoutine' : 'generateDiet';
+    // Si el tipo es uno de los predefinidos, mapeamos a la acción del backend
+    // Si no, usamos el tipo recibido directamente (ej: 'meal_recipe')
+    const actionMap = {
+        'routine': 'generateRoutine',
+        'diet': 'generateDiet'
+    };
+
+    const action = actionMap[type] || type;
     return await callAiProxy(action, userData);
 };
+
+// También exportamos callAiProxy para máxima flexibilidad
+export { callAiProxy };
 
 /**
  * Analiza el progreso del entrenamiento

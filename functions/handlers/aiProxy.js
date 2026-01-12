@@ -14,6 +14,7 @@ const RATE_LIMITS = {
     analyzeProgress: { windowMs: 60000, maxRequests: 5 },
     verifyProof: { windowMs: 60000, maxRequests: 5 },
     analyzeRoutineFromImage: { windowMs: 60000, maxRequests: 10 },
+    meal_recipe: { windowMs: 60000, maxRequests: 20 },
 };
 
 // Premium Limits (Monthly)
@@ -223,6 +224,9 @@ module.exports = async (req, res) => {
                 break;
             case "analyzeRoutineFromImage":
                 result = await handleAnalyzeRoutineFromImage(data);
+                break;
+            case "meal_recipe":
+                result = await handleMealRecipe(data);
                 break;
             default:
                 return res.status(400).json({ error: `Unknown action: ${action}` });
@@ -484,4 +488,22 @@ async function handleAnalyzeRoutineFromImage(data) {
         return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
     }
     throw new Error("No se pudo extraer el JSON de la imagen.");
+}
+
+async function handleMealRecipe(data) {
+    const { customSystemPrompt, customUserPrompt } = data;
+
+    if (!customSystemPrompt || !customUserPrompt) {
+        throw new Error("Prompts are required for meal_recipe");
+    }
+
+    const response = await callOpenRouter(customUserPrompt, customSystemPrompt);
+
+    // Intentar extraer el JSON
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+        return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
+    }
+
+    return response;
 }

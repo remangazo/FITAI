@@ -36,64 +36,76 @@ export const getWeeklyCalorieSummary = async (userId, targetCalories = 2000) => 
         const weekDates = getWeekDates();
         const today = getLocalDateString();
 
-        // Obtener logs de nutrición de la semana
-        const nutritionLogs = [];
-        for (const date of weekDates) {
-            if (date > today) continue; // No contar días futuros
+        // 1. Obtener entrenamientos completados del usuario (pocos documentos, filtrado manual seguro)
+        const workoutsQuery = query(
+            collection(db, 'workouts'),
+            where('userId', '==', userId),
+            where('status', '==', 'completed')
+        );
+        const workoutsSnap = await getDocs(workoutsQuery);
+        const trainingDays = new Set();
+        workoutsSnap.forEach(doc => {
+            const data = doc.data();
+            const date = data.startTime?.toDate?.() || new Date(data.startTime);
+            const dateStr = getLocalDateString(date);
+            trainingDays.add(dateStr);
+        });
 
-            try {
-                // CORRECCIÓN: Usar colección 'nutritionLogs' de nivel superior
+        // 2. Obtener logs de nutrición (usando bucle para evitar problemas de índice compuesto)
+        let totalDeficit = 0;
+        let daysOnTarget = 0;
+        let daysTracked = 0;
+
+        const dailyStatsPromises = weekDates.map(async (date) => {
+            const isFuture = date > today;
+            let log = null;
+
+            if (!isFuture) {
                 const q = query(
                     collection(db, 'nutritionLogs'),
                     where('userId', '==', userId),
                     where('date', '==', date)
                 );
                 const querySnapshot = await getDocs(q);
-
                 if (!querySnapshot.empty) {
-                    nutritionLogs.push({
-                        date,
-                        ...querySnapshot.docs[0].data()
-                    });
-                } else {
-                    nutritionLogs.push({ date, totalMacros: { calories: 0 }, activities: [] });
+                    log = querySnapshot.docs[0].data();
                 }
-            } catch (e) {
-                nutritionLogs.push({ date, totalMacros: { calories: 0 }, activities: [] });
             }
-        }
 
-        // Calcular déficit acumulado y estados diarios
-        let totalDeficit = 0;
-        let daysOnTarget = 0;
-        let daysTracked = 0;
-        const dailyStats = weekDates.map(date => ({
-            date,
-            isTracked: false,
-            isOnTarget: false,
-            isFuture: date > today
-        }));
-
-        nutritionLogs.forEach((log, index) => {
-            const consumed = log.totalMacros?.calories || 0;
-            const activities = log.activities || [];
+            const hasTraining = trainingDays.has(date);
+            const consumed = log?.totalMacros?.calories || 0;
+            const activities = log?.activities || [];
             const burned = activities.reduce((sum, act) => sum + (act.caloriesBurned || 0), 0);
-            const dayTarget = Math.round(log.targetMacros?.calories || targetCalories);
+            const dayTarget = Math.round(log?.targetMacros?.calories || targetCalories);
 
-            const hasActivity = consumed > 0 || activities.length > 0;
+            const isTracked = (consumed > 0 || hasTraining) && !isFuture;
+            let isOnTarget = false;
 
-            if (hasActivity && log.date <= today) {
+            if (isTracked) {
                 const netCalories = consumed - burned;
-                const deficit = dayTarget - netCalories;
-
-                totalDeficit += deficit;
-                daysTracked++;
-                dailyStats[index].isTracked = true;
-
                 if (netCalories <= dayTarget + 100 && netCalories >= dayTarget - 300) {
-                    daysOnTarget++;
-                    dailyStats[index].isOnTarget = true;
+                    isOnTarget = true;
                 }
+            }
+
+            return {
+                date,
+                isTracked,
+                isOnTarget,
+                hasTraining,
+                isFuture,
+                deficit: isTracked ? (dayTarget - (consumed - burned)) : 0
+            };
+        });
+
+        const dailyStats = await Promise.all(dailyStatsPromises);
+
+        // Calcular totales finales
+        dailyStats.forEach(stat => {
+            if (stat.isTracked) {
+                daysTracked++;
+                totalDeficit += stat.deficit;
+                if (stat.isOnTarget) daysOnTarget++;
             }
         });
 

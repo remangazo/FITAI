@@ -27,7 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
 import { getDailyNutritionLog, setDailyMeals, setDailyTargetMacros } from '../services/nutritionService';
 import { getWeeklyProgressSummary } from '../services/weeklyProgressService';
-import { getLocalDateString, getDayName } from '../utils/dateUtils';
+import { getLocalDateString, getDayName, getWeekStart } from '../utils/dateUtils';
 
 export default function NutritionProgressWidget({ activities: externalActivities }) {
     const navigate = useNavigate();
@@ -306,9 +306,23 @@ export default function NutritionProgressWidget({ activities: externalActivities
                                 </div>
                                 <div className="flex gap-1.5 h-2">
                                     {(calorieSummary.dailyStats || [0, 1, 2, 3, 4, 5, 6]).map((day, i) => {
-                                        const isAdherent = day?.isOnTarget;
-                                        const isTracked = day?.isTracked;
-                                        const isFuture = day?.isFuture;
+                                        // Extraer fecha del día de la semana (Lunes es 0)
+                                        const weekStart = getWeekStart();
+                                        const d = new Date(weekStart);
+                                        d.setDate(weekStart.getDate() + i);
+                                        const dayStr = getLocalDateString(d);
+                                        const todayStr = getLocalDateString();
+
+                                        // Verificar entrenamiento para ese día específico en los datos ya cargados
+                                        const hasTraining = weeklyProgress?.training?.workouts?.some(w => {
+                                            const wDate = w.startTime instanceof Date ? w.startTime :
+                                                (w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime));
+                                            return getLocalDateString(wDate) === dayStr;
+                                        });
+
+                                        const isAdherent = day?.isOnTarget || hasTraining;
+                                        const isTracked = day?.isTracked || hasTraining; // Un día con entreno es un día registrado
+                                        const isFuture = dayStr > todayStr;
 
                                         return (
                                             <div
@@ -316,11 +330,12 @@ export default function NutritionProgressWidget({ activities: externalActivities
                                                 className={`flex-1 rounded-full transition-all duration-700 ${isAdherent
                                                     ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
                                                     : isTracked
-                                                        ? 'bg-red-500/40' // Marked but missed goal
+                                                        ? 'bg-red-500/40'
                                                         : isFuture
                                                             ? 'bg-white/5'
-                                                            : 'bg-white/[0.03]' // Past day without log
+                                                            : 'bg-white/[0.03]'
                                                     }`}
+                                                title={`${dayStr}: ${hasTraining ? 'Entrenado' : ''} ${day?.isOnTarget ? 'En objetivo' : ''}`}
                                             />
                                         );
                                     })}

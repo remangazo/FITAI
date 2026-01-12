@@ -274,6 +274,13 @@ const selectExercisesForMuscle = (muscleGroup, count, usedIds, config) => {
         !injuredMuscles.includes(muscleGroup)
     );
 
+    // Prioridad ELITE: Si hay ejercicios del COACH, darles preferencia
+    const coachExercises = available.filter(ex => ex.coachSource === true);
+    if (coachExercises.length > 0) {
+        // Mezclamos los del coach para que no siempre sea el mismo
+        available = [...coachExercises, ...available];
+    }
+
     if (available.length === 0) {
         available = EXERCISES.filter(ex =>
             ex.muscleGroup === muscleGroup &&

@@ -956,6 +956,155 @@ export const EXERCISES = [
         defaultReps: '12 c/lado',
         techniques: [],
         notes: 'Resistir la rotacion. Core activado.'
+    },
+    // ==================== COACH ELITE EXERCISES (PRO) ====================
+    {
+        id: 'coach_shoulders_pec_fly_posterior',
+        name: 'Vuelos posteriores en maquina pectorales',
+        muscleGroup: MUSCLE_GROUPS.SHOULDERS,
+        equipment: EQUIPMENT.MACHINE,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 4,
+        defaultReps: '15-12',
+        techniques: ['dropset'],
+        coachSource: true,
+        notes: '+ 2 drops al 25% cada uno al fallo. Pecho apoyado.'
+    },
+    {
+        id: 'coach_biceps_hammer_rope_low',
+        name: 'Martillo con soga en polea baja',
+        muscleGroup: MUSCLE_GROUPS.BICEPS,
+        equipment: EQUIPMENT.CABLE,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 4,
+        defaultReps: '12-10',
+        techniques: ['dropset'],
+        coachSource: true,
+        notes: 'Mantener codos fijos. 1.30 min descanso.'
+    },
+    {
+        id: 'coach_back_v_grip_machine_row',
+        name: 'Remo en maquina agarre V',
+        muscleGroup: MUSCLE_GROUPS.BACK,
+        equipment: EQUIPMENT.MACHINE,
+        type: EXERCISE_TYPE.COMPOUND,
+        defaultSets: 4,
+        defaultReps: '12-10',
+        techniques: ['dropset'],
+        coachSource: true,
+        notes: '+ 2 drops al 25% cada uno al fallo. Retraccion maxima.'
+    },
+    {
+        id: 'coach_triceps_extension_rope_overhead',
+        name: 'Extension triceps tras nuca con soga polea alta',
+        muscleGroup: MUSCLE_GROUPS.TRICEPS,
+        equipment: EQUIPMENT.CABLE,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 4,
+        defaultReps: '12-10',
+        coachSource: true,
+        notes: 'Inclinacion hacia adelante. Codos cerrados.'
+    },
+    {
+        id: 'coach_legs_bulgarian_db_elite',
+        name: 'Sentadilla bulgara con mancuernas (Elite)',
+        muscleGroup: MUSCLE_GROUPS.LEGS_QUAD,
+        equipment: EQUIPMENT.DUMBBELL,
+        type: EXERCISE_TYPE.COMPOUND,
+        defaultSets: 3,
+        defaultReps: '10-8',
+        coachSource: true,
+        notes: 'Pie trasero elevado. Enfoque en profundidad y control.'
+    },
+    {
+        id: 'coach_abs_crunch_weighted_neck',
+        name: 'ABS Crunch con peso tras nuca',
+        muscleGroup: MUSCLE_GROUPS.CORE,
+        equipment: EQUIPMENT.DUMBBELL,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 3,
+        defaultReps: '15',
+        coachSource: true,
+        notes: 'Peso de 5-10kg tras la nuca. Exhalar arriba.'
+    },
+    {
+        id: 'coach_glute_kickback_machine_elite',
+        name: 'Patada de gluteos en maquina/polea',
+        muscleGroup: MUSCLE_GROUPS.LEGS_HAM,
+        equipment: EQUIPMENT.CABLE,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 3,
+        defaultReps: '10-8',
+        coachSource: true,
+        notes: 'Controlar el regreso. Apretar gluteo 1".'
+    },
+    {
+        id: 'coach_back_lat_pulldown_v_grip',
+        name: 'Jalones neutros con agarre V',
+        muscleGroup: MUSCLE_GROUPS.BACK,
+        equipment: EQUIPMENT.CABLE,
+        type: EXERCISE_TYPE.COMPOUND,
+        defaultSets: 3,
+        defaultReps: '10-8',
+        techniques: ['dropset'],
+        coachSource: true,
+        notes: 'Tirar hacia la parte alta del pecho.'
+    },
+    {
+        id: 'coach_legs_squat_smith_elite',
+        name: 'Sentadilla en Smith (Elite)',
+        muscleGroup: MUSCLE_GROUPS.LEGS_QUAD,
+        equipment: EQUIPMENT.SMITH,
+        type: EXERCISE_TYPE.COMPOUND,
+        defaultSets: 4,
+        defaultReps: '12-10',
+        coachSource: true,
+        notes: '2x10 calentamiento. Controlar el descenso.'
+    },
+    {
+        id: 'coach_legs_hip_thrust_barbell_elite',
+        name: 'Hip Thrust con barra (Elite)',
+        muscleGroup: MUSCLE_GROUPS.LEGS_HAM,
+        equipment: EQUIPMENT.BARBELL,
+        type: EXERCISE_TYPE.COMPOUND,
+        defaultSets: 4,
+        defaultReps: '12-10',
+        coachSource: true,
+        notes: 'Apretar gluteo 2" arriba en cada rep.'
+    },
+    {
+        id: 'coach_chest_press_incline_smith_elite',
+        name: 'Press inclinado 45° en Smith (Elite)',
+        muscleGroup: MUSCLE_GROUPS.CHEST,
+        equipment: EQUIPMENT.SMITH,
+        type: EXERCISE_TYPE.COMPOUND,
+        defaultSets: 3,
+        defaultReps: '12-10',
+        techniques: ['dropset'],
+        coachSource: true,
+        notes: '+ 2 drops x fallo. Enfoque pectoral superior.'
+    },
+    {
+        id: 'coach_triceps_french_press_db_neutro',
+        name: 'Frances tumbado con mancuernas agarre neutro',
+        muscleGroup: MUSCLE_GROUPS.TRICEPS,
+        equipment: EQUIPMENT.DUMBBELL,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 3,
+        defaultReps: '12-10',
+        coachSource: true,
+        notes: 'Bajar las mancuernas a los lados de la frente.'
+    },
+    {
+        id: 'coach_biceps_curl_z_bar_preacher',
+        name: 'Curl predicador con barra Z (Elite)',
+        muscleGroup: MUSCLE_GROUPS.BICEPS,
+        equipment: EQUIPMENT.BARBELL,
+        type: EXERCISE_TYPE.ISOLATION,
+        defaultSets: 3,
+        defaultReps: '12-10',
+        coachSource: true,
+        notes: 'Extender brazo casi completo sin bloquear codos.'
     }
 ];
 

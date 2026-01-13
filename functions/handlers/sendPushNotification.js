@@ -55,6 +55,12 @@ const NOTIFICATION_TEMPLATES = {
         body: 'Tu coach te ha asignado un nuevo plan de entrenamiento. ¡A darle con todo!',
         icon: '/logo192.png',
         click_action: '/dashboard'
+    },
+    coach_welcome: {
+        title: '🧔‍♂️ ¡Bienvenido a FitAI Partners!',
+        body: 'Tu torre de control está lista. Descubre cómo escalar tu negocio con IA.',
+        icon: '/logo192.png',
+        click_action: '/coach-dashboard'
     }
 };
 

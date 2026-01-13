@@ -38,7 +38,13 @@ const welcomeEmail = async (user) => {
                             <h2>Hola, ${userName} 👋</h2>
                             <p>Bienvenido a <span class="highlight">FitAI</span>. Has dado el primer paso para hackear tu biología y llevar tu rendimiento al siguiente nivel.</p>
                             <p>Nuestra inteligencia artificial ya está analizando los datos para crear tu primer plan de entrenamiento y nutrición 100% adaptativo.</p>
-                            <h3>¿Qué sigue ahora?</h3>
+                            
+                            <div style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 20px; margin: 25px 0; border-radius: 0 12px 12px 0;">
+                                <p style="margin: 0; font-weight: 700; color: #ffffff;">⚠️ IMPORTANTE PARA TU EVOLUCIÓN</p>
+                                <p style="margin: 5px 0 0 0; font-size: 14px; color: #a1a1aa;">Para que la IA pueda realizar un seguimiento preciso y ajustar tus cargas en tiempo real, es **crucial** que mantengas tus datos biométricos y registros de entrenamiento actualizados en la app.</p>
+                            </div>
+
+                            <h3>¿Qué sigue ahora??</h3>
                             <ul>
                                 <li>Completa tu perfil metabólico en la app.</li>
                                 <li>Genera tu primera rutina IA.</li>

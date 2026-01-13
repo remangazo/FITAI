@@ -1,8 +1,8 @@
-const { onRequest } = require("firebase-functions/v2/https");
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
-const { onUserCreated } = require("firebase-functions/v2/auth");
-// const { onSchedule } = require("firebase-functions/v2/scheduler"); // Requires GCP Cloud Scheduler API
-const { setGlobalOptions } = require("firebase-functions/v2");
+const v2 = require("firebase-functions/v2");
+const { onRequest } = v2.https;
+const { onDocumentCreated, onDocumentUpdated } = v2.firestore;
+const { setGlobalOptions } = v2;
+const { auth } = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -21,6 +21,7 @@ const aiProxy = require("./handlers/aiProxy");
 const { exportUserData, deleteUserAccount } = require("./handlers/gdpr");
 const { onUserPremiumConversion, onStudentOnboardingComplete } = require("./handlers/trainerRewards");
 const welcomeEmail = require("./handlers/welcomeEmail");
+const coachWelcomeEmail = require("./handlers/coachWelcomeEmail");
 
 // Existing handlers
 exports.generateRoutine = onRequest(generateRoutine);
@@ -53,9 +54,13 @@ exports.onStudentOnboardingComplete = onDocumentUpdated("users/{userId}", (event
     return onStudentOnboardingComplete(event, { params: event.params });
 });
 
+exports.onCoachCreated = onDocumentCreated("trainers/{trainerId}", (event) => {
+    return coachWelcomeEmail(event.data.data(), event.params.trainerId);
+});
+
 // Authentication Triggers
-exports.onUserCreated = onUserCreated((event) => {
-    return welcomeEmail(event.data);
+exports.onUserCreated = auth.user().onCreate((user) => {
+    return welcomeEmail(user);
 });
 
 // TODO: Enable after configuring GCP Cloud Scheduler API

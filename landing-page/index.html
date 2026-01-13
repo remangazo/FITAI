@@ -183,7 +183,7 @@
 <body class="bg-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-indigo/30">
 
     <!-- Nav -->
-    <nav x-data="{ scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
+    <nav x-data="{ scrolled: false, openTrainerModal: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
         :class="{ 'glass-dark py-4': scrolled, 'py-8': !scrolled }"
         class="fixed top-0 w-full z-[100] px-6 md:px-12 flex justify-between items-center transition-all duration-500">
         <div class="flex items-center gap-2">
@@ -610,6 +610,32 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- B2B CTA for Trainers (Moved & Resized) -->
+                <div class="mt-20 p-8 md:p-12 bg-gradient-to-br from-brand-indigo/15 via-brand-violet/5 to-transparent border border-brand-indigo/20 rounded-[32px] relative overflow-hidden group reveal-up"
+                    x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
+                    <div
+                        class="absolute top-0 right-0 w-[300px] h-[300px] bg-brand-indigo/10 blur-[80px] -translate-y-1/2 translate-x-1/2">
+                    </div>
+
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+                        <div class="text-center md:text-left space-y-4">
+                            <h3
+                                class="text-3xl md:text-5xl font-display font-black uppercase italic tracking-tighter leading-none">
+                                ¿SOS ENTRENADOR <br> <span class="shimmer-indigo">PERSONAL?</span>
+                            </h3>
+                            <p class="text-lg text-white/40 font-medium max-w-xl">
+                                Únete a nuestra red de élite. Accede a herramientas de gestión de última generación y
+                                escala
+                                tu negocio llegando a acuerdos estratégicos directamente con nosotros.
+                            </p>
+                        </div>
+                        <button @click="$dispatch('open-trainer-modal')"
+                            class="flex-shrink-0 bg-white text-dark px-10 py-6 text-lg font-black uppercase tracking-tighter hover:bg-brand-indigo hover:text-white transition-all transform hover:-rotate-2 shadow-xl shadow-indigo-500/10">
+                            CONOCER MÁS
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -854,6 +880,68 @@
             </div>
         </div>
     </footer>
+
+    <!-- Trainer Modal Overlay -->
+    <div x-data="{ show: false }" x-show="show" @open-trainer-modal.window="show = true" x-cloak
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-dark/95 backdrop-blur-xl" @click="show = false"></div>
+
+        <div x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-90"
+            x-transition:enter-end="opacity-100 scale-100"
+            class="relative bg-dark-card border border-white/10 rounded-[40px] w-full max-w-2xl overflow-hidden shadow-2xl">
+
+            <button @click="show = false"
+                class="absolute top-8 right-8 text-white/20 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+
+            <div class="p-12 md:p-16 space-y-12 text-white">
+                <div class="space-y-4">
+                    <h3 class="text-4xl font-display font-black italic uppercase tracking-tighter shimmer-indigo">
+                        ALIANZA ESTRATÉGICA</h3>
+                    <p class="text-white/40 font-medium">Completa tus datos y nuestro equipo se pondrá en contacto
+                        contigo para presentarte las oportunidades de acuerdo profesional.</p>
+                </div>
+
+                <form class="space-y-6"
+                    @submit.prevent="alert('¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.'); show = false">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-white/40">Nombre
+                                Completo</label>
+                            <input type="text" required
+                                class="w-full bg-white/5 border border-white/10 p-5 focus:border-brand-indigo outline-none transition-colors rounded-xl text-white">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-white/40">Correo
+                                Electrónico</label>
+                            <input type="email" required
+                                class="w-full bg-white/5 border border-white/10 p-5 focus:border-brand-indigo outline-none transition-colors rounded-xl text-white">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-white/40">Especialidad /
+                            Enlace a Redes</label>
+                        <input type="text" placeholder="Ej: Hipertrofia, Crossfit, @tuusuario"
+                            class="w-full bg-white/5 border border-white/10 p-5 focus:border-brand-indigo outline-none transition-colors rounded-xl text-white">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-white/40">Contanos tus
+                            objetivos</label>
+                        <textarea rows="4"
+                            class="w-full bg-white/5 border border-white/10 p-5 focus:border-brand-indigo outline-none transition-colors rounded-xl text-white resize-none"></textarea>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-brand-indigo text-white py-8 font-black uppercase tracking-tighter hover:bg-white hover:text-dark transition-all shadow-xl shadow-indigo-500/20">
+                        SOLICITAR INFORMACIÓN
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         lucide.createIcons();

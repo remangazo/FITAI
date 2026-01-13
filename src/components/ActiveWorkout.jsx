@@ -21,6 +21,7 @@ import { calculateSmartWeightSync } from '../services/weightSuggestionService';
 import { EXERCISES } from '../data/exercises';
 import { getExerciseVideo } from '../services/exerciseMappingService';
 import { Video } from 'lucide-react';
+import voiceService from '../services/voiceService';
 
 export default function ActiveWorkout({ routine, onClose, onComplete }) {
     const { user, profile } = useAuth();
@@ -65,6 +66,8 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
                     try {
                         const audio = new Audio('/notification.mp3');
                         audio.play().catch(() => { });
+                        // Voice announcement for resuming
+                        voiceService.speak("¡Tiempo cumplido! Vamos con la siguiente.");
                     } catch (e) { }
                     return null;
                 }
@@ -194,6 +197,9 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
             setWorkout(workoutData);
             setShowDaySelector(false);
             setElapsedTime(0); // Reset timer for new workout
+
+            // Voice announcement
+            voiceService.speak(`Comenzando entrenamiento de ${workoutData.dayName || 'hoy'}. ¡A darle con todo!`);
         } catch (error) {
             console.error('[ActiveWorkout] Error starting:', error);
             alert('Error al iniciar entrenamiento');
@@ -220,6 +226,14 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
 
             // Start rest timer
             setRestTimer(restSeconds);
+
+            // Voice announcement
+            const isLastSet = (updated.exercises[exerciseIndex].sets?.length || 0) >= (updated.exercises[exerciseIndex].targetSets || 4);
+            if (isLastSet) {
+                voiceService.speak(`¡Excelente! Terminaste el ejercicio. Descansá ${restSeconds} segundos.`);
+            } else {
+                voiceService.speak(`Serie completada. Descansá ${restSeconds} segundos.`);
+            }
         } catch (error) {
             console.error('[ActiveWorkout] Error logging set:', error);
         } finally {
@@ -244,6 +258,9 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
                 );
                 console.log('[ActiveWorkout] Day marked as completed');
             }
+
+            // Voice announcement
+            voiceService.speak("¡Entrenamiento completado! Felicitaciones, lo diste todo.");
 
             onComplete?.(summary);
         } catch (error) {
@@ -372,7 +389,7 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
                                 <button
                                     key={index}
                                     onClick={() => setSelectedDay(index)}
-                                    className={`w-full p-5 rounded-[32px] border-2 text-left transition-all relative overflow-hidden group ${isSelected
+                                    className={`w-full p-4 rounded-[32px] border-2 text-left transition-all relative overflow-hidden group ${isSelected
                                         ? 'border-indigo-500 bg-indigo-500/10 ring-4 ring-indigo-500/10'
                                         : isCompleted
                                             ? 'border-emerald-500/30 bg-emerald-500/[0.03]'
@@ -444,10 +461,10 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
 
                     <button
                         onClick={handleStartWorkout}
-                        className="w-full mt-8 bg-gradient-to-r from-indigo-600 to-violet-600 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 hover:from-indigo-500 hover:to-violet-500 transition-all text-white"
+                        className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:from-indigo-500 hover:to-violet-500 transition-all text-white shadow-lg shadow-indigo-500/20"
                     >
-                        <Play size={20} />
-                        {pendingWorkout ? 'Comenzar Nuevo' : 'Comenzar'} {routine.days?.[selectedDay]?.day || 'Entrenamiento'}
+                        <Play size={18} />
+                        {pendingWorkout ? 'Continuar' : 'Comenzar'} {routine.days?.[selectedDay]?.day || 'Entrenamiento'}
                     </button>
                 </div>
             </div>
@@ -457,7 +474,7 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
 
     // Main Workout UI
     return (
-        <div className="fixed inset-0 bg-slate-950 z-[60] flex flex-col text-white">
+        <div className="fixed inset-0 bg-slate-950 z-[110] flex flex-col text-white">
             {/* Header with timer */}
             <header className="bg-slate-900 border-b border-white/10 p-4">
                 <div className="flex items-center justify-between">
@@ -549,7 +566,7 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
             </AnimatePresence>
 
             {/* Exercise List */}
-            <main className="flex-1 overflow-y-auto p-4 space-y-4">
+            <main className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
                 {workout?.exercises?.map((exercise, exIndex) => (
                     <ExerciseLogger
                         key={exIndex}
@@ -565,21 +582,29 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
             </main>
 
             {/* Footer */}
-            <footer className="bg-slate-900 border-t border-white/10 p-4">
-                <div className="flex gap-3">
-                    <div className="flex-1 bg-slate-800 rounded-2xl p-3">
-                        <div className="text-xs text-slate-500">Volumen Total</div>
-                        <div className="text-xl font-bold">
-                            {((workout?.totalVolume || 0) / 1000).toFixed(1)}k kg
+            <footer className="bg-slate-900/80 backdrop-blur-2xl border-t border-white/10 p-5 pb-10 md:pb-6 relative z-20">
+                {/* Subtle top glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+                <div className="flex gap-4">
+                    <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-[24px] p-4 border border-white/5 flex flex-col justify-center">
+                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Volumen</div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-black text-indigo-400">
+                                {((workout?.totalVolume || 0) / 1000).toFixed(1)}k
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-600">KG</span>
                         </div>
                     </div>
                     <button
                         onClick={handleCompleteWorkout}
                         disabled={saving || (workout?.totalSets || 0) === 0}
-                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-[1.5] bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 hover:brightness-110 active:scale-[0.98] py-4 rounded-[24px] font-black text-lg flex items-center justify-center gap-3 disabled:opacity-30 disabled:grayscale transition-all shadow-[0_10px_30px_rgba(16,185,129,0.3)] border-t border-white/20"
                     >
-                        <Check size={20} />
-                        Finalizar
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <Check size={18} strokeWidth={3} />
+                        </div>
+                        <span className="tracking-tight italic uppercase">Finalizar</span>
                     </button>
                 </div>
             </footer>

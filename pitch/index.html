@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitAI Pitch | The Future of Fitness</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700;800&family=Outfit:wght@900&display=swap"
         rel="stylesheet">
@@ -294,6 +295,72 @@
         .reveal {
             animation: reveal 1s ease-out forwards;
         }
+
+        /* Heartbeat & Glow Animations */
+        @keyframes heartbeat {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
+
+            20% {
+                left: 100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .badge-founder {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.2), rgba(99, 102, 241, 0.1));
+            border: 1px solid rgba(129, 140, 248, 0.4);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.2);
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+
+        .badge-founder::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(30deg);
+            animation: shine 4s infinite ease-in-out;
+        }
+
+        .badge-founder i {
+            color: #818cf8;
+            filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.8));
+        }
     </style>
 </head>
 
@@ -316,11 +383,11 @@
 
     <!-- Hero Section -->
     <section class="section hero">
-        <div class="reveal">
-            <span class="badge-premium"><i data-lucide="sparkles" size="14"></i> Oportunidad Founder 2026</span>
+        <div className="reveal">
+            <span class="badge-founder"><i data-lucide="sparkles" size="14"></i> Oportunidad Founder 2026</span>
             <h1>Tu Marca es el Activo.<br><span class="gradient-text">FitAI es el Motor.</span></h1>
-            <p>La tecnología diseñada para que los líderes del fitness conviertan su autoridad en un negocio de alto
-                rendimiento, escalable y 100% propio.</p>
+            <p>La tecnología diseñada para que los líderes del fitness generen <b>ingresos pasivos</b> y conviertan su
+                autoridad en un negocio de alto rendimiento, escalable y 100% propio.</p>
             <div style="display: flex; gap: 1rem; justify-content: center;">
                 <a href="#vision" class="cta-premium">VER PROPUESTA</a>
                 <a href="#audit"

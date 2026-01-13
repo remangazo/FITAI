@@ -29,6 +29,7 @@ import {
     checkNotificationStatus,
     showLocalNotification
 } from '../services/notificationService';
+import voiceService from '../services/voiceService';
 
 export default function Settings() {
     const { user, profile, logout, loading: authLoading } = useAuth();
@@ -44,7 +45,8 @@ export default function Settings() {
         language: 'es',
         units: 'metric',
         avatarUrl: '',
-        isPrivate: false
+        isPrivate: false,
+        voiceEnabled: true
     });
 
     const [notifStatus, setNotifStatus] = useState(null);
@@ -525,6 +527,50 @@ export default function Settings() {
                                 Probar
                             </button>
                         </div>
+                    </div>
+                </section>
+
+                {/* Voice & Audio Section */}
+                <section className="glass rounded-[2rem] p-6 border border-white/5">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                            <Sparkles className="text-blue-400" size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-white">Voz y Audio</h3>
+                            <p className="text-[10px] text-slate-500">Guía auditiva en entrenamientos</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 flex items-center justify-between">
+                            <div className="flex-1">
+                                <h4 className="font-bold text-sm">Entrenador de Voz</h4>
+                                <p className="text-[10px] text-slate-500">
+                                    Escuchar anuncios de ejercicios y tiempos de descanso.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    const next = !settings.voiceEnabled;
+                                    setSettings(s => ({ ...s, voiceEnabled: next }));
+                                    voiceService.setEnabled(next);
+                                }}
+                                className={`w-12 h-6 rounded-full transition-colors relative ${settings.voiceEnabled ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                            >
+                                <motion.div
+                                    className="w-4 h-4 bg-white rounded-full absolute top-1 left-1"
+                                    animate={{ x: settings.voiceEnabled ? 24 : 0 }}
+                                />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => voiceService.speak("Che, ¿cómo va el entrenamiento? Todo listo para arrancar.")}
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold transition-all border border-white/5"
+                        >
+                            <Sparkles size={14} className="text-blue-400" /> Probar Voz Argentina
+                        </button>
                     </div>
                 </section>
 

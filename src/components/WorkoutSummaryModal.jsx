@@ -41,14 +41,60 @@ export default function WorkoutSummaryModal({ summary, onClose }) {
         ? `${(totalVolume / 1000).toFixed(1)}k`
         : totalVolume.toString();
 
-    // Determinar mensaje motivacional basado en el rendimiento
-    const getMotivationalMessage = () => {
-        if (personalRecords.length >= 3) return '¡ENTRENAMIENTO LEGENDARIO! 🔥';
-        if (personalRecords.length >= 1) return '¡NUEVO RÉCORD PERSONAL! 🏆';
-        if (duration >= 60) return '¡SESIÓN ÉPICA! 💪';
-        if (totalSets >= 20) return '¡ALTO VOLUMEN! 📊';
-        return '¡BUEN TRABAJO! ✅';
+    // IA Coach Feedback System
+    const getCoachFeedback = () => {
+        // Incomplete / Very short session logic
+        if (totalSets <= 3 || duration < 5) {
+            return {
+                title: 'SESIÓN INCOMPLETA ⚠️',
+                subtitle: 'Hiciste lo más difícil: empezar. Pero la disciplina se construye terminando el plan.',
+                gradient: 'from-slate-700 via-slate-800 to-slate-900',
+                icon: Award,
+                iconBg: 'bg-white/10'
+            };
+        }
+
+        // Standard / High Performance logic
+        if (personalRecords.length >= 3) {
+            return {
+                title: '¡ENTRENAMIENTO LEGENDARIO! 🔥',
+                subtitle: 'Estás en otro nivel. Tu cuerpo y mente te lo van a agradecer.',
+                gradient: 'from-indigo-600 via-purple-600 to-pink-600',
+                icon: Trophy,
+                iconBg: 'bg-white/20'
+            };
+        }
+
+        if (personalRecords.length >= 1) {
+            return {
+                title: '¡NUEVO RÉCORD PERSONAL! 🏆',
+                subtitle: 'Superarse a uno mismo es la única competencia que importa.',
+                gradient: 'from-amber-500 via-orange-600 to-yellow-600',
+                icon: Zap,
+                iconBg: 'bg-white/20'
+            };
+        }
+
+        if (duration >= 60 || totalSets >= 18) {
+            return {
+                title: '¡SESIÓN ÉPICA FINALIZADA! 💪',
+                subtitle: 'Gran volumen de trabajo hoy. El descanso de hoy será merecido.',
+                gradient: 'from-blue-600 via-indigo-600 to-blue-700',
+                icon: Flame,
+                iconBg: 'bg-white/20'
+            };
+        }
+
+        return {
+            title: '¡ENTRENAMIENTO CUMPLIDO! ✅',
+            subtitle: 'Un paso más hacia tu mejor versión. ¡Seguí así!',
+            gradient: 'from-emerald-500 via-green-600 to-teal-700',
+            icon: CheckCircle2,
+            iconBg: 'bg-white/20'
+        };
     };
+
+    const coach = getCoachFeedback();
 
     return (
         <AnimatePresence>
@@ -56,7 +102,7 @@ export default function WorkoutSummaryModal({ summary, onClose }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                className="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4"
                 onClick={onClose}
             >
                 <motion.div
@@ -64,11 +110,11 @@ export default function WorkoutSummaryModal({ summary, onClose }) {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="bg-slate-900 rounded-[32px] border border-white/10 max-w-md w-full overflow-hidden flex flex-col max-h-[92vh] shadow-2xl shadow-emerald-500/10"
+                    className="bg-slate-900 rounded-t-[40px] sm:rounded-[40px] border-t sm:border border-white/10 max-w-md w-full overflow-hidden flex flex-col max-h-[95vh] shadow-2xl shadow-emerald-500/20"
                     onClick={e => e.stopPropagation()}
                 >
-                    {/* Header with confetti-like gradient */}
-                    <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 p-6 md:p-8 text-center relative overflow-hidden flex-shrink-0">
+                    {/* Header with dynamic gradient based on performance */}
+                    <div className={`bg-gradient-to-br ${coach.gradient} p-6 md:p-8 text-center relative overflow-hidden flex-shrink-0`}>
                         {/* Decorative circles */}
                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                         <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -79,16 +125,16 @@ export default function WorkoutSummaryModal({ summary, onClose }) {
                             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                             className="relative"
                         >
-                            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-3">
-                                <CheckCircle2 size={32} className="text-white" />
+                            <div className={`w-16 h-16 md:w-20 md:h-20 mx-auto ${coach.iconBg} rounded-full flex items-center justify-center mb-3 shadow-lg backdrop-blur-md`}>
+                                <coach.icon size={32} className="text-white" />
                             </div>
-                            <h2 className="text-xl md:text-2xl font-black text-white mb-1 tracking-tight">{getMotivationalMessage()}</h2>
-                            <p className="text-white/80 text-[10px] md:text-sm font-black uppercase tracking-[0.2em]">{dayName}</p>
+                            <h2 className="text-xl md:text-2xl font-black text-white mb-1 tracking-tight leading-tight">{coach.title}</h2>
+                            <p className="text-white/80 text-[10px] md:text-xs font-bold px-4">{coach.subtitle}</p>
                         </motion.div>
                     </div>
 
                     {/* Stats Grid - Scrollable area */}
-                    <div className="p-5 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+                    <div className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar pb-32 sm:pb-8">
                         <div className="grid grid-cols-2 gap-3 md:gap-4">
                             <StatCard
                                 icon={Clock}
@@ -159,9 +205,9 @@ export default function WorkoutSummaryModal({ summary, onClose }) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={onClose}
-                            className="w-full bg-white text-slate-950 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all hover:bg-slate-100 shadow-xl shadow-black/20"
+                            className="w-full bg-gradient-to-r from-white via-slate-100 to-slate-200 text-slate-950 font-black py-4.5 px-6 rounded-[24px] flex items-center justify-center gap-2 transition-all shadow-xl shadow-white/5 border-t border-white"
                         >
-                            <Zap size={18} fill="currentColor" />
+                            <CheckCircle2 size={18} />
                             FINALIZAR SESIÓN
                         </motion.button>
                     </div>

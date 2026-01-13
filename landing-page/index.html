@@ -4,7 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitAI Coach | Elite Intelligence</title>
+    <title>FitAI Coach | Inteligencia Artificial para Entrenamiento de Élite</title>
+    <meta name="description"
+        content="FitAI es la plataforma de entrenamiento líder potenciada por IA que entiende tu biología. Rutinas personalizadas, dietas inteligentes y gestión para entrenadores profesionales.">
+    <meta name="keywords"
+        content="entrenamiento IA, coach fitness inteligente, rutinas personalizadas, fitness avanzado, gestión entrenadores, nutrición inteligente">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fitai.personal">
+    <meta property="og:title" content="FitAI | Inteligencia Artificial para Entrenamiento de Élite">
+    <meta property="og:description"
+        content="Domina tu evolución con la IA que entiende tu biología. Rutinas y dietas adaptativas en tiempo real.">
+    <meta property="og:image" content="https://fitai.personal/images/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="FitAI | IA para Atletas de Élite">
+    <meta property="twitter:description"
+        content="La primera plataforma donde la IA entiende tu biología para resultados máximos.">
+    <meta property="twitter:image" content="https://fitai.personal/images/og-image.jpg">
+
     <link rel="icon" type="image/png" href="images/favicon.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -281,12 +301,12 @@
                     <div class="absolute inset-0 bg-brand-indigo/20 blur-[80px] md:blur-[120px]"></div>
 
                     <!-- Image 1: Dashboard -->
-                    <img src="images/movil1.png" alt="FitAI Dashboard"
+                    <img src="images/movil1.png" alt="Dashboard de FitAI mostrando el progreso metabólico del atleta"
                         class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
                         :class="current === 1 ? 'opacity-100' : 'opacity-0'">
 
                     <!-- Image 2: Nutrition -->
-                    <img src="images/movil4.png" alt="FitAI Nutrition"
+                    <img src="images/movil4.png" alt="Módulo de nutrición inteligente y planes de comida en FitAI"
                         class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
                         :class="current === 2 ? 'opacity-100' : 'opacity-0'">
 
@@ -370,7 +390,7 @@
 
             <div class="lg:order-1 relative flex justify-center">
                 <div class="absolute inset-0 bg-violet-600/10 blur-[200px]"></div>
-                <img src="images/movil2.png" alt="FitAI Routines"
+                <img src="images/movil2.png" alt="Interfaz de rutinas inteligentes generadas por IA"
                     class="relative z-10 w-[550px] animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
                 <div
                     class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white/5 rounded-full animate-pulse-slow">
@@ -412,7 +432,9 @@
                 <div class="bento-card relative p-12 space-y-12 group overflow-hidden reveal-up"
                     x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
                     <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
-                        <img src="images/massive_management.png" class="w-full h-full object-cover">
+                        <img src="images/massive_management.png"
+                            alt="Gestión de múltiples atletas para entrenadores personales"
+                            class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
                     </div>
                     <div
@@ -430,7 +452,8 @@
                     style="transition-delay: 0.1s" x-data="{ active: false }" x-intersect="active = true"
                     :class="{ 'active': active }">
                     <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
-                        <img src="images/monetization.png" class="w-full h-full object-cover">
+                        <img src="images/monetization.png" alt="Monetización y comisiones para socios de FitAI"
+                            class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
                     </div>
                     <div
@@ -576,15 +599,21 @@
                                 <!-- Image Layers -->
                                 <div class="absolute inset-0 transition-all duration-1000 transform"
                                     :class="step === 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'">
-                                    <img src="images/coach1.png" class="w-full h-full object-cover">
+                                    <img src="images/coach1.png"
+                                        alt="Panel principal de gestión de atletas en FitAI Elite"
+                                        class="w-full h-full object-cover">
                                 </div>
                                 <div class="absolute inset-0 transition-all duration-1000 transform"
                                     :class="step === 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'">
-                                    <img src="images/coach2.png" class="w-full h-full object-cover">
+                                    <img src="images/coach2.png"
+                                        alt="Identificación automática de alumnos en riesgo basado en datos biométricos"
+                                        class="w-full h-full object-cover">
                                 </div>
                                 <div class="absolute inset-0 transition-all duration-1000 transform"
                                     :class="step === 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'">
-                                    <img src="images/coach3.png" class="w-full h-full object-cover">
+                                    <img src="images/coach3.png"
+                                        alt="Análisis detallado de la evolución técnica y de fuerza del atleta"
+                                        class="w-full h-full object-cover">
                                 </div>
 
                                 <!-- Decorative Overlays -->
@@ -686,7 +715,7 @@
                     <div class="absolute inset-0 bg-brand-indigo/10 blur-[80px] md:blur-[150px]"></div>
 
                     <!-- Image 1: Social -->
-                    <img src="images/movil3.png" alt="FitAI Community"
+                    <img src="images/movil3.png" alt="Comunidad FitAI: Desafíos y podios 3D interactivos"
                         class="absolute inset-0 z-10 w-full h-full object-contain md:rotate-3 animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] transition-opacity duration-1000"
                         :class="currentsocial === 1 ? 'opacity-100' : 'opacity-0'">
 

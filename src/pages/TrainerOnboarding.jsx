@@ -8,7 +8,7 @@
  * 4. Code Generation (show unique coach code)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -49,11 +49,18 @@ const CERTIFICATIONS = [
 
 export default function TrainerOnboarding() {
     const navigate = useNavigate();
-    const { user, profile, updateProfile } = useAuth();
+    const { user, profile, updateProfile, loading } = useAuth();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [coachCode, setCoachCode] = useState('');
     const [copied, setCopied] = useState(false);
+
+    // Redirect if not authenticated
+    useEffect(() => {
+        if (!loading && !user) {
+            navigate('/login?redirect=/become-trainer');
+        }
+    }, [user, loading, navigate]);
 
     const [formData, setFormData] = useState({
         displayName: profile?.displayName || profile?.name || user?.displayName || '',
@@ -90,6 +97,11 @@ export default function TrainerOnboarding() {
     const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
     const handleSubmit = async () => {
+        if (!user) {
+            alert('Sesión expirada. Por favor, inicia sesión nuevamente.');
+            navigate('/login');
+            return;
+        }
         setIsLoading(true);
         try {
             // Register as trainer

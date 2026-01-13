@@ -716,23 +716,15 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                 </div>
 
                 {/* Footer Action */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 mt-10 pt-8 border-t border-white/5">
+                <div className="mt-10 pt-8 border-t border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
                             <Heart size={14} className="text-indigo-400" />
                         </div>
                         <p className="text-xs text-slate-400 font-medium italic">
                             "{recommendations.motivationalMessage}"
                         </p>
                     </div>
-                    <motion.button
-                        whileHover={{ scale: 1.02, x: 5 }} whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate('/routines')}
-                        className="group flex items-center gap-3 px-8 py-4 rounded-full bg-white text-slate-950 font-black text-sm transition-all hover:bg-indigo-50"
-                    >
-                        CONTINUAR ENTRENAMIENTO
-                        <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </motion.button>
                 </div>
             </div>
 

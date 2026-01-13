@@ -9,8 +9,8 @@ import { BottomNav, BackButton } from '../components/Navigation';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { trainerService } from '../services/trainerService';
-import { shopService } from '../services/shopService';
 import { CATEGORIES } from '../data/shopConstants';
+import { analyticsService } from '../services/analyticsService';
 
 // Constantes de Tienda
 const PREMIUM_DISCOUNT = 0.15; // 15% de descuento para Premium
@@ -191,7 +191,13 @@ export default function Shop() {
                             type="text"
                             placeholder="Buscar productos..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                // Debounced search tracking could be better, but for now simple track
+                                if (e.target.value.length > 2) {
+                                    analyticsService.trackSearch(e.target.value);
+                                }
+                            }}
                             className="w-full bg-slate-900 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                         />
                     </div>
@@ -260,18 +266,24 @@ export default function Shop() {
 
                 {/* Products Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filteredProducts.map(product => (
-                        <ProductCard
-                            key={product.id}
-                            product={product}
-                            onAdd={() => addToCart(product)}
-                            onView={() => setSelectedProduct(product)}
-                            isPremium={isPremium}
-                            isTrainerEligible={isTrainerDiscountEligible(product.category)}
-                            trainerDiscount={getTrainerDiscount()}
-                            getDiscountedPrice={getDiscountedPrice}
-                        />
-                    ))}
+                    <ProductCard
+                        key={product.id}
+                        product={product}
+                        onAdd={() => {
+                            addToCart(product);
+                            analyticsService.recordOrder({ // Simulation for demo: add to cart records an "intent" or just use a dedicated button for order
+                                // We'll actually record the order in the checkout button later
+                            });
+                        }}
+                        onView={() => {
+                            setSelectedProduct(product);
+                            analyticsService.trackProductView(product.id);
+                        }}
+                        isPremium={isPremium}
+                        isTrainerEligible={isTrainerDiscountEligible(product.category)}
+                        trainerDiscount={getTrainerDiscount()}
+                        getDiscountedPrice={getDiscountedPrice}
+                    />
                 </div>
 
                 {filteredProducts.length === 0 && (

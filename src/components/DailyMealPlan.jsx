@@ -331,6 +331,7 @@ export default function DailyMealPlan({ dietPlan, targetMacros = null }) {
                             completed={completedMeals.includes(index)}
                             expanded={expandedMeal === index}
                             extras={dailyLog.customFoods?.filter(f => f.mealIndex === index) || []}
+                            completedCount={completedMeals.length}
                             onToggle={() => handleToggleMeal(index)}
                             onExpand={() => setExpandedMeal(expandedMeal === index ? null : index)}
                             onAddExtra={() => { setAddFoodToMeal(index); setShowAddFood(true); }}
@@ -403,7 +404,7 @@ export default function DailyMealPlan({ dietPlan, targetMacros = null }) {
     );
 }
 
-function MealItem({ meal, index, completed, expanded, extras, onToggle, onExpand, onAddExtra, onRemoveExtra }) {
+function MealItem({ meal, index, completed, expanded, extras, completedCount, onToggle, onExpand, onAddExtra, onRemoveExtra }) {
     const mealIcons = [<Apple size={20} />, <Zap size={20} />, <Utensils size={20} />, <Flame size={20} />, <Droplets size={20} />];
     const extraCals = extras.reduce((sum, e) => sum + Number(e.calories || 0), 0);
     const extraProt = extras.reduce((sum, e) => sum + Number(e.protein || 0), 0);
@@ -534,7 +535,7 @@ function MealItem({ meal, index, completed, expanded, extras, onToggle, onExpand
                             <ContextualOffer
                                 meal={meal}
                                 index={index}
-                                completedCount={dailyLog.completedMeals?.length || 0}
+                                completedCount={completedCount}
                             />
                         </div>
                     </motion.div>

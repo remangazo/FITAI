@@ -26,24 +26,24 @@ const SPECIALTIES = [
     { id: 'fuerza', label: 'Fuerza', icon: Zap, color: 'yellow' },
     { id: 'crossfit', label: 'CrossFit', icon: Flame, color: 'orange' },
     { id: 'funcional', label: 'Funcional', icon: Target, color: 'green' },
-    { id: 'perdida_peso', label: 'PÃ©rdida de Peso', icon: Scale, color: 'purple' },
+    { id: 'perdida_peso', label: 'Pérdida de Peso', icon: Scale, color: 'purple' },
     { id: 'cardio', label: 'Cardio', icon: Heart, color: 'red' },
     { id: 'resistencia', label: 'Resistencia', icon: Timer, color: 'cyan' },
     { id: 'calistenia', label: 'Calistenia', icon: Trophy, color: 'indigo' },
-    { id: 'rehabilitacion', label: 'RehabilitaciÃ³n', icon: Shield, color: 'emerald' },
-    { id: 'nutricion', label: 'NutriciÃ³n', icon: Brain, color: 'pink' },
+    { id: 'rehabilitacion', label: 'Rehabilitación', icon: Shield, color: 'emerald' },
+    { id: 'nutricion', label: 'Nutrición', icon: Brain, color: 'pink' },
 ];
 
 const CERTIFICATIONS = [
     'Personal Trainer Certificado',
-    'Licenciado en EducaciÃ³n FÃ­sica',
+    'Licenciado en Educación Física',
     'CrossFit Level 1-3',
     'NSCA-CPT',
     'ACE Certified',
     'Nutricionista Deportivo',
-    'Especialista en RehabilitaciÃ³n',
+    'Especialista en Rehabilitación',
     'Instructor de Yoga/Pilates',
-    'TÃ©cnico en MusculaciÃ³n',
+    'Técnico en Musculación',
     'Otro (especificar)',
 ];
 
@@ -166,7 +166,7 @@ export default function TrainerOnboarding() {
             <div className="flex-1 overflow-y-auto p-6 max-w-xl mx-auto w-full">
                 <AnimatePresence mode="wait">
                     {step === 1 && (
-                        <StepContainer key="step1" icon={User} title="Tu Perfil de Trainer" subtitle="Esta informaciÃ³n serÃ¡ visible para tus alumnos">
+                        <StepContainer key="step1" icon={User} title="Tu Perfil de Trainer" subtitle="Esta información será visible para tus alumnos">
                             <div className="space-y-6">
                                 {/* Photo placeholder */}
                                 <div className="flex justify-center">
@@ -187,11 +187,11 @@ export default function TrainerOnboarding() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-sm text-slate-400 mb-2 block">Bio / DescripciÃ³n</label>
+                                        <label className="text-sm text-slate-400 mb-2 block">Bio / Descripción</label>
                                         <textarea
                                             value={formData.bio}
                                             onChange={(e) => updateField('bio', e.target.value)}
-                                            placeholder="ContÃ¡ un poco sobre vos y tu experiencia..."
+                                            placeholder="Contá un poco sobre vos y tu experiencia..."
                                             rows={4}
                                             className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                         />
@@ -202,7 +202,7 @@ export default function TrainerOnboarding() {
                     )}
 
                     {step === 2 && (
-                        <StepContainer key="step2" icon={Dumbbell} title="Tus Especialidades" subtitle="SeleccionÃ¡ en quÃ© Ã¡reas te especializÃ¡s">
+                        <StepContainer key="step2" icon={Dumbbell} title="Tus Especialidades" subtitle="Seleccioná en qué áreas te especializás">
                             <div className="grid grid-cols-2 gap-3">
                                 {SPECIALTIES.map(spec => {
                                     const Icon = spec.icon;
@@ -226,13 +226,13 @@ export default function TrainerOnboarding() {
                                 })}
                             </div>
                             {formData.specialties.length === 0 && (
-                                <p className="text-center text-slate-500 text-sm mt-4">SeleccionÃ¡ al menos una especialidad</p>
+                                <p className="text-center text-slate-500 text-sm mt-4">Seleccioná al menos una especialidad</p>
                             )}
                         </StepContainer>
                     )}
 
                     {step === 3 && (
-                        <StepContainer key="step3" icon={Award} title="Certificaciones" subtitle="Opcional: AgregÃ¡ tus credenciales">
+                        <StepContainer key="step3" icon={Award} title="Certificaciones" subtitle="Opcional: Agregá tus credenciales">
                             <div className="space-y-3">
                                 {CERTIFICATIONS.map(cert => {
                                     const selected = formData.certifications.includes(cert);
@@ -259,19 +259,19 @@ export default function TrainerOnboarding() {
                                         type="text"
                                         value={formData.customCertification}
                                         onChange={(e) => updateField('customCertification', e.target.value)}
-                                        placeholder="EspecificÃ¡ tu certificaciÃ³n..."
+                                        placeholder="Especificá tu certificación..."
                                         className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
                                     />
                                 )}
                             </div>
                             <p className="text-center text-slate-500 text-sm mt-4">
-                                PodÃ©s omitir este paso si no tenÃ©s certificaciones formales
+                                Podés omitir este paso si no tenés certificaciones formales
                             </p>
                         </StepContainer>
                     )}
 
                     {step === 4 && (
-                        <StepContainer key="step4" icon={Sparkles} title="Â¡Ya sos Trainer!" subtitle="CompartÃ­ tu cÃ³digo con tus alumnos">
+                        <StepContainer key="step4" icon={Sparkles} title="¡Ya sos Trainer!" subtitle="Compartí tu código con tus alumnos">
                             <div className="space-y-6">
                                 {/* Success Animation */}
                                 <motion.div
@@ -287,7 +287,7 @@ export default function TrainerOnboarding() {
 
                                 {/* Coach Code Display */}
                                 <div className="bg-slate-900 rounded-2xl p-6 border border-blue-500/30">
-                                    <p className="text-center text-slate-400 text-sm mb-3">Tu CÃ³digo de Coach</p>
+                                    <p className="text-center text-slate-400 text-sm mb-3">Tu Código de Coach</p>
                                     <div className="flex items-center justify-center gap-3">
                                         <span className="text-2xl font-mono font-black text-blue-400 tracking-wider">
                                             {coachCode}
@@ -302,12 +302,12 @@ export default function TrainerOnboarding() {
                                 </div>
 
                                 <div className="bg-slate-900/50 rounded-xl p-4 text-sm text-slate-400">
-                                    <p className="font-bold text-white mb-2">Â¿CÃ³mo funciona?</p>
+                                    <p className="font-bold text-white mb-2">¿Cómo funciona?</p>
                                     <ul className="list-disc list-inside space-y-1">
-                                        <li>CompartÃ­ este cÃ³digo con tus alumnos</li>
+                                        <li>Compartí este código con tus alumnos</li>
                                         <li>Ellos lo ingresan al registrarse en FITAI</li>
-                                        <li>AutomÃ¡ticamente los verÃ¡s en tu Dashboard</li>
-                                        <li>PodÃ©s asignarles rutinas y ver su progreso</li>
+                                        <li>Automáticamente los verás en tu Dashboard</li>
+                                        <li>Podés asignarles rutinas y ver su progreso</li>
                                     </ul>
                                 </div>
 

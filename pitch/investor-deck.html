@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitAI Business | Investor Deck 2026</title>
+    <link rel="icon" type="image/png" href="investor-favicon.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700;800&family=Outfit:wght@900&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        :root {
+            --bg: #03040b;
+            --primary: #818cf8;
+            --secondary: #10b981;
+            --accent: #f43f5e;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* For Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(129, 140, 248, 0.2) var(--bg);
+        }
+
+        /* Particles & Background */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(129, 140, 248, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+            font-weight: 900;
+        }
+
+        /* Layout */
+        main {
+            padding-top: 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 3rem;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
+        }
+
+        .section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin-bottom: 1.2rem;
+            letter-spacing: -2px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Accordion Style Points */
+        .point-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .point-card:hover {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Pulsing Dot for Live */
+        .pulse-live {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #f43f5e;
+            border-radius: 50%;
+            margin-left: 10px;
+            box-shadow: 0 0 0 rgba(244, 63, 94, 0.4);
+            animation: pulse-red 2s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+            }
+        }
+
+        /* Rocket Animation 2.0 - Ultra Modern */
+        .rocket-circle {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 3rem;
+            box-shadow: 0 0 50px rgba(129, 140, 248, 0.4);
+            animation: circle-glow 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .rocket-icon {
+            transform: scale(1.8);
+            animation: rocket-launch-vibe 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+        }
+
+        @keyframes circle-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 40px rgba(129, 140, 248, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.2);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 70px rgba(16, 185, 129, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.4);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes rocket-launch-vibe {
+
+            0%,
+            100% {
+                transform: scale(1.8) translate(0, 0) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.9) translate(2px, -4px) rotate(2deg);
+            }
+
+            50% {
+                transform: scale(1.85) translate(-1px, -2px) rotate(-1deg);
+            }
+
+            75% {
+                transform: scale(1.95) translate(3px, -6px) rotate(3deg);
+            }
+        }
+
+        .point-header {
+            padding: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .point-header h3 {
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .point-content {
+            padding: 0 2.5rem 2.5rem 2.5rem;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        /* Stats & Tables */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--glass), transparent);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            border-radius: 2.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .business-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .business-table th,
+        .business-table td {
+            padding: 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .business-table th {
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* Interactive Elements */
+        .badge {
+            background: rgba(129, 140, 248, 0.1);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: badge-float 3s ease-in-out infinite;
+        }
+
+        @keyframes badge-float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        .highlight-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--secondary);
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 1rem 1rem 0;
+        }
+
+        /* Modal Vision Edge Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 4, 11, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-container {
+            background: rgba(20, 21, 35, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 3rem;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            padding: 4rem;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8);
+            animation: modal-zoom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modal-zoom {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: rotate(90deg);
+        }
+
+        .vision-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .vision-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 2rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body x-data="{ 
+    activePoint: null, 
+    tc: 1500,
+    precioUsd: 8,
+    showVisionModal: false,
+    togglePoint(id) { this.activePoint = this.activePoint === id ? null : id } 
+}">
+    <div class="grid-bg"></div>
+    <div class="glow-orb" style="top: -100px; right: -100px;"></div>
+    <div class="glow-orb" style="bottom: -200px; left: -200px; opacity: 0.05;"></div>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div class="logo">FITAI <span style="color: var(--primary);">MODEL</span></div>
+            <a href="index.html"
+                style="color: var(--text-dim); text-decoration: none; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="arrow-left" size="14"></i> VOLVER AL PITCH
+            </a>
+        </div>
+        <div style="font-weight: 700; color: var(--text-dim);">TC: <span style="color: #fff;">$1 = 1.500 ARS</span>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Intro Hero -->
+        <section class="section active"
+            style="text-align: center; min-height: 50vh; display: flex; flex-direction: column; justify-content: center;">
+            <span class="badge">Estrategia Financiera 2026</span>
+            <h1><span class="gradient-text">Fidelizando el</span><br>Mercado Argentino</h1>
+            <p style="font-size: 1.5rem; color: var(--text-dim); max-width: 800px; margin: 1.5rem auto;">Análisis del
+                modelo de negocio, escalabilidad y ecosistema de partners bajo un contexto de economía dinámica.</p>
+        </section>
+
+        <!-- Contexto Mercado -->
+        <section class="section" :class="{'active': true}">
+            <h2 style="text-align: center;">1. El Contexto Argentina 🇦🇷</h2>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Precio Gimnasio Medio</span>
+                    <span class="stat-value">ARS $45k</span>
+                    <p style="color: var(--text-dim);">Promedio mensual regular</p>
+                </div>
+                <div class="stat-box" style="border-color: var(--secondary);">
+                    <span class="stat-label">Precio FitAI Premium</span>
+                    <span class="stat-value">ARS $12k</span>
+                    <p style="color: var(--secondary); font-weight: 700;">Ahorro del >70%</p>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Entrenador Personal</span>
+                    <span class="stat-value">ARS $80k+</span>
+                    <p style="color: var(--text-dim);">Costo mensual promedio</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <p style="font-size: 1.3rem;"><strong>Sweet Spot Estratégico</strong>: FitAI no compite con el gimnasio,
+                    compite con la desorganización. Al ser <strong>1/10 parte</strong> del costo de un profesional
+                    humano, la barrera de entrada es casi inexistente.</p>
+            </div>
+        </section>
+
+        <!-- Estructura de Precios Interactiva -->
+        <section class="section active">
+            <h2>2. Arquitectura de Ingresos</h2>
+
+            <!-- Point 1: Freemium -->
+            <div class="point-card" @click="togglePoint(1)">
+                <div class="point-header">
+                    <h3 style="display: flex; align-items: center; gap: 15px;">
+                        <i data-lucide="zap" size="28" style="color: var(--primary);"></i>
+                        Nivel 1: Freemium (Adquisición)
+                    </h3>
+                    <i data-lucide="chevron-down" :style="activePoint === 1 ? 'transform: rotate(180deg)' : ''"
+                        style="transition: transform 0.3s;"></i>
+                </div>
+                <div class="point-content" x-show="activePoint === 1" x-collapse>
+                    <p>El motor de adquisición masiva. Los usuarios pueden registrar su peso y acceder a 1 rutina
+                        genérica mensual. El objetivo principal es la <strong>retención de datos</strong> (biometría)
+                        que luego alimenta el algoritmo para una conversión personalizada al plan Premium.</p>
+                </div>
+            </div>
+
+            <!-- Point 2: Premium -->
+            <div class="point-card" @click="togglePoint(2)" style="border-color: var(--primary);">
+                <div class="point-header">
+                    <h3 style="display: flex; align-items: center; gap: 15px;">
+                        <i data-lucide="shield-check" size="28" style="color: var(--primary);"></i>
+                        Nivel 2: Premium Elite ($8 USD / ARS $12.000)
+                    </h3>
+                    <i data-lucide="chevron-down" :style="activePoint === 2 ? 'transform: rotate(180deg)' : ''"
+                        style="transition: transform 0.3s;"></i>
+                </div>
+                <div class="point-content" x-show="activePoint === 2" x-collapse>
+                    <p>Acceso total: IA Voice Coach, generación ilimitada de rutinas, dietas dinámicas y analítica
+                        profunda de PRs. Con un margen bruto del **90%**, este nivel es el soporte de rentabilidad
+                        directa de la plataforma.</p>
+                </div>
+            </div>
+
+            <!-- Point 3: Partners -->
+            <div class="point-card" @click="togglePoint(3)">
+                <div class="point-header">
+                    <h3 style="display: flex; align-items: center; gap: 15px;">
+                        <i data-lucide="users" size="28" style="color: var(--secondary);"></i>
+                        Nivel 3: Partner-Led (El Ecosistema B2B)
+                    </h3>
+                    <i data-lucide="chevron-down" :style="activePoint === 3 ? 'transform: rotate(180deg)' : ''"
+                        style="transition: transform 0.3s;"></i>
+                </div>
+                <div class="point-content" x-show="activePoint === 3" x-collapse>
+                    <p>El profesional utiliza FitAI como su **Torre de Control gratuita** ($0 costo para él). Al
+                        centralizar a sus alumnos en nuestro ecosistema, genera un flujo natural y de alta confianza que
+                        incentiva al alumno a adquirir el **Plan Premium** para desbloquear las métricas de IA que su
+                        coach supervisa. Esto elimina el costo de adquisición de usuarios (CAC).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flywheel de Comisiones -->
+        <section class="section active"
+            style="background: rgba(129, 140, 248, 0.05); padding: 3rem; border-radius: 4rem; border: 1px solid var(--border);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <span class="badge" style="background: var(--secondary); color: #fff;">Impacto Social & Económico</span>
+                <h2>El Flywheel del Coach 🧔‍♂️🦾</h2>
+                <p style="font-size: 1.2rem; color: var(--text-dim);">Convertimos al entrenador en un canal de
+                    distribución masivo mediante recompensas recurrentes.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;">
+                <div>
+                    <h4 style="color: var(--primary); margin-bottom: 1rem;">Escalera de Fidelización</h4>
+                    <p style="margin-bottom: 1rem;">Más alumnos = Más beneficios para el Coach:</p>
+                    <ul style="list-style: none;">
+                        <li style="display: flex; gap: 10px; margin-bottom: 10px;"><i data-lucide="award"
+                                style="color: var(--primary);"></i> <b>Starter</b>: Gestión $0 + 10% Off Market</li>
+                        <li style="display: flex; gap: 10px; margin-bottom: 10px;"><i data-lucide="award"
+                                style="color: var(--secondary);"></i> <b>Gold</b>: Gestión $0 + 20% Off + Bonos</li>
+                        <li style="display: flex; gap: 10px; margin-bottom: 10px;"><i data-lucide="award"
+                                style="color: var(--accent);"></i> <b>Elite</b>: Acceso total + Comisiones x Escala</li>
+                    </ul>
+                </div>
+                <div
+                    style="background: rgba(0,0,0,0.3); padding: 2rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <h4 style="text-align: center; margin-bottom: 1.5rem;">The Vision Edge 💎</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.9rem;">
+                        <div style="display: flex; gap: 10px;"><i data-lucide="zap" size="16"
+                                style="color: var(--primary);"></i> <b>Fricción Cero</b>: Viralidad por gratuidad.</div>
+                        <div style="display: flex; gap: 10px;"><i data-lucide="shield" size="16"
+                                style="color: var(--primary);"></i> <b>Simplicidad</b>: Sin riesgos impositivos.</div>
+                        <div style="display: flex; gap: 10px;"><i data-lucide="trending-up" size="16"
+                                style="color: var(--primary);"></i> <b>Efecto Red</b>: Alta retención de datos.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Unit Economics Table -->
+        <section class="section active">
+            <h2>3. Unit Economics & Escalabilidad</h2>
+            <p style="color: var(--text-dim); margin-bottom: 2rem;">A mayor volumen, los costos de IA (Gemini Flash) se
+                vuelven insignificantes frente al ingreso bruto.</p>
+
+            <div style="overflow-x: auto;">
+                <table class="business-table">
+                    <thead>
+                        <tr>
+                            <th>Usuarios Premium</th>
+                            <th>Ingreso Mensual (USD)</th>
+                            <th>Ingreso Mensual (ARS)</th>
+                            <th>Costos IA/Server</th>
+                            <th>Margen Neto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>500</strong></td>
+                            <td>$4.000</td>
+                            <td>$6.000.000</td>
+                            <td>$150 USD</td>
+                            <td>96%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5.000</strong></td>
+                            <td>$40.000</td>
+                            <td>$60.000.000</td>
+                            <td>$800 USD</td>
+                            <td>98%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>20.000</strong></td>
+                            <td>$160.000</td>
+                            <td>$240.000.000</td>
+                            <td>$2.500 USD</td>
+                            <td>98.5%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: center; color: var(--text-dim); margin-top: 2rem; font-style: italic;">*Valores
+                calculados después de costos de infraestructura e IA (Margen Bruto ~98%).</p>
+        </section>
+
+        <!-- Escenarios de Sensibilidad -->
+        <section class="section active" style="margin-top: 5rem;">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <span class="badge" style="background: var(--primary); color: #fff;">Escalabilidad Estratégica</span>
+                <h2>Sensibilidad de Márgenes 📉</h2>
+                <p style="font-size: 1.2rem; color: var(--text-dim);">Ponderación de comisiones vs. Velocidad de
+                    adquisición.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Scenario A -->
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <span style="font-weight: 800; color: var(--primary);">Escenario A</span>
+                        <span class="badge" style="margin: 0;">70% Peso</span>
+                    </div>
+                    <h3 style="margin-bottom: 1rem;">Orgánico Puro</h3>
+                    <div style="margin-bottom: 2rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                            <span>Comisión Coach</span>
+                            <span style="font-weight: 700;">0%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #fff;">
+                            <span>Margen Neto</span>
+                            <span style="font-weight: 800; color: var(--secondary);">~97%</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-dim);">Foco en rentabilidad máxima. Crecimiento
+                        basado en la utilidad gratuita de la herramienta.</p>
+                </div>
+
+                <!-- Scenario B -->
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--primary);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <span style="font-weight: 800; color: var(--primary);">Escenario B</span>
+                        <span class="badge" style="margin: 0;">20% Peso</span>
+                    </div>
+                    <h3 style="margin-bottom: 1rem;">Híbrido Partner</h3>
+                    <div style="margin-bottom: 2rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                            <span>Comisión Coach</span>
+                            <span style="font-weight: 700;">15%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #fff;">
+                            <span>Margen Neto</span>
+                            <span style="font-weight: 800; color: var(--secondary);">~82%</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-dim);">Equilibrio agresivo. Incentivo monetario
+                        directo para acelerar la captación en grandes comunidades.</p>
+                </div>
+
+                <!-- Scenario C -->
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--accent);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <span style="font-weight: 800; color: var(--primary);">Escenario C</span>
+                        <span class="badge" style="margin: 0;">10% Peso</span>
+                    </div>
+                    <h3 style="margin-bottom: 1rem;">Hiper-Escala</h3>
+                    <div style="margin-bottom: 2rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                            <span>Comisión Coach</span>
+                            <span style="font-weight: 700;">25%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: #fff;">
+                            <span>Margen Neto</span>
+                            <span style="font-weight: 800; color: var(--secondary);">~72%</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-dim);">Captura masiva de mercado (Mega-Influencers).
+                        El CAC negativo compensa el menor margen inicial.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulación de Volumen -->
+        <section class="section active" style="margin-top: 5rem;">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <span class="badge" style="background: var(--secondary); color: #fff;">ROI & Facturación</span>
+                <h2>Proyección Neta Mensual 💰</h2>
+                <p style="font-size: 1.2rem; color: var(--text-dim);">Simulación de facturación según volumen y
+                    escenario de comisiones (USD).</p>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="business-table" style="text-align: center;">
+                    <thead>
+                        <tr>
+                            <th>Usuarios Activos</th>
+                            <th>Escenario A (Orgánico)</th>
+                            <th>Escenario B (Híbrido)</th>
+                            <th>Escenario C (Hiper-Escala)</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 1.4rem;">
+                        <tr>
+                            <td><strong>100</strong></td>
+                            <td style="color: var(--secondary); font-weight: 700;">$780</td>
+                            <td style="color: var(--primary); font-weight: 600;">$660</td>
+                            <td>$580</td>
+                        </tr>
+                        <tr>
+                            <td><strong>500</strong></td>
+                            <td style="color: var(--secondary); font-weight: 700;">$3.900</td>
+                            <td style="color: var(--primary); font-weight: 600;">$3.300</td>
+                            <td>$2.900</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1.000</strong></td>
+                            <td style="color: var(--secondary); font-weight: 800;">$7.800</td>
+                            <td style="color: var(--primary); font-weight: 700;">$6.600</td>
+                            <td>$5.800</td>
+                        </tr>
+                        <tr style="background: rgba(129, 140, 248, 0.05);">
+                            <td><strong style="font-size: 1.8rem;">10.000</strong></td>
+                            <td style="color: var(--secondary); font-weight: 900;">$78.000</td>
+                            <td style="color: var(--primary); font-weight: 800;">$66.000</td>
+                            <td style="font-weight: 700;">$58.000</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="font-size: 2.2rem;">50.000</strong></td>
+                            <td style="color: var(--secondary); font-weight: 900;">$390.000</td>
+                            <td style="color: var(--primary); font-weight: 900;">$330.000</td>
+                            <td style="font-weight: 800;">$290.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: center; color: var(--text-dim); margin-top: 2rem; font-style: italic;">*Valores
+                calculados después de costos de infraestructura e IA (Margen Bruto ~98%).</p>
+        </section>
+
+        <!-- Monetización 360 -->
+        <section class="section active"
+            style="margin-top: 2rem; background: linear-gradient(180deg, transparent, rgba(129, 140, 248, 0.05), transparent); padding: 3rem 0;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <span class="badge" style="background: var(--accent); color: #fff;">Ecosistema "SuperApp"</span>
+                <h2>Monetización 360 🛒📽️<span class="pulse-live"></span></h2>
+                <p style="font-size: 1.2rem; color: var(--text-dim); max-width: 800px; margin: 0 auto;">FitAI trasciende
+                    el SaaS para convertirse en el epicentro de la economía fitness.</p>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; padding: 0 2rem; max-width: 1000px; margin: 0 auto;">
+                <!-- Market -->
+                <div
+                    style="background: var(--glass); border: 1px solid var(--border); border-radius: 2.5rem; padding: 3rem; position: relative; overflow: hidden;">
+                    <i data-lucide="shopping-bag" size="48" style="color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h3 style="font-size: 2rem; margin-bottom: 1rem;">Tienda Oficial</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 2rem;">Market curado y gestionado por el equipo
+                        core (<b>Mauri & Rufian</b>). Calidad garantizada.</p>
+                    <ul style="list-style: none; font-size: 0.9rem; color: var(--text-main);">
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Acuerdos Directos con Marcas</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> <b>Descuentos Exclusivos</b> p/ Coaches</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Productos de Autor Curados</li>
+                    </ul>
+                </div>
+
+                <!-- Content -->
+                <div
+                    style="background: var(--glass); border: 1px solid var(--border); border-radius: 2.5rem; padding: 3rem; position: relative; overflow: hidden;">
+                    <i data-lucide="play-circle" size="48" style="color: var(--secondary); margin-bottom: 1.5rem;"></i>
+                    <h3 style="font-size: 2rem; margin-bottom: 1rem;">The Content Loop</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 2rem;">Bucle de tráfico recurrente: el consumo de
+                        rutinas dispara las visitas a los canales oficiales.</p>
+                    <ul style="list-style: none; font-size: 0.9rem; color: var(--text-main);">
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="repeat" size="16"
+                                style="color: var(--secondary);"></i> <b>Visitas Recurrentes</b> p/ Ejercicio</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="trending-up"
+                                size="16" style="color: var(--secondary);"></i> Crecimiento Orgánico RRSS</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="star" size="16"
+                                style="color: var(--secondary);"></i> Masterclasses On-demand</li>
+                    </ul>
+                </div>
+
+                <!-- Streaming -->
+                <div
+                    style="background: var(--glass); border: 1px solid var(--border); border-radius: 2.5rem; padding: 3rem; position: relative; overflow: hidden;">
+                    <i data-lucide="radio" size="48" style="color: var(--accent); margin-bottom: 1.5rem;"></i>
+                    <h3 style="font-size: 2rem; margin-bottom: 1rem;">Streaming Live</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 2rem;">Eventos masivos en vivo y clases VIP
+                        interactivas lideradas por referentes.</p>
+                    <ul style="list-style: none; font-size: 0.9rem; color: var(--text-main);">
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Venta de Tickets Live</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Chat Interactivo con IA</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Patrocinios en Pantalla</li>
+                    </ul>
+                </div>
+
+                <!-- B2B Gyms -->
+                <div
+                    style="background: var(--glass); border: 1px solid var(--primary); border-radius: 2.5rem; padding: 3rem; position: relative; overflow: hidden;">
+                    <i data-lucide="building-2" size="48" style="color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h3 style="font-size: 2rem; margin-bottom: 1rem;">Bundles B2B</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 2rem;">Venta mayorista a Gimnasios PYME. Paquetes
+                        de 50-500 membresías con descuento.</p>
+                    <ul style="list-style: none; font-size: 0.9rem; color: var(--text-main);">
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> CAC $0 (Venta Institucional)</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Cash-flow Anticipado</li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 10px;"><i data-lucide="check" size="16"
+                                style="color: var(--secondary);"></i> Fidelización de Alumnos</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <button @click="showVisionModal = true"
+                    style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; padding: 1.8rem 4rem; border-radius: 100px; font-weight: 800; font-size: 1.3rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 15px 40px rgba(129, 140, 248, 0.4); display: inline-flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <i data-lucide="sparkles"></i> EXPLORAR VISIÓN ESTRATÉGICA 360
+                </button>
+                <p style="margin-top: 1.5rem; color: var(--text-dim); font-size: 1rem;">La hoja de ruta completa para
+                    dominar la Fitness Economy.</p>
+            </div>
+        </section>
+
+        <!-- Virtudes de la Visión -->
+        <section class="section active"
+            style="background: rgba(16, 185, 129, 0.05); padding: 3rem; border-radius: 4rem; border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 2rem;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <span class="badge" style="background: var(--secondary); color: #fff;">The Vision Advantage</span>
+                <h2>Las Virtudes de la Idea 💎</h2>
+                <p style="font-size: 1.2rem; color: var(--text-dim);">¿Por qué este modelo es superior a cualquier otra
+                    plataforma?</p>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; padding: 0 2rem; max-width: 1000px; margin: 0 auto;">
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="zap" style="color: var(--secondary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">Fricción Cero</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Al ser gratuito para el coach, la adopción es
+                        viral e inmediata. Eliminamos el ciclo de venta complejo y la resistencia tecnológica,
+                        permitiendo que el profesional se convierta en nuestro principal motor de crecimiento orgánico
+                        sin costo de adquisición directo.</p>
+                </div>
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="shield-check" style="color: var(--secondary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">Simplicidad Operativa</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Sin riesgos legales o impositivos por
+                        comisiones masivas en mercados volátiles. Nuestra estructura de incentivos basada en beneficios
+                        de plataforma y convenios estratégicos con marcas líderes es limpia, potente y escalable
+                        globalmente.</p>
+                </div>
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="users" style="color: var(--secondary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">Legitimación del Coach</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">El coach valida la tecnología frente al
+                        alumno. No somos una app que busca reemplazar al profesional, sino la infraestructura que lo
+                        potencia y profesionaliza. El alumno paga la suscripción Premium porque confía plenamente en el
+                        criterio de su coach.</p>
+                </div>
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="lock" style="color: var(--secondary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">Efecto Lock-in</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Cuantos más alumnos gestiona un coach y más
+                        datos acumula dentro del ecosistema, más dependiente y fiel se vuelve de FitAI. La migración a
+                        otra plataforma implicaría una pérdida inaceptable de historial, eficiencia operativa y contacto
+                        con su comunidad.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visión para Fundadores -->
+        <section class="section active" style="margin-top: 2rem; padding: 3rem 0; border-top: 1px solid var(--border);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <span class="badge" style="background: var(--primary); color: #fff;">Equity & Automation</span>
+                <h2>Escala sin Complejidad 🚀</h2>
+                <p style="font-size: 1.2rem; color: var(--text-dim); max-width: 800px; margin: 0 auto;">FitAI es un
+                    activo
+                    que trabaja para los fundadores, no al revés.</p>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; padding: 0 2rem; max-width: 1000px; margin: 0 auto;">
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="trending-up" style="color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">De Esfuerzo a Activo</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Diferencia fundamental: no vendemos horas de
+                        entrenamiento, creamos <b>Equity</b>. FitAI es una empresa que genera ingresos escalables y
+                        automáticos, construyendo un valor de mercado que trasciende el trabajo diario.</p>
+                </div>
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="cpu" style="color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">IA: Tu Mejor Empleado</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Mauri no necesita un ejército de personas. La
+                        IA (Gemini) gestiona el contenido, las dietas y las rutinas. La tecnología hace el trabajo
+                        pesado por una fracción del costo de un equipo humano tradicional.</p>
+                </div>
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="globe" style="color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">Infraestructura Elástica</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Gracias a la arquitectura Serverless (Google
+                        Cloud), la app soporta desde 100 hasta 100.000 usuarios sin intervención técnica. Los costos
+                        crecen solo si los ingresos crecen. Eficiencia total.</p>
+                </div>
+                <div
+                    style="background: var(--glass); padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border);">
+                    <i data-lucide="user-plus" style="color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h4 style="margin-bottom: 1rem; font-size: 1.5rem;">Conversión de Audiencia</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-dim);">Dile adiós a la dependencia del algoritmo.
+                        FitAI es el vehículo para convertir tu masiva audiencia actual en un <b>negocio propio</b>.
+                        Transformamos seguidores volátiles en una base de clientes recurrente con datos reales, contacto
+                        directo y monetización constante.</p>
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 4rem; padding: 3rem; background: rgba(129, 140, 248, 0.05); border-radius: 3rem; border: 1px solid var(--border); max-width: 1000px; margin-left: auto; margin-right: auto; text-align: center;">
+                <h4 style="margin-bottom: 1.5rem; color: var(--primary);">Validación de Alcance Real 📊</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+                    <div>
+                        <div style="font-size: 2rem; font-weight: 800;">772k+</div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;">Seguidores
+                            Totales</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 2rem; font-weight: 800;">1.3%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;">Conversión
+                            Necesaria</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 2rem; font-weight: 800;">Saavedra</div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;">HQ &
+                            Laboratorio Físico</div>
+                    </div>
+                </div>
+                <p style="margin-top: 2rem; font-size: 1.1rem; color: var(--text-main); font-style: italic;">"Con un
+                    alcance masivo y un <b>gimnasio propio en Saavedra (CABA)</b>, el riesgo de adquisición es nulo. 10k
+                    usuarios es nuestro piso conservador."</p>
+            </div>
+        </section>
+
+        <!-- Conclusión -->
+        <section class="section active" style="text-align: center; padding-top: 5rem;">
+            <div class="rocket-circle">
+                <i data-lucide="rocket" color="white" class="rocket-icon"></i>
+            </div>
+            <h2 style="font-size: 4rem;">Despegue Inmediato</h2>
+            <p style="font-size: 1.5rem; color: var(--text-dim); max-width: 700px; margin: 0 auto 3rem;">La tecnología
+                está lista. El mercado está pidiendo salud accesible. El modelo financiero es imbatible.</p>
+            <div style="display: flex; gap: 1.5rem; justify-content: center;">
+                <div
+                    style="text-align: left; background: var(--glass); padding: 1.5rem 3rem; border-radius: 1rem; border: 1px solid var(--border);">
+                    <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--primary);">Próximo
+                        Milestone</span>
+                    <span style="display: block; font-size: 1.2rem; font-weight: 800;">Lanzamiento Q1 2026</span>
+                </div>
+                <div
+                    style="text-align: left; background: var(--glass); padding: 1.5rem 3rem; border-radius: 1rem; border: 1px solid var(--border);">
+                    <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--primary);">Objetivo
+                        Usuarios</span>
+                    <span style="display: block; font-size: 1.2rem; font-weight: 800;">10k Activos (Conservador)</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer style="padding: 4rem; text-align: center; border-top: 1px solid var(--border);">
+        <p style="color: var(--text-dim); font-size: 0.9rem; font-weight: 700; letter-spacing: 0.2em;">FITAI | THE
+            FUTURE OF FITNESS ECONOMY</p>
+    </footer>
+
+    <!-- Modal Vision Edge -->
+    <div x-show="showVisionModal" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0" class="modal-overlay" @click.self="showVisionModal = false" x-cloak>
+        <div class="modal-container" x-show="showVisionModal" x-transition:enter="transition ease-out duration-500"
+            x-transition:enter-start="opacity-0 scale-90 translate-y-8"
+            x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+            <button class="modal-close" @click="showVisionModal = false">
+                <i data-lucide="x"></i>
+            </button>
+
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <span class="badge" style="background: var(--secondary); color: #fff;">Complete Business Analysis</span>
+                <h2 style="font-size: 2.8rem; margin-bottom: 1rem; letter-spacing: -2px;">Visión Estratégica & Modelo
+                    2026 💎</h2>
+                <p style="color: var(--text-dim); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Análisis
+                    exhaustivo de rentabilidad y libertad operativa para los fundadores.</p>
+            </div>
+
+            <!-- 1. Contexto Argentina -->
+            <div style="margin-bottom: 3rem;">
+                <h4
+                    style="color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+                    <i data-lucide="map-pin"></i> 1. El "Sweet Spot" Argentino
+                </h4>
+                <div
+                    style="background: rgba(129, 140, 248, 0.05); padding: 2.5rem; border-radius: 2.5rem; border: 1px solid var(--border);">
+                    <p style="color: var(--text-dim); line-height: 1.6; margin-bottom: 1.5rem;">
+                        FitAI no compite con el gimnasio, compite con la desorganización. Con un precio final de <b>ARS
+                            $12.000 (neto)</b>, es la opción mas competitiva ante los $80k que cobra un profesional
+                        humano.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div
+                            style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border);">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--primary);">Margen
+                                Operativo</span>
+                            <div style="font-size: 1.8rem; font-weight: 800;">> 90%</div>
+                        </div>
+                        <div
+                            style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border);">
+                            <span
+                                style="font-size: 0.75rem; text-transform: uppercase; color: var(--secondary);">Estrategia
+                                MP</span>
+                            <div style="font-size: 1.2rem; font-weight: 700;">Local Pricing 🇦🇷</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Arquitectura 360 -->
+            <div style="margin-bottom: 3rem;">
+                <h4
+                    style="color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+                    <i data-lucide="refresh-cw"></i> 2. Ecosistema de Monetización
+                </h4>
+                <div class="vision-grid" style="margin-top: 0;">
+                    <div class="vision-item">
+                        <h5 style="color: #fff; margin-bottom: 0.5rem;">FitAI Market (UltraTech)</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">E-commerce validado con partners líderes:
+                            Suplementación y logística de primer nivel desde el día 1.</p>
+                    </div>
+                    <div class="vision-item">
+                        <h5 style="color: #fff; margin-bottom: 0.5rem;">The Content Loop</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">Tráfico recurrente a redes sociales de
+                            Mauri & Rufian. Independencia Algorítmica.</p>
+                    </div>
+                    <div class="vision-item">
+                        <h5 style="color: #fff; margin-bottom: 0.5rem;">Brand Partnerships</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">Escaparate B2B: Marcas pagan por
+                            posicionarse ante audiencia segmentada.</p>
+                    </div>
+                    <div class="vision-item">
+                        <h5 style="color: #fff; margin-bottom: 0.5rem;">Unit Economics</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">LTV proyectado: $15 - $25 USD por usuario
+                            activo mediante cross-selling.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Visión Fundadores -->
+            <div style="margin-bottom: 3rem;">
+                <h4
+                    style="color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+                    <i data-lucide="zap"></i> 3. Visión Escala & Libertad
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div
+                        style="padding: 2rem; background: rgba(16, 185, 129, 0.05); border-radius: 2rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <h5 style="color: var(--secondary); margin-bottom: 0.5rem;">Activo vs Trabajo</h5>
+                        <p style="font-size: 0.85rem; color: var(--text-dim);">FitAI genera ingresos mientras duermen.
+                            No venden horas, crean una empresa con valor de mercado real (Equity).</p>
+                    </div>
+                    <div
+                        style="padding: 2rem; background: rgba(129, 140, 248, 0.05); border-radius: 2rem; border: 1px solid rgba(129, 140, 248, 0.2);">
+                        <h5 style="color: var(--primary); margin-bottom: 0.5rem;">Capital Social (OLGA/Network)</h5>
+                        <p style="font-size: 0.85rem; color: var(--text-dim);">Acceso directo a medios masivos y red de
+                            influencers. FitAI es parte de la conversación cultural de Argentina.</p>
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 1.5rem; padding: 2rem; background: rgba(244, 63, 94, 0.05); border-radius: 2rem; border: 1px solid rgba(244, 63, 94, 0.2);">
+                    <h5 style="color: var(--accent); margin-bottom: 0.5rem;">Desmitificación Técnica</h5>
+                    <p style="font-size: 0.85rem; color: var(--text-dim);">Infraestructura Serverless (Google). Sin
+                        servidores físicos, escala sola. IA = Tu empleado más eficiente.</p>
+                </div>
+            </div>
+
+            <div
+                style="text-align: center; padding: 2.5rem; background: var(--glass); border-radius: 2.5rem; border: 1px solid var(--border);">
+                <h4 style="color: #fff; margin-bottom: 0.5rem;">Conclusión Estratégica</h4>
+                <p style="font-size: 1rem; color: var(--text-dim); line-height: 1.6;">Combinamos la <b>Autoridad de
+                        Influencer</b> con la <b>Eficiencia de un SaaS</b> para dominar el mercado fitness de habla
+                    hispana.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

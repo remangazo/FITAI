@@ -1,3 +1,7 @@
+CRM
+admin_ops@fitai.com
+admin123
+
 rutina1
 Objetivos: Definicion
 Peso: 77kg Altura: 167 Edad: 32
@@ -313,3 +317,7 @@ asi llegamos a trabajar las fibras mas profundas de los musculos. Siempre y
 cuando se respete bien la técnica. Descansar lo indicado: Entre series 1, 1.30 
 min. Entre ejercicios 2 min.
 REALIZAR 3 VECES POR SEMANA UN CARDIO EN CINTA DE 30 MIN CAMINATA RAPIDA
+
+
+Perfecto ahora quiero que crees una carpeta dentro del proyecto donde me genes archivos de documentacion de arquitectura, mapa conceptual de flujos y una auditoria de seguridad y tecnologica, quiero que tomes en cuenta las mejores practicas de seguridad y escalamiento con estas imagenes que adjunto. 
+Quiero que a su vez me generes una web con auditoria de negocios, puntos fuertes, escalabilidad, modelos de negocio potenciales en la app y todo lo necesario para presentar a dos potenciales socios que son influencers fitness. Se puede?

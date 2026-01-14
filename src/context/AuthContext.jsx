@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, googleProvider } from '../config/firebase';
+import { db, auth, googleProvider } from '../config/firebase';
 import {
     onAuthStateChanged,
     signInWithPopup,
@@ -9,9 +9,9 @@ import {
     sendPasswordResetEmail,
     updateProfile
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { Loader2 } from 'lucide-react'; // Added Loader2
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
+import { Loader2 } from 'lucide-react';
 
 const AuthContext = createContext();
 
@@ -28,39 +28,7 @@ export const AuthProvider = ({ children }) => {
     const [profileLoading, setProfileLoading] = useState(false);
 
     useEffect(() => {
-        if (isFirebaseConfigured) {
-            const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                try {
-                    setUser(user);
-                    if (user) {
-                        setProfileLoading(true);
-                        const docRef = doc(db, 'users', user.uid);
-                        const docSnap = await getDoc(docRef);
-                        if (docSnap.exists()) {
-                            setProfile(docSnap.data());
-                        } else {
-                            const initialData = {
-                                email: user.email,
-                                isPremium: false,
-                                onboardingCompleted: false,
-                                createdAt: new Date(),
-                            };
-                            await setDoc(docRef, initialData);
-                            setProfile(initialData);
-                        }
-                    } else {
-                        setProfile(null);
-                    }
-                } catch (error) {
-                    console.error("Auth State Check Error:", error);
-                    setProfile(null);
-                } finally {
-                    setLoading(false);
-                    setProfileLoading(false);
-                }
-            });
-            return unsubscribe;
-        } else {
+        if (!isFirebaseConfigured) {
             // MOCK_MODE: Load mock user from localStorage
             const mockSession = localStorage.getItem('fitai_mock_session');
             if (mockSession) {
@@ -69,8 +37,59 @@ export const AuthProvider = ({ children }) => {
                 setProfile(sessionData.profile);
             }
             setLoading(false);
+            return;
         }
+
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            setUser(user);
+            if (!user) {
+                setProfile(null);
+                setLoading(false);
+                setProfileLoading(false);
+            }
+        });
+
+        return unsubscribeAuth;
     }, []);
+
+    // Effect for real-time profile sync
+    useEffect(() => {
+        if (!isFirebaseConfigured || !user) return;
+
+        setProfileLoading(true);
+        const docRef = doc(db, 'users', user.uid);
+
+        const unsubscribeProfile = onSnapshot(docRef,
+            async (docSnap) => {
+                if (docSnap.exists()) {
+                    setProfile(docSnap.data());
+                } else {
+                    // Create profile if it doesn't exist
+                    const initialData = {
+                        email: user.email,
+                        isPremium: false,
+                        onboardingCompleted: false,
+                        createdAt: new Date(),
+                    };
+                    try {
+                        await setDoc(docRef, initialData);
+                        // Profile state will be updated by the next snapshot
+                    } catch (err) {
+                        console.error("[AuthContext] Error creating profile:", err);
+                    }
+                }
+                setProfileLoading(false);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("[AuthContext] Profile sync error:", error);
+                setProfileLoading(false);
+                setLoading(false);
+            }
+        );
+
+        return unsubscribeProfile;
+    }, [user]);
 
     const loginWithGoogle = async () => {
         if (isFirebaseConfigured) {
@@ -141,20 +160,50 @@ export const AuthProvider = ({ children }) => {
             }
             try {
                 const docRef = doc(db, 'users', user.uid);
-                const newData = { ...profileData };
+
+                // Filtrar campos protegidos para evitar errores de permisos si no han cambiado
+                const restrictedFields = ['isPremium', 'subscriptionId', 'subscriptionStatus', 'role'];
+                const filteredData = { ...profileData };
+
+                restrictedFields.forEach(field => {
+                    if (filteredData[field] === profile?.[field]) {
+                        delete filteredData[field];
+                    }
+                });
+
+                const newData = { ...filteredData };
+
+                // Detect if metabolic profile needs recalculation
+                const metabolicTriggers = ['weight', 'height', 'birthYear', 'gender', 'primaryGoal', 'trainingFrequency', 'mealsPerDay'];
+                const needsRecalculate = metabolicTriggers.some(field =>
+                    filteredData[field] !== undefined && filteredData[field] !== profile?.[field]
+                );
+
+                if (needsRecalculate) {
+                    console.log('[AuthContext] Recalculating metabolic profile for cache...');
+                    const updatedProfileForCalc = { ...profile, ...filteredData };
+                    const metabolicProfile = calculateFullMetabolicProfile(updatedProfileForCalc);
+                    newData.metabolicCache = {
+                        ...metabolicProfile,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
 
                 // Si hay un cambio de peso, registrar en el historial
-                if (profileData.weight && profileData.weight !== profile?.weight) {
+                if (filteredData.weight && filteredData.weight !== profile?.weight) {
                     const weightEntry = {
-                        weight: profileData.weight,
+                        weight: filteredData.weight,
                         date: new Date().toISOString(),
                     };
                     newData.weightHistory = [...(profile?.weightHistory || []), weightEntry].slice(-50); // Mantener últimos 50
                     newData.lastWeightUpdate = new Date().toISOString();
                 }
 
-                await setDoc(docRef, { ...profile, ...newData }, { merge: true });
+                if (Object.keys(newData).length === 0) return; // Nada que actualizar
+
+                await setDoc(docRef, newData, { merge: true });
                 setProfile(prev => ({ ...prev, ...newData }));
+                return true;
             } catch (error) {
                 console.error("Error actualizando perfil en Firestore:", error);
                 throw error;

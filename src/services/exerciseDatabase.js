@@ -50,7 +50,7 @@ export const EXERCISES = [
     // ==================== PECHO ====================
     {
         id: 'chest_press_incline_smith',
-        name: 'Press inclinado en Smith 35 grados',
+        name: 'Press inclinacióndo en Smith 35 grados',
         muscleGroup: MUSCLE_GROUPS.CHEST,
         secondaryMuscle: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.SMITH,
@@ -62,7 +62,7 @@ export const EXERCISES = [
     },
     {
         id: 'chest_press_incline_db',
-        name: 'Press inclinado con mancuernas 25 grados',
+        name: 'Press inclinacióndo con mancuernas 25 grados',
         muscleGroup: MUSCLE_GROUPS.CHEST,
         secondaryMuscle: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.DUMBBELL,
@@ -70,11 +70,11 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '12-10-10',
         techniques: ['dropset'],
-        notes: 'Retraccion escapular. Controlar la bajada.'
+        notes: 'retracción escapular. Controlar la bajada.'
     },
     {
         id: 'chest_fly_machine',
-        name: 'Aperturas en maquina',
+        name: 'Aperturas en máquina',
         muscleGroup: MUSCLE_GROUPS.CHEST,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -104,7 +104,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '12-10-8-8',
         techniques: ['pyramid'],
-        notes: 'ugarre medio. Tocar el pecho en cada rep.'
+        notes: 'Agarre medio. Tocar el pecho en cada rep.'
     },
     {
         id: 'chest_dips',
@@ -116,13 +116,13 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '10-8-8',
         techniques: [],
-        notes: 'Inclinacion hacia adelante para enfatizar pecho.'
+        notes: 'inclinacióncion hacia adelante para enfatizar pecho.'
     },
 
     // ==================== TRCEPS ====================
     {
-        id: 'triceps_extension_cable_high',
-        name: 'Extension de triceps en polea alta',
+        id: 'triceps_Extensión_cable_high',
+        name: 'Extensión de triceps en polea alta',
         muscleGroup: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.CABLE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -132,8 +132,8 @@ export const EXERCISES = [
         notes: '+ 1 drop al 50% fallo'
     },
     {
-        id: 'triceps_extension_unilateral',
-        name: 'Extension neutra unilateral en polea',
+        id: 'triceps_Extensión_unilateral',
+        name: 'Extensión neutra unilateral en polea',
         muscleGroup: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.CABLE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -162,7 +162,7 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '12-10-10',
         techniques: ['dropset'],
-        notes: 'Separar la soga en la contraccion maxima.'
+        notes: 'Separar la soga en la contracción maxima.'
     },
     {
         id: 'triceps_kickback_cable',
@@ -173,10 +173,10 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '12-10',
         techniques: [],
-        notes: 'Mantener el codo fijo. Contraccion maxima.'
+        notes: 'Mantener el codo fijo. contracción maxima.'
     },
 
-    // ==================== ESPuLDu ====================
+    // ==================== ESPALDA ====================
     {
         id: 'back_pullover_cable',
         name: 'Pullover con soga en polea',
@@ -210,11 +210,11 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '12-10',
         techniques: [],
-        notes: 'ugarre neutro. Tirar hacia el abdomen.'
+        notes: 'Agarre neutro. Tirar hacia el abdomen.'
     },
     {
         id: 'back_row_machine_unilateral',
-        name: 'Remo en maquina neutro unilateral',
+        name: 'Remo en máquina neutro unilateral',
         muscleGroup: MUSCLE_GROUPS.BACK,
         secondaryMuscle: MUSCLE_GROUPS.BICEPS,
         equipment: EQUIPMENT.MACHINE,
@@ -234,7 +234,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '10-8-8-6',
         techniques: [],
-        notes: 'ugarre prono ancho. Bajar controlado.'
+        notes: 'Agarre prono ancho. Bajar controlado.'
     },
     {
         id: 'back_seated_row_cable',
@@ -246,7 +246,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '12-10-10-8',
         techniques: ['pyramid'],
-        notes: 'Mantener espalda recta. Retraccion escapular.'
+        notes: 'Mantener espalda recta. retracción escapular.'
     },
 
     // ==================== BCEPS ====================
@@ -343,7 +343,7 @@ export const EXERCISES = [
     },
     {
         id: 'shoulders_rear_delt_machine',
-        name: 'Posteriores en maquina',
+        name: 'Posteriores en máquina',
         muscleGroup: MUSCLE_GROUPS.SHOULDERS,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -372,7 +372,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '20',
         techniques: [],
-        notes: 'Mantener 2" en la contraccion maxima.'
+        notes: 'Mantener 2" en la contracción maxima.'
     },
     {
         id: 'shoulders_lateral_cable',
@@ -386,7 +386,7 @@ export const EXERCISES = [
         notes: 'Tension constante. Sin impulso.'
     },
 
-    // ==================== PIERNuS (CUDRICEPS) ====================
+    // ==================== PIERNAS (CUÁDRICEPS) ====================
     {
         id: 'legs_hack_squat',
         name: 'Hack Squat',
@@ -422,7 +422,7 @@ export const EXERCISES = [
         notes: '+ 1 sentadilla con mancuernas x fallo'
     },
     {
-        id: 'legs_leg_extension',
+        id: 'legs_leg_Extensión',
         name: 'Sillon de cuadriceps',
         muscleGroup: MUSCLE_GROUPS.LEGS_QUAD,
         equipment: EQUIPMENT.MACHINE,
@@ -441,10 +441,10 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '15-12',
         techniques: [],
-        notes: 'Control total. Maxima extension de rodilla.'
+        notes: 'Control total. Maxima Extensión de rodilla.'
     },
 
-    // ==================== PIERNuS (ISQUIOTIBIuLES/GLTEOS) ====================
+    // ==================== PIERNAS (ISQUIOTIBIALES/GLÚTEOS) ====================
     {
         id: 'legs_leg_curl',
         name: 'Camilla de femorales',
@@ -454,22 +454,22 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '12-10',
         techniques: [],
-        notes: 'Contraccion maxima en cada rep.'
+        notes: 'contracción maxima en cada rep.'
     },
     {
         id: 'legs_hip_thrust',
-        name: 'Hip Thrust en maquina',
+        name: 'Hip Thrust en máquina',
         muscleGroup: MUSCLE_GROUPS.LEGS_HAM,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.COMPOUND,
         defaultSets: 3,
         defaultReps: '12-10',
         techniques: [],
-        notes: 'Squeeze 2" en la contraccion maxima.'
+        notes: 'Squeeze 2" en la contracción maxima.'
     },
     {
         id: 'legs_abductors',
-        name: 'ubductores en maquina',
+        name: 'Abductores en máquina',
         muscleGroup: MUSCLE_GROUPS.LEGS_HAM,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -629,7 +629,7 @@ export const EXERCISES = [
         notes: 'Disco en la espalda o chaleco lastrado.'
     },
 
-    // ==================== EJERCICIOS ADICIONuLES ESPuLDu ====================
+    // ==================== EJERCICIOS ADICIONuLES ESPALDA ====================
     {
         id: 'back_lat_pulldown_supine',
         name: 'Jalones supinos en polea alta',
@@ -640,11 +640,11 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '12-10-10',
         techniques: ['dropset'],
-        notes: 'ugarre supino. nfasis en biceps y espalda baja.'
+        notes: 'Agarre supino. nfasis en biceps y espalda baja.'
     },
     {
         id: 'back_row_barbell',
-        name: 'Remo con barra inclinado',
+        name: 'Remo con barra inclinacióndo',
         muscleGroup: MUSCLE_GROUPS.BACK,
         secondaryMuscle: MUSCLE_GROUPS.BICEPS,
         equipment: EQUIPMENT.BARBELL,
@@ -652,7 +652,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '10-8-8-6',
         techniques: ['pyramid'],
-        notes: '45 grados de inclinacion. Tirar hacia el ombligo.'
+        notes: '45 grados de inclinacióncion. Tirar hacia el ombligo.'
     },
     {
         id: 'back_row_db_unilateral',
@@ -679,7 +679,7 @@ export const EXERCISES = [
     },
     {
         id: 'back_machine_row',
-        name: 'Remo en maquina (palancas)',
+        name: 'Remo en máquina (palancas)',
         muscleGroup: MUSCLE_GROUPS.BACK,
         secondaryMuscle: MUSCLE_GROUPS.BICEPS,
         equipment: EQUIPMENT.MACHINE,
@@ -701,11 +701,11 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '12-10-8',
         techniques: ['pyramid'],
-        notes: 'Sentado. Subir hasta extension completa.'
+        notes: 'Sentado. Subir hasta Extensión completa.'
     },
     {
         id: 'shoulders_arnold_press',
-        name: 'Press urnold',
+        name: 'Press Arnold',
         muscleGroup: MUSCLE_GROUPS.SHOULDERS,
         secondaryMuscle: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.DUMBBELL,
@@ -724,11 +724,11 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '12-10',
         techniques: [],
-        notes: 'ugarre medio. Subir hasta nivel de clavicula.'
+        notes: 'Agarre medio. Subir hasta nivel de clavicula.'
     },
     {
         id: 'shoulders_lateral_machine',
-        name: 'Vuelos laterales en maquina',
+        name: 'Vuelos laterales en máquina',
         muscleGroup: MUSCLE_GROUPS.SHOULDERS,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -749,7 +749,7 @@ export const EXERCISES = [
         notes: 'Brazos cruzados. ubrir hacia afuera.'
     },
 
-    // ==================== EJERCICIOS ADICIONuLES PIERNuS ====================
+    // ==================== EJERCICIOS ADICIONuLES PIERNAS ====================
     {
         id: 'legs_squat_barbell',
         name: 'Sentadilla con barra',
@@ -805,7 +805,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '20-15-15',
         techniques: [],
-        notes: 'Pausa en la contraccion maxima.'
+        notes: 'Pausa en la contracción maxima.'
     },
     {
         id: 'legs_calf_raise_seated',
@@ -840,7 +840,7 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '12-10',
         techniques: [],
-        notes: 'Pecho apoyado en banco inclinado. Maxima contraccion.'
+        notes: 'Pecho apoyado en banco inclinacióndo. Maxima contracción.'
     },
     {
         id: 'biceps_curl_21s',
@@ -879,7 +879,7 @@ export const EXERCISES = [
     },
     {
         id: 'triceps_overhead_db',
-        name: 'Extension overhead con mancuerna',
+        name: 'Extensión overhead con mancuerna',
         muscleGroup: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.DUMBBELL,
         type: EXERCISE_TYPE.ISOLATION,
@@ -898,7 +898,7 @@ export const EXERCISES = [
         defaultSets: 4,
         defaultReps: '10-8-8',
         techniques: ['pyramid'],
-        notes: 'ugarre a la anchura de hombros. Codos pegados.'
+        notes: 'Agarre a la anchura de hombros. Codos pegados.'
     },
     {
         id: 'triceps_pushdown_bar',
@@ -909,7 +909,7 @@ export const EXERCISES = [
         defaultSets: 3,
         defaultReps: '15-12-10',
         techniques: ['dropset'],
-        notes: 'Mantener codos fijos. Extension completa.'
+        notes: 'Mantener codos fijos. Extensión completa.'
     },
 
     // ==================== EJERCICIOS ADICIONuLES CORE ====================
@@ -960,7 +960,7 @@ export const EXERCISES = [
     // ==================== COACH ELITE EXERCISES (PRO) ====================
     {
         id: 'coach_shoulders_pec_fly_posterior',
-        name: 'Vuelos posteriores en maquina pectorales',
+        name: 'Vuelos posteriores en máquina pectorales',
         muscleGroup: MUSCLE_GROUPS.SHOULDERS,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -984,7 +984,7 @@ export const EXERCISES = [
     },
     {
         id: 'coach_back_v_grip_machine_row',
-        name: 'Remo en maquina agarre V',
+        name: 'Remo en máquina agarre V',
         muscleGroup: MUSCLE_GROUPS.BACK,
         equipment: EQUIPMENT.MACHINE,
         type: EXERCISE_TYPE.COMPOUND,
@@ -992,18 +992,18 @@ export const EXERCISES = [
         defaultReps: '12-10',
         techniques: ['dropset'],
         coachSource: true,
-        notes: '+ 2 drops al 25% cada uno al fallo. Retraccion maxima.'
+        notes: '+ 2 drops al 25% cada uno al fallo. retracción maxima.'
     },
     {
-        id: 'coach_triceps_extension_rope_overhead',
-        name: 'Extension triceps tras nuca con soga polea alta',
+        id: 'coach_triceps_Extensión_rope_overhead',
+        name: 'Extensión triceps tras nuca con soga polea alta',
         muscleGroup: MUSCLE_GROUPS.TRICEPS,
         equipment: EQUIPMENT.CABLE,
         type: EXERCISE_TYPE.ISOLATION,
         defaultSets: 4,
         defaultReps: '12-10',
         coachSource: true,
-        notes: 'Inclinacion hacia adelante. Codos cerrados.'
+        notes: 'inclinacióncion hacia adelante. Codos cerrados.'
     },
     {
         id: 'coach_legs_bulgarian_db_elite',
@@ -1029,7 +1029,7 @@ export const EXERCISES = [
     },
     {
         id: 'coach_glute_kickback_machine_elite',
-        name: 'Patada de gluteos en maquina/polea',
+        name: 'Patada de gluteos en máquina/polea',
         muscleGroup: MUSCLE_GROUPS.LEGS_HAM,
         equipment: EQUIPMENT.CABLE,
         type: EXERCISE_TYPE.ISOLATION,
@@ -1074,7 +1074,7 @@ export const EXERCISES = [
     },
     {
         id: 'coach_chest_press_incline_smith_elite',
-        name: 'Press inclinado 45Â° en Smith (Elite)',
+        name: 'Press inclinacióndo 45Â° en Smith (Elite)',
         muscleGroup: MUSCLE_GROUPS.CHEST,
         equipment: EQUIPMENT.SMITH,
         type: EXERCISE_TYPE.COMPOUND,
@@ -1166,4 +1166,5 @@ export const getAbsCircuit = () => {
 };
 
 export default EXERCISES;
+
 

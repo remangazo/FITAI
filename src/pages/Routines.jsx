@@ -100,7 +100,7 @@ export default function Routines() {
     const allRoutines = [...aiRoutines, ...manualRoutines.map((r, i) => ({ ...r, isManual: true, manualIndex: i }))];
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white pb-24 md:pb-8">
+        <div className="min-h-screen bg-slate-950 text-white pb-32 md:pb-8">
             {/* Header - Optimized for mobile */}
             <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 pt-3 sm:pt-6 pb-3 sm:pb-4">
@@ -154,7 +154,7 @@ export default function Routines() {
             </div>
 
             {/* Content */}
-            <main className="max-w-7xl mx-auto p-4 md:p-8">
+            <main className="max-w-7xl mx-auto p-4 md:p-8 pb-40">
                 <AnimatePresence mode="wait">
                     {activeTab === 'my-routines' && (
                         <motion.div

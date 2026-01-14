@@ -98,6 +98,7 @@ export default function Dashboard() {
         coachName: 'Coach Pro',
         coachAvatar: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&q=80&w=150&h=150'
     });
+    const [assignedCoach, setAssignedCoach] = useState(null);
 
     // Global Modal Back-Button Handler
     useEffect(() => {
@@ -296,7 +297,30 @@ export default function Dashboard() {
                 }
             }
 
-            setDiets(activeDiet ? [activeDiet] : []);
+            // Cargar perfil metabólico - PRIORIDAD: metabolicCache > Cálculo al vuelo
+            let metabolicProfile = null;
+            if (profile?.metabolicCache) {
+                metabolicProfile = profile.metabolicCache;
+                console.log('[Dashboard] Metabolic profile loaded from cache');
+            } else {
+                console.log('[Dashboard] Calculating metabolic profile (no cache found)');
+                metabolicProfile = calculateFullMetabolicProfile(profile);
+            }
+
+            // Usar el perfil metabólico para lo que sea necesario en el Dashboard...
+            // Por ejemplo, para mostrar recomendaciones o widget de nutrición
+
+            // Cargar info del coach asignado
+            if (profile?.coachId) {
+                try {
+                    const coachDoc = await getDoc(doc(db, 'trainers', profile.coachId));
+                    if (coachDoc.exists()) {
+                        setAssignedCoach(coachDoc.data());
+                    }
+                } catch (err) {
+                    console.error("[Dashboard] Error loading coach info:", err);
+                }
+            }
 
         } catch (error) {
             console.error("[Dashboard] Error fetching dashboard data:", error);
@@ -521,7 +545,7 @@ export default function Dashboard() {
                 <Loader2 className="animate-spin text-blue-500" size={48} />
             </div>
         }>
-            <div className="min-h-screen bg-slate-950 text-white font-sans pb-24 md:pb-0 overflow-x-hidden">
+            <div className="min-h-screen bg-slate-950 text-white font-sans pb-32 md:pb-0 overflow-x-hidden">
                 {/* Header with Background Glow */}
                 <div className="relative">
                     {showTutorial && <InteractiveGuide onComplete={handleTutorialComplete} />}
@@ -564,7 +588,7 @@ export default function Dashboard() {
                     </div>
                 </nav>
 
-                <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-4 sm:space-y-8">
+                <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-4 sm:space-y-8 pb-40">
                     {/* Streaming Live Banner - Real-time Hub */}
                     <InfluencerLiveBanner
                         isLive={streamInfo.isLive}
@@ -606,6 +630,18 @@ export default function Dashboard() {
                                     <div className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider hidden sm:block">
                                         {profile?.isPremium ? 'Premium' : 'Free'}
                                     </div>
+                                    {assignedCoach && (
+                                        <>
+                                            <div className="w-1 h-1 bg-slate-700 rounded-full" />
+                                            <div
+                                                onClick={() => navigate(`/trainer/profile/${profile.coachId}`)}
+                                                className="flex items-center gap-1.5 text-indigo-400 text-[10px] sm:text-xs font-black uppercase tracking-wider cursor-pointer hover:text-indigo-300 transition-colors"
+                                            >
+                                                <Sparkles size={12} className="text-indigo-400" />
+                                                Coach: {assignedCoach.displayName || 'Asignado'}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -76,8 +76,8 @@
 
     <style>
         .text-huge {
-            font-size: clamp(3rem, 10vw, 7.5rem);
-            line-height: 0.8;
+            font-size: clamp(2.5rem, 12vw, 7.5rem);
+            line-height: 0.9;
             letter-spacing: -0.05em;
         }
 
@@ -203,13 +203,15 @@
 <body class="bg-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-indigo/30">
 
     <!-- Nav -->
-    <nav x-data="{ scrolled: false, openTrainerModal: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
-        :class="{ 'glass-dark py-4': scrolled, 'py-8': !scrolled }"
+    <nav x-data="{ scrolled: false, mobileMenu: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
+        :class="{ 'glass-dark py-4': scrolled, 'py-6 md:py-8': !scrolled }"
         class="fixed top-0 w-full z-[100] px-6 md:px-12 flex justify-between items-center transition-all duration-500">
         <div class="flex items-center gap-2">
-            <span class="text-3xl font-display font-black tracking-tighter uppercase">FIT<span
+            <span class="text-2xl md:text-3xl font-display font-black tracking-tighter uppercase">FIT<span
                     class="text-brand-indigo">AI</span></span>
         </div>
+
+        <!-- Desktop Nav -->
         <div class="hidden md:flex items-center gap-10 text-[10px] font-black tracking-[0.4em] uppercase">
             <a href="#pro"
                 class="hover:text-brand-indigo transition-colors opacity-60 hover:opacity-100 uppercase tracking-widest leading-none">PROFESIONAL</a>
@@ -220,6 +222,25 @@
             <button
                 class="bg-white text-dark px-10 py-5 rounded-none font-black hover:bg-brand-indigo hover:text-white transition-all transform hover:scale-105">ACCESO
                 ÉLITE</button>
+        </div>
+
+        <!-- Mobile Trigger -->
+        <button @click="mobileMenu = !mobileMenu" class="md:hidden text-white">
+            <i data-lucide="menu" x-show="!mobileMenu" class="w-8 h-8"></i>
+            <i data-lucide="x" x-show="mobileMenu" class="w-8 h-8" x-cloak></i>
+        </button>
+
+        <!-- Mobile Menu Overlay -->
+        <div x-show="mobileMenu" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+            class="absolute top-full left-0 w-full bg-dark/95 backdrop-blur-xl border-b border-white/10 flex flex-col p-8 gap-8 md:hidden"
+            x-cloak>
+            <a href="#pro" @click="mobileMenu = false"
+                class="text-lg font-black tracking-widest uppercase">PROFESIONAL</a>
+            <a href="#community" @click="mobileMenu = false"
+                class="text-lg font-black tracking-widest uppercase">COMUNIDAD</a>
+            <a href="#plans" @click="mobileMenu = false" class="text-lg font-black tracking-widest uppercase">PLANES</a>
+            <button class="bg-brand-indigo text-white py-6 font-black uppercase tracking-widest">ACCESO ÉLITE</button>
         </div>
     </nav>
 
@@ -273,44 +294,46 @@
                 </div>
 
                 <p
-                    class="text-2xl md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-8">
+                    class="text-xl md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-6 md:pl-8">
                     La primera plataforma donde la IA no solo te da planes, sino que entiende tu biología.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-8">
+                <div class="flex flex-col sm:flex-row gap-6 md:gap-8">
                     <a href="https://peachpuff-narwhal-354649.hostingersite.com/" target="_blank"
                         class="bg-brand-indigo text-white px-8 md:px-14 py-6 md:py-8 text-lg md:text-xl font-black uppercase tracking-tighter hover:bg-white hover:text-dark transition-all transform hover:-rotate-1 inline-block text-center w-full md:w-auto">
                         UNIRSE AHORA
                     </a>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 justify-center md:justify-start">
                         <div class="flex -space-x-3">
-                            <div class="w-12 h-12 rounded-full border-2 border-dark bg-slate-800"></div>
-                            <div class="w-12 h-12 rounded-full border-2 border-dark bg-brand-indigo"></div>
-                            <div class="w-12 h-12 rounded-full border-2 border-dark bg-slate-700"></div>
+                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-dark bg-slate-800"></div>
+                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-dark bg-brand-indigo">
+                            </div>
+                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-dark bg-slate-700"></div>
                         </div>
-                        <div class="text-[10px] font-black tracking-widest text-white/40 leading-tight uppercase">
-                            50,000+ ATLETAS <br> EN ELÉVACIÓN
+                        <div
+                            class="text-[9px] md:text-[10px] font-black tracking-widest text-white/40 leading-tight uppercase">
+                            50,000+ ATLETAS <br> EN ELEVACIÓN
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Real Asset: movil1.png & movil4.png Loop -->
-            <div class="relative flex justify-center lg:justify-end mt-12 lg:mt-0 lg:-mr-20" x-data="{ current: 1 }"
+            <div class="relative flex justify-center lg:justify-end mt-12 lg:mt-0" x-data="{ current: 1 }"
                 x-init="setInterval(() => current = current === 1 ? 2 : 1, 4000)">
-                <div class="relative animate-float h-[500px] md:h-[800px] w-full max-w-[350px] md:max-w-[550px]">
-                    <div class="absolute inset-0 bg-brand-indigo/20 blur-[80px] md:blur-[120px]"></div>
+                <div class="relative animate-float h-[400px] md:h-[800px] w-full max-w-[280px] md:max-w-[550px]">
+                    <div class="absolute inset-0 bg-brand-indigo/20 blur-[60px] md:blur-[120px]"></div>
 
                     <!-- Image 1: Dashboard -->
-                    <img src="images/movil1.png" alt="Dashboard de FitAI mostrando el progreso metabólico del atleta"
-                        class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
+                    <img src="images/movil1.png" alt="Dashboard de FitAI"
+                        class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
                         :class="current === 1 ? 'opacity-100' : 'opacity-0'">
 
                     <!-- Image 2: Nutrition -->
-                    <img src="images/movil4.png" alt="Módulo de nutrición inteligente y planes de comida en FitAI"
-                        class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
+                    <img src="images/movil4.png" alt="Módulo de nutrición"
+                        class="absolute inset-0 z-10 w-full h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] filter brightness-110 transition-opacity duration-1000"
                         :class="current === 2 ? 'opacity-100' : 'opacity-0'">
 
-                    <div class="absolute -bottom-10 md:bottom-1/4 left-1/2 -translate-x-1/2 md:translate-x-0 md:-left-20 glass-dark p-6 md:p-8 border-t-4 animate-float-delayed z-20 min-w-[200px] md:min-w-[220px] transition-all duration-500 text-center"
+                    <div class="absolute -bottom-6 md:bottom-1/4 left-1/2 -translate-x-1/2 md:translate-x-0 md:-left-20 glass-dark p-4 md:p-8 border-t-2 md:border-t-4 animate-float-delayed z-20 min-w-[160px] md:min-w-[220px] transition-all duration-500 text-center"
                         x-data="{ 
                             stats: [
                                 { label: 'PROGRESO IA', value: '+14.2%', desc: 'Capacidad Metabólica', color: 'border-brand-indigo', text: 'text-brand-indigo' },
@@ -325,18 +348,19 @@
                                 }, 3500);
                             }
                         }" :class="stats[current].color">
-                        <div class="relative h-20 overflow-hidden flex items-center justify-center">
+                        <div class="relative h-16 md:h-20 overflow-hidden flex items-center justify-center">
                             <template x-for="(stat, index) in stats">
                                 <div x-show="current === index" x-transition:enter="transition ease-out duration-500"
                                     x-transition:enter-start="opacity-0 translate-y-4"
                                     x-transition:leave="transition ease-in duration-300 absolute inset-0"
                                     class="flex flex-col justify-center items-center w-full">
-                                    <p class="text-[10px] font-black uppercase tracking-widest mb-2" :class="stat.text"
-                                        x-text="stat.label"></p>
-                                    <div class="text-4xl font-display font-black leading-none tracking-tighter"
+                                    <p class="text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1 md:mb-2"
+                                        :class="stat.text" x-text="stat.label"></p>
+                                    <div class="text-2xl md:text-4xl font-display font-black leading-none tracking-tighter"
                                         x-text="stat.value">
                                     </div>
-                                    <div class="text-[8px] font-bold text-white/30 uppercase mt-2" x-text="stat.desc">
+                                    <div class="text-[7px] md:text-[8px] font-bold text-white/30 uppercase mt-1 md:mt-2"
+                                        x-text="stat.desc">
                                     </div>
                                 </div>
                             </template>
@@ -362,7 +386,7 @@
                         <span class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
                         THE INTELLIGENCE CORE
                     </p>
-                    <h2 class="text-4xl md:text-6xl lg:text-[5.5rem] font-display font-black uppercase leading-none md:leading-[0.85] tracking-tighter reveal-up"
+                    <h2 class="text-3xl md:text-6xl lg:text-[5.5rem] font-display font-black uppercase leading-tight md:leading-[0.85] tracking-tighter reveal-up"
                         :class="{ 'active': active }">
                         <span class="shimmer-white">MENOS</span><br>
                         <span class="shimmer-indigo">DUDA.</span><br>
@@ -390,10 +414,10 @@
 
             <div class="lg:order-1 relative flex justify-center">
                 <div class="absolute inset-0 bg-violet-600/10 blur-[200px]"></div>
-                <img src="images/movil2.png" alt="Interfaz de rutinas inteligentes generadas por IA"
-                    class="relative z-10 w-[550px] animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+                <img src="images/movil2.png" alt="Interfaz de rutinas inteligentes"
+                    class="relative z-10 w-full max-w-[320px] md:max-w-[550px] animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
                 <div
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white/5 rounded-full animate-pulse-slow">
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] border border-white/5 rounded-full animate-pulse-slow">
                 </div>
             </div>
         </div>
@@ -413,11 +437,11 @@
                     <span class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
                     ELITE COACHING NETWORK
                 </p>
-                <h2 class="text-7xl md:text-[10rem] font-display font-black uppercase leading-none tracking-tighter reveal-scale"
+                <h2 class="text-5xl md:text-[10rem] font-display font-black uppercase leading-none tracking-tighter reveal-scale"
                     :class="{ 'active': active }">
                     <span class="shimmer-white">EL ESTÁNDAR</span> <br>
                     <span
-                        class="bg-white text-dark px-10 transform -rotate-2 inline-block animate-ambient">PROFESIONAL.</span>
+                        class="bg-white text-dark px-4 md:px-10 transform -rotate-2 inline-block animate-ambient mt-2">PROFESIONAL.</span>
                 </h2>
                 <p class="mt-16 text-2xl md:text-4xl font-display font-medium text-white/40 leading-tight reveal-up"
                     :class="{ 'active': active }">
@@ -442,9 +466,11 @@
                         <i data-lucide="users-2" class="w-8 h-8 text-white"></i>
                     </div>
                     <div class="relative z-10 space-y-4">
-                        <h3 class="text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
+                        <h3
+                            class="text-3xl md:text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
                             GESTIÓN MASIVA</h3>
-                        <p class="text-white/40 text-lg leading-relaxed font-medium">Controla el progreso de 50+ atletas
+                        <p class="text-white/40 text-base md:text-lg leading-relaxed font-medium">Controla el progreso
+                            de 50+ atletas
                             desde un solo mando. Visualiza alertas de riesgo automáticas.</p>
                     </div>
                 </div>
@@ -481,9 +507,11 @@
                         <i data-lucide="shield-check" class="w-8 h-8 text-brand-indigo"></i>
                     </div>
                     <div class="relative z-10 space-y-4">
-                        <h3 class="text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
+                        <h3
+                            class="text-3xl md:text-4xl font-display font-black uppercase tracking-tighter italic leading-none">
                             BRANDING ELITE</h3>
-                        <p class="text-white/40 text-lg leading-relaxed font-medium">Desde tu logo hasta tu metodología
+                        <p class="text-white/40 text-base md:text-lg leading-relaxed font-medium">Desde tu logo hasta tu
+                            metodología
                             personalizada. Todo bajo tu marca personal.</p>
                     </div>
                 </div>
@@ -573,10 +601,10 @@
                                         <div class="h-[1px] w-12 bg-brand-indigo/30"></div>
                                     </div>
                                     <h3
-                                        class="text-5xl md:text-7xl font-display font-black uppercase leading-[0.85] tracking-tighter">
+                                        class="text-4xl md:text-7xl font-display font-black uppercase leading-[0.85] tracking-tighter">
                                         EVOLUCIÓN <br> <span class="shimmer-indigo">DETALLADA.</span>
                                     </h3>
-                                    <p class="text-xl text-white/50 leading-relaxed font-medium">
+                                    <p class="text-lg md:text-xl text-white/50 leading-relaxed font-medium">
                                         Estudia el progreso biométrico y técnico de cada atleta. Toma decisiones basadas
                                         en datos reales para maximizar resultados.
                                     </p>
@@ -624,15 +652,17 @@
 
                             <!-- Floating Badge -->
                             <div
-                                class="absolute -top-6 -right-6 glass-dark p-6 border border-white/10 rounded-2xl z-20 shadow-2xl flex items-center gap-4 animate-float">
-                                <div class="w-12 h-12 bg-white flex items-center justify-center rounded-xl">
-                                    <i data-lucide="sparkles" class="w-6 h-6 text-dark animate-pulse"></i>
+                                class="absolute -top-4 md:-top-6 -right-4 md:-right-6 glass-dark p-4 md:p-6 border border-white/10 rounded-2xl z-20 shadow-2xl flex items-center gap-3 md:gap-4 animate-float">
+                                <div
+                                    class="w-10 h-10 md:w-12 md:h-12 bg-white flex items-center justify-center rounded-xl">
+                                    <i data-lucide="sparkles" class="w-5 h-5 md:w-6 md:h-6 text-dark animate-pulse"></i>
                                 </div>
                                 <div>
                                     <div
-                                        class="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">
+                                        class="text-[8px] md:text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">
                                         Tecnología</div>
-                                    <div class="text-xs font-black uppercase text-white tracking-widest leading-none">
+                                    <div
+                                        class="text-[10px] md:text-xs font-black uppercase text-white tracking-widest leading-none">
                                         FitAI Elite</div>
                                 </div>
                             </div>
@@ -653,14 +683,14 @@
                                 class="text-3xl md:text-5xl font-display font-black uppercase italic tracking-tighter leading-none">
                                 ¿SOS ENTRENADOR <br> <span class="shimmer-indigo">PERSONAL?</span>
                             </h3>
-                            <p class="text-lg text-white/40 font-medium max-w-xl">
+                            <p class="text-base md:text-lg text-white/40 font-medium max-w-xl">
                                 Únete a nuestra red de élite. Accede a herramientas de gestión de última generación y
                                 escala
                                 tu negocio llegando a acuerdos estratégicos directamente con nosotros.
                             </p>
                         </div>
                         <button @click="$dispatch('open-trainer-modal')"
-                            class="flex-shrink-0 bg-white text-dark px-10 py-6 text-lg font-black uppercase tracking-tighter hover:bg-brand-indigo hover:text-white transition-all transform hover:-rotate-2 shadow-xl shadow-indigo-500/10">
+                            class="w-full md:w-auto flex-shrink-0 bg-white text-dark px-10 py-6 text-lg font-black uppercase tracking-tighter hover:bg-brand-indigo hover:text-white transition-all transform hover:-rotate-2 shadow-xl shadow-indigo-500/10">
                             CONOCER MÁS
                         </button>
                     </div>
@@ -724,11 +754,14 @@
                         class="absolute inset-0 z-10 w-full h-full object-contain md:rotate-3 animate-float drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] md:drop-shadow-[0_50px_100px_rgba(0,0,0,0.8)] transition-opacity duration-1000"
                         :class="currentsocial === 2 ? 'opacity-100' : 'opacity-0'">
 
-                    <div class="absolute bottom-1/4 -right-10 bg-white p-6 md:p-8 transform rotate-6 shadow-2xl z-20">
+                    <div
+                        class="absolute bottom-1/4 -right-4 md:-right-10 bg-white p-4 md:p-8 transform rotate-6 shadow-2xl z-20">
                         <p
-                            class="text-dark font-black text-2xl uppercase italic leading-none underline decoration-brand-indigo decoration-4 mb-2">
+                            class="text-dark font-black text-xl md:text-2xl uppercase italic leading-none underline decoration-brand-indigo decoration-4 mb-2">
                             Social 2.0</p>
-                        <p class="text-[9px] font-black text-dark/40 tracking-widest leading-none uppercase">DOMINIO
+                        <p
+                            class="text-[7px] md:text-[9px] font-black text-dark/40 tracking-widest leading-none uppercase">
+                            DOMINIO
                             TOTAL
                         </p>
                     </div>
@@ -747,7 +780,7 @@
         <div class="max-w-[1200px] mx-auto space-y-24">
             <div class="text-center space-y-6" x-data="{ active: false }" x-intersect="active = true">
                 <p class="text-[10px] font-black tracking-[0.5em] text-brand-indigo uppercase">COMPARA Y ASCIENDE</p>
-                <h2 class="text-5xl md:text-7xl lg:text-9xl font-display font-black uppercase tracking-tighter reveal-up"
+                <h2 class="text-4xl md:text-7xl lg:text-9xl font-display font-black uppercase tracking-tighter reveal-up"
                     :class="{ 'active': active }">
                     <span class="shimmer-white">PLANES</span> <span
                         class="italic text-brand-indigo shimmer-indigo">ÉLITE.</span>
@@ -767,7 +800,7 @@
                         <div>
                             <p class="text-[11px] font-black tracking-widest text-white/40 uppercase mb-4">PLAN ATLETA
                             </p>
-                            <h3 class="text-6xl font-display font-black uppercase italic mb-8">FREEMIUM</h3>
+                            <h3 class="text-5xl md:text-6xl font-display font-black uppercase italic mb-8">FREEMIUM</h3>
                         </div>
                         <ul class="space-y-6">
                             <li class="flex items-center justify-between pricing-table-row pb-4 text-white/80">
@@ -820,7 +853,7 @@
                         <div>
                             <p class="text-[11px] font-black tracking-widest text-white/60 uppercase mb-4">STATUS
                                 SUPREMO</p>
-                            <h3 class="text-7xl md:text-8xl font-display font-black uppercase italic mb-8 leading-none">
+                            <h3 class="text-6xl md:text-8xl font-display font-black uppercase italic mb-8 leading-none">
                                 ELITE<br>PREMIUM</h3>
                         </div>
                         <ul class="space-y-6">
@@ -857,10 +890,10 @@
                         </ul>
                     </div>
                     <div class="mt-20 pt-12 border-t border-white/20 text-center relative z-10">
-                        <div class="text-7xl font-display font-black mb-10">$12<span
+                        <div class="text-5xl md:text-7xl font-display font-black mb-10">$12<span
                                 class="text-base text-white/50 italic font-medium">.99/MES</span></div>
                         <button
-                            class="w-full bg-white text-brand-indigo py-8 font-black text-2xl uppercase tracking-tighter shadow-2xl shadow-black/30 hover:scale-105 transition-all">PÁSATE
+                            class="w-full bg-white text-brand-indigo py-8 font-black text-xl md:text-2xl uppercase tracking-tighter shadow-2xl shadow-black/30 hover:scale-105 transition-all">PÁSATE
                             A ÉLITE</button>
                     </div>
                 </div>
@@ -924,11 +957,13 @@
                 <i data-lucide="x" class="w-8 h-8"></i>
             </button>
 
-            <div class="p-12 md:p-16 space-y-12 text-white">
+            <div class="p-8 md:p-16 space-y-8 md:y-12 text-white">
                 <div class="space-y-4">
-                    <h3 class="text-4xl font-display font-black italic uppercase tracking-tighter shimmer-indigo">
+                    <h3
+                        class="text-3xl md:text-4xl font-display font-black italic uppercase tracking-tighter shimmer-indigo leading-tight">
                         ALIANZA ESTRATÉGICA</h3>
-                    <p class="text-white/40 font-medium">Completa tus datos y nuestro equipo se pondrá en contacto
+                    <p class="text-sm md:text-base text-white/40 font-medium">Completa tus datos y nuestro equipo se
+                        pondrá en contacto
                         contigo para presentarte las oportunidades de acuerdo profesional.</p>
                 </div>
 

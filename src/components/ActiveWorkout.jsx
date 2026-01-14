@@ -321,7 +321,7 @@ export default function ActiveWorkout({ routine, onClose, onComplete }) {
     // Day Selector
     if (showDaySelector) {
         return (
-            <div className="fixed inset-0 bg-slate-950 z-[60] overflow-y-auto text-white">
+            <div className="fixed inset-0 bg-slate-950 z-[60] overflow-y-auto text-white pb-48">
                 <div className="max-w-2xl mx-auto p-6">
                     <div className="flex items-center justify-between mb-8">
                         <h1 className="text-2xl font-bold">Iniciar Entrenamiento</h1>

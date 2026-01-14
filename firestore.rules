@@ -24,10 +24,21 @@ service cloud.firestore {
       return isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+
+    function isCoachOf(studentId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(studentId)).data.coachId == request.auth.uid;
+    }
     
     // ========== USER PROFILES ==========
     match /users/{userId} {
-      allow read: if isAuthenticated(); // Permite ver perfiles para funciones sociales
+      // Allow read if owner, or if the user is the coach of this student
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        resource.data.coachId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      
       allow create: if isOwner(userId);
       // Prevent users from modifying their own premium status or role
       allow update: if isOwner(userId) 
@@ -40,7 +51,7 @@ service cloud.firestore {
     match /routines/{routineId} {
       allow create: if isAuthenticated() 
         && request.resource.data.userId == request.auth.uid;
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isCoachOf(resource.data.userId));
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
     
@@ -48,14 +59,14 @@ service cloud.firestore {
     match /diets/{dietId} {
       allow create: if isAuthenticated() 
         && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isCoachOf(resource.data.userId));
     }
     
     // ========== WORKOUTS ==========
     match /workouts/{workoutId} {
       allow create: if isAuthenticated() 
         && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isCoachOf(resource.data.userId));
     }
     
     // ========== NUTRITION LOGS ==========
@@ -145,7 +156,9 @@ service cloud.firestore {
     match /activities/{activityId} {
       allow create: if isAuthenticated() 
         && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if isAuthenticated() 
+      allow read: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid || isCoachOf(resource.data.userId));
+      allow update, delete: if isAuthenticated() 
         && resource.data.userId == request.auth.uid;
     }
 
@@ -176,7 +189,7 @@ service cloud.firestore {
       allow create: if isOwner(trainerId);
       allow update: if isOwner(trainerId)
         && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['rewardPoints', 'rewardLevel', 'shopDiscount', 'studentReferrals']));
+            .hasAny(['shopDiscount', 'studentReferrals']));
       allow delete: if isOwner(trainerId);
     }
 

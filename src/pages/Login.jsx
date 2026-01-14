@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dumbbell, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff, Zap, Target, TrendingUp, ShoppingCart } from 'lucide-react';
@@ -8,6 +8,8 @@ import { Dumbbell, Mail, Lock, User, ArrowLeft, Loader2, Eye, EyeOff, Zap, Targe
 export default function Login() {
     const { loginWithGoogle, loginWithEmail, signupWithEmail, resetPassword, user, profile, loading: authLoading, profileLoading } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const redirectPath = searchParams.get('redirect');
     const { t, i18n } = useTranslation();
 
     const [mode, setMode] = useState('login');
@@ -21,8 +23,13 @@ export default function Login() {
 
     useEffect(() => {
         // Redirigir solo cuando tengamos certeza del usuario y su perfil
-        // Esperamos a que profileLoading sea false para asegurar que el perfil (o su ausencia) es definitivo
         if (user && !authLoading && !profileLoading) {
+            // Si hay un path de redirección pendiente, lo priorizamos
+            if (redirectPath) {
+                navigate(redirectPath);
+                return;
+            }
+
             if (profile) {
                 if (profile.onboardingCompleted) {
                     navigate('/dashboard');
@@ -30,14 +37,11 @@ export default function Login() {
                     navigate('/onboarding');
                 }
             } else {
-                // Si hay usuario pero perfil sigue null tras cargar, algo falló.
-                // Intentamos forzar onboarding como fallback seguro si es un usuario válido.
-                // Esto evita el estado "zombie" en login.
                 console.warn("Usuario autenticado sin perfil, redirigiendo a onboarding...");
                 navigate('/onboarding');
             }
         }
-    }, [user, profile, authLoading, profileLoading, navigate]);
+    }, [user, profile, authLoading, profileLoading, navigate, redirectPath]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -186,6 +190,19 @@ export default function Login() {
 
                     {/* Error/Message Display */}
                     <AnimatePresence>
+                        {redirectPath === '/become-trainer' && !user && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 p-4 rounded-xl bg-brand-indigo/10 border border-brand-indigo/30 text-brand-indigo text-sm flex items-center gap-3"
+                            >
+                                <Zap size={18} className="text-brand-cyan" />
+                                <div>
+                                    <p className="font-bold">Modo Entrenador Elite</p>
+                                    <p className="opacity-80">Inicia sesión para comenzar tu registro como partner.</p>
+                                </div>
+                            </motion.div>
+                        )}
                         {profileLoading && user && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}

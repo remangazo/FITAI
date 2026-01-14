@@ -125,13 +125,18 @@ async function onStudentOnboardingComplete(change, context) {
     try {
         const trainerRef = db.collection("trainers").doc(trainerId);
 
+        // We award 15 points total: 5 for registration + 10 for complete onboarding
+        // consolidating both events into one secure server-side call.
+        const totalPoints = REWARD_POINTS.STUDENT_REGISTERED + REWARD_POINTS.STUDENT_COMPLETED_ONBOARDING;
+
         await trainerRef.update({
-            rewardPoints: admin.firestore.FieldValue.increment(REWARD_POINTS.STUDENT_COMPLETED_ONBOARDING),
+            rewardPoints: admin.firestore.FieldValue.increment(totalPoints),
+            studentCount: admin.firestore.FieldValue.increment(1),
         });
 
         await recalculateTrainerLevel(trainerId);
 
-        return { success: true, trainerId, pointsAdded: REWARD_POINTS.STUDENT_COMPLETED_ONBOARDING };
+        return { success: true, trainerId, pointsAdded: totalPoints };
     } catch (error) {
         console.error("[TrainerRewards] Error updating trainer on onboarding:", error);
         return { error: error.message };

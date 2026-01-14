@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNotifications } from '../context/NotificationContext';
 import { motion } from 'framer-motion';
 import { db } from '../config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -20,8 +21,13 @@ import {
     Trash2,
     Shield,
     GraduationCap,
-    Users
+    Users,
+    Key,
+    UserMinus,
+    UserPlus,
+    Clock9
 } from 'lucide-react';
+import { trainerService } from '../services/trainerService';
 import { BackButton } from '../components/Navigation';
 import NotificationSettings from '../components/NotificationSettings';
 import {
@@ -35,6 +41,7 @@ export default function Settings() {
     const { user, profile, logout, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+    const { showToast } = useNotifications?.() || { showToast: () => { } };
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -57,6 +64,12 @@ export default function Settings() {
     const [deletingAccount, setDeletingAccount] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+    // Coach linking state
+    const [coachCode, setCoachCode] = useState('');
+    const [linkingCoach, setLinkingCoach] = useState(false);
+    const [currentCoach, setCurrentCoach] = useState(null);
+    const [loadingCoach, setLoadingCoach] = useState(false);
 
     const API_BASE = import.meta.env.VITE_FUNCTIONS_URL || '';
 
@@ -136,9 +149,26 @@ export default function Settings() {
                 });
                 setLoading(false);
                 setNotifStatus(checkNotificationStatus());
+
+                // Load coach info if exists
+                if (profile?.coachId) {
+                    loadCoachInfo(profile.coachId);
+                }
             }
         }
     }, [user, authLoading, navigate, profile, i18n?.language]);
+
+    const loadCoachInfo = async (coachId) => {
+        setLoadingCoach(true);
+        try {
+            const coachData = await trainerService.getTrainerById(coachId);
+            setCurrentCoach(coachData);
+        } catch (err) {
+            console.error('[Settings] Error loading coach info:', err);
+        } finally {
+            setLoadingCoach(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!user) return;
@@ -166,6 +196,45 @@ export default function Settings() {
             setError("No se pudieron guardar los cambios");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleLinkCoach = async () => {
+        if (!user || !coachCode.trim()) return;
+        setLinkingCoach(true);
+        setError(null);
+        try {
+            const result = await trainerService.linkStudentToCoach(user.uid, coachCode.trim());
+            if (result.success) {
+                showToast({ type: 'success', title: '¡Vinculado!', message: `Ahora estás bajo la supervisión de ${result.trainerName}` });
+                setSaved(true);
+                setCoachCode('');
+                await loadCoachInfo(result.trainerId);
+                setTimeout(() => setSaved(false), 2000);
+            }
+        } catch (err) {
+            console.error('[Settings] Error linking coach:', err);
+            setError(err.message || 'Código de coach inválido');
+        } finally {
+            setLinkingCoach(false);
+        }
+    };
+
+    const handleUnlinkCoach = async () => {
+        if (!user || !profile.coachId) return;
+        if (!window.confirm('¿Estás seguro de que quieres desvincularte de tu coach? Perderá el acceso a tu progreso.')) return;
+
+        setLinkingCoach(true);
+        try {
+            await trainerService.unlinkStudent(user.uid, profile.coachId);
+            setCurrentCoach(null);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch (err) {
+            console.error('[Settings] Error unlinking coach:', err);
+            setError('No se pudo desvincular del coach');
+        } finally {
+            setLinkingCoach(false);
         }
     };
 
@@ -686,43 +755,110 @@ export default function Settings() {
                             <GraduationCap className="text-cyan-400" size={20} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-white">Modo Entrenador</h3>
+                            <h3 className="font-bold text-white">Entrenador y Coach</h3>
                             <p className="text-[10px] text-slate-500">
-                                {profile?.role === 'trainer' ? 'Gestioná tus alumnos' : 'Convertite en Coach'}
+                                {profile?.role === 'trainer' ? 'Panel de gestión' : 'Vinculación y supervisión'}
                             </p>
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {profile?.role === 'trainer' ? (
-                            <button
-                                onClick={() => navigate('/trainer')}
-                                className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-bold transition-all"
-                            >
-                                <Users size={18} />
-                                Ir a mi Dashboard de Trainer
-                            </button>
-                        ) : (
-                            <div className="space-y-4">
-                                <p className="text-slate-400 text-sm">
-                                    ¿Sos entrenador personal o coach? Llevá el control de tus alumnos, asigná rutinas y visualizá su progreso.
-                                </p>
-                                <button
-                                    onClick={() => navigate('/become-trainer')}
-                                    className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-cyan-500/30 rounded-xl font-bold text-cyan-400 hover:bg-cyan-600/30 transition-all"
-                                >
-                                    <GraduationCap size={18} />
-                                    Convertirme en Trainer
-                                </button>
+                    <div className="space-y-4">
+                        {/* Link to Coach Sub-section */}
+                        {profile?.role !== 'trainer' && (
+                            <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 space-y-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Users size={16} className="text-blue-400" />
+                                    <h4 className="font-bold text-sm">Mi Coach</h4>
+                                </div>
+
+                                {profile?.coachId ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                                {loadingCoach ? (
+                                                    <Loader2 className="animate-spin" size={16} />
+                                                ) : currentCoach?.photoURL ? (
+                                                    <img src={currentCoach.photoURL} className="w-full h-full rounded-full object-cover" />
+                                                ) : (
+                                                    <User size={18} />
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="text-xs text-slate-500 uppercase font-black tracking-widest">Vinculado a:</div>
+                                                <div className="font-black text-blue-100">{currentCoach?.displayName || 'Cargando...'}</div>
+                                            </div>
+                                            <button
+                                                onClick={handleUnlinkCoach}
+                                                disabled={linkingCoach}
+                                                className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                                                title="Desvincular"
+                                            >
+                                                <UserMinus size={18} />
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 leading-relaxed px-1">
+                                            Tu coach puede ver tu progreso, asignar rutinas y darte feedback.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                                            ¿Tienes un entrenador personal? Ingresa su código para que pueda supervisar tus entrenamientos.
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Key size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
+                                                <input
+                                                    type="text"
+                                                    value={coachCode}
+                                                    onChange={(e) => setCoachCode(e.target.value.toUpperCase())}
+                                                    placeholder="CÓDIGO (EJ: FITAI-ALEX-1234)"
+                                                    className="w-full bg-slate-950 border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs font-mono tracking-wider focus:outline-none focus:border-blue-500/50 placeholder:text-slate-700"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={handleLinkCoach}
+                                                disabled={linkingCoach || !coachCode.trim()}
+                                                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-slate-800 px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                                            >
+                                                {linkingCoach ? <Loader2 className="animate-spin" size={14} /> : 'Vincular'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {profile?.coachId && (
-                            <div className="bg-slate-900/50 rounded-xl p-3 border border-white/5 text-xs text-slate-400">
-                                <span className="text-blue-400 font-bold">📋 Tenés un entrenador vinculado.</span>
-                                <p className="mt-1">Tu progreso es visible para tu coach.</p>
+                        {/* Become Trainer Sub-section */}
+                        <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 space-y-3">
+                            <div className="flex items-center gap-2 mb-2">
+                                <GraduationCap size={16} className="text-cyan-400" />
+                                <h4 className="font-bold text-sm">Modo Entrenador</h4>
                             </div>
-                        )}
+
+                            {profile?.role === 'trainer' ? (
+                                <button
+                                    onClick={() => navigate('/trainer')}
+                                    className="w-full flex items-center justify-center gap-3 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-bold text-xs transition-all shadow-lg shadow-blue-900/20"
+                                >
+                                    <Users size={16} />
+                                    Ir a mi Dashboard de Trainer
+                                </button>
+                            ) : (
+                                <>
+                                    <p className="text-slate-400 text-[11px] leading-relaxed">
+                                        ¿Sos entrenador personal o coach? Llevá el control de tus alumnos, asigná rutinas y visualizá su progreso.
+                                    </p>
+                                    <button
+                                        onClick={() => navigate('/become-trainer')}
+                                        className="w-full flex items-center justify-center gap-3 py-3 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 border border-cyan-500/30 rounded-xl font-bold text-[10px] uppercase tracking-widest text-cyan-400 hover:bg-cyan-600/20 transition-all"
+                                    >
+                                        <GraduationCap size={16} />
+                                        Convertirme en Trainer
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </section>
 

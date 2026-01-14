@@ -21,28 +21,28 @@ import {
 const cleanString = (str) => {
     if (!str) return "";
     return String(str)
-        .replace(/Ã­/g, 'i')
-        .replace(/Ã¡/g, 'a')
-        .replace(/Ã©/g, 'e')
-        .replace(/Ã³/g, 'o')
-        .replace(/Ãº/g, 'u')
-        .replace(/Ã±/g, 'n')
+        .replace(/Ã­/g, 'í')
+        .replace(/Ã¡/g, 'á')
+        .replace(/Ã©/g, 'é')
+        .replace(/Ã³/g, 'ó')
+        .replace(/Ãº/g, 'ú')
+        .replace(/Ã±/g, 'ñ')
         .replace(/A-da/g, 'ida')
-        .replace(/fA-sicos/g, 'fisicos')
-        .replace(/Anico/g, 'unico')
-        .replace(/mAsculo/g, 'musculo')
-        .replace(/tAccnicas/g, 'tecnicas')
-        .replace(/ejecuciA3n/g, 'ejecucion')
-        .replace(/RetracciA3n/g, 'Retraccion')
-        .replace(/mAquina/g, 'maquina')
-        .replace(/ExtensiA3n/g, 'Extension')
-        .replace(/trA-ceps/g, 'triceps')
-        .replace(/FrancAcs/g, 'Frances')
-        .replace(/í/g, 'i')
-        .replace(/á/g, 'a')
-        .replace(/é/g, 'e')
-        .replace(/ó/g, 'o')
-        .replace(/ú/g, 'u')
+        .replace(/fA-sicos/g, 'físicos')
+        .replace(/Anico/g, 'único')
+        .replace(/mAsculo/g, 'músculo')
+        .replace(/tAccnicas/g, 'técnicas')
+        .replace(/ejecuciA3n/g, 'ejecución')
+        .replace(/RetracciA3n/g, 'Retracción')
+        .replace(/mAquina/g, 'máquina')
+        .replace(/ExtensiA3n/g, 'Extensión')
+        .replace(/trA-ceps/g, 'tríceps')
+        .replace(/FrancAcs/g, 'Francés')
+        .replace(/í/g, 'í')
+        .replace(/á/g, 'á')
+        .replace(/é/g, 'é')
+        .replace(/ó/g, 'ó')
+        .replace(/ú/g, 'ú')
         .replace(/°/g, ' grados')
         .replace(/×/g, 'x')
         .replace(/Ã—/g, 'x')
@@ -393,7 +393,7 @@ const generateDay = (dayTemplate, usedExerciseIds, config) => {
             return {
                 name: cleanString(ex.name),
                 sets: parseInt(ex.defaultSets) + (goalConfig.setsModifier || 0),
-                reps: String(ex.defaultReps).replace('×', 'x').replace('Ã—', 'x'),
+                reps: String(ex.defaultReps).replace('×', 'x'),
                 rest: goalConfig.restTime,
                 suggestedWeight: suggestedWeight || null,
                 muscleGroup: cleanString((ex.muscleGroup || '').replace('chest', 'Pectoral').replace('back', 'Dorsal').replace('shoulders', 'Hombros').replace('legs_quad', 'Cuadriceps').replace('legs_ham', 'Isquiotibiales').replace('biceps', 'Biceps').replace('triceps', 'Triceps').replace('_', ' ')),

@@ -47,11 +47,11 @@ exports.scheduledWorkoutReminders = scheduledWorkoutReminders;
 
 // Trainer Rewards - Firestore triggers
 exports.onUserPremiumConversion = onDocumentUpdated("users/{userId}", (event) => {
-    return onUserPremiumConversion(event, { params: event.params });
+    return onUserPremiumConversion(event.data, { params: event.params });
 });
 
 exports.onStudentOnboardingComplete = onDocumentUpdated("users/{userId}", (event) => {
-    return onStudentOnboardingComplete(event, { params: event.params });
+    return onStudentOnboardingComplete(event.data, { params: event.params });
 });
 
 exports.onCoachCreated = onDocumentCreated("trainers/{trainerId}", (event) => {

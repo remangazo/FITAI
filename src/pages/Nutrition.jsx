@@ -143,7 +143,7 @@ export default function Nutrition() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020617] text-white pb-32">
+        <div className="min-h-screen bg-[#020617] text-white pb-48">
             {/* Header Area */}
             <header className="relative pt-8 pb-12 overflow-hidden">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full -mr-48 -mt-24 pointer-events-none" />

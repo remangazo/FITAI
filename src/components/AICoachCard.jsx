@@ -396,6 +396,14 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
             result.extraActivities = extraActivities?.length || 0;
             result.personalRecordsCount = Object.keys(personalRecords || {}).length;
 
+            // Logic for Target Workouts (Data Fix for 20% vs 25%)
+            // Prioritize activeRoutine days, then profile preference, then default 3
+            result.targetWorkouts = (activeRoutine?.daysPerWeek)
+                ? parseInt(activeRoutine.daysPerWeek)
+                : (profile?.trainingFrequency || 3);
+
+            console.log('[AICoach] Target Workouts determined:', result.targetWorkouts);
+
             if (result.weeklyGoals && typeof result.weeklyGoals[0] === 'string') {
                 result.weeklyGoals = result.weeklyGoals.map(g => ({
                     text: g,
@@ -408,10 +416,10 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
 
                 result.weeklyGoals = [
                     {
-                        text: stats?.workoutsThisWeek < (profile?.trainingFrequency || 3)
-                            ? `Entrenar ${profile?.trainingFrequency || 3} días esta semana`
+                        text: stats?.workoutsThisWeek < result.targetWorkouts
+                            ? `Entrenar ${result.targetWorkouts} días esta semana`
                             : "¡Objetivo de frecuencia cumplido!",
-                        completed: stats?.workoutsThisWeek >= (profile?.trainingFrequency || 3)
+                        completed: stats?.workoutsThisWeek >= result.targetWorkouts
                     },
                     {
                         text: prList.length > 0
@@ -551,42 +559,56 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
             <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-indigo-600/10 blur-[120px] pointer-events-none" />
             <div className="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-emerald-600/10 blur-[120px] pointer-events-none" />
 
-            {/* Top Right Actions (Absolute) - Optimization per user request to save space on mobile */}
-            <div className="absolute top-4 right-4 md:top-8 md:right-8 z-30 flex items-center gap-2">
-                {recommendations?.streak > 0 && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400">
-                        <Flame size={12} fill="currentColor" className="md:w-3.5 md:h-3.5" />
-                        <span className="text-[10px] md:text-xs font-black">{recommendations.streak}d</span>
-                    </div>
-                )}
-                <motion.button
-                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                    onClick={handleRefresh}
-                    title="Analizar de nuevo"
-                    className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md"
-                >
-                    <RefreshCw size={14} className={`md:w-[18px] md:h-[18px] ${loading ? "animate-spin" : ""}`} />
-                </motion.button>
-            </div>
-
             {/* Header Content */}
             <div className="relative z-10 p-6 md:p-8">
+                {/* Mobile Actions - Row Layout (V4) */}
+                <div className="flex justify-end gap-2 mb-4 md:absolute md:top-8 md:right-8 md:mb-0">
+                    {/* Fire Badge Inline */}
+                    {recommendations?.streak > 0 && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400">
+                            <Flame size={12} fill="currentColor" className="md:w-3.5 md:h-3.5" />
+                            <span className="text-[10px] md:text-xs font-black">{recommendations.streak}d</span>
+                        </div>
+                    )}
+
+                    {/* Action Buttons Row */}
+                    <motion.button
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={handleRefresh}
+                        title="Analizar de nuevo"
+                        className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md"
+                    >
+                        <RefreshCw size={14} className={`md:w-[18px] md:h-[18px] ${loading ? "animate-spin" : ""}`} />
+                    </motion.button>
+                    <button
+                        onClick={() => setShowScoreInfo(true)}
+                        className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all backdrop-blur-md"
+                        title="Ver Info"
+                    >
+                        <Info size={14} className="md:w-[18px] md:h-[18px]" />
+                    </button>
+                </div>
+
                 <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
 
                     {/* Hero Section: Progress Rings */}
                     <div className="flex-shrink-0 relative">
-                        <ActivityRings
-                            score={recommendations?.progressScore}
-                            workouts={recommendations?.weeklyWorkouts}
-                            goals={profile?.trainingFrequency || 3}
-                            cardioProgress={recommendations?.cardioProgress || 0}
-                        />
-                        <button
-                            onClick={() => setShowScoreInfo(true)}
-                            className="absolute -top-1 -right-1 p-2 bg-slate-900 border border-white/10 rounded-full text-slate-500 hover:text-white transition-colors"
-                        >
-                            <Info size={14} />
-                        </button>
+                        {/* Calculate compliance percentage for consistency */}
+                        {(() => {
+                            const target = (Number(recommendations?.targetWorkouts) || 4);
+                            const actual = (Number(recommendations?.weeklyWorkouts) || 0);
+                            const compliancePct = Math.min(100, Math.round((actual / target) * 100));
+
+                            return (
+                                <ActivityRings
+                                    score={compliancePct} // V4: Sync Score with Compliance %
+                                    workouts={actual}
+                                    goals={target}
+                                    cardioProgress={recommendations?.cardioProgress || 0}
+                                />
+                            );
+                        })()}
+                        {/* Info button moved to right column */}
                     </div>
 
                     {/* Meta Section */}
@@ -616,12 +638,17 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
 
                         {/* Quick Stats Grid */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
-                            {[
-                                { icon: Dumbbell, label: "Entrenos", value: recommendations.weeklyWorkouts, color: "blue" },
-                                { icon: Sparkles, label: "Extra", value: recommendations.extraActivities, color: "emerald" },
-                                { icon: Award, label: "Récords", value: recommendations.personalRecordsCount || 0, color: "amber" },
-                                { icon: Zap, label: "Cumplimiento", value: `${Math.min(100, Math.round(((Number(recommendations.weeklyWorkouts) || 0) / (Number(profile?.trainingFrequency) || 4)) * 100))}%`, color: "indigo" }
-                            ].map((stat, i) => (
+                            {(() => {
+                                const target = (Number(recommendations?.targetWorkouts) || 4);
+                                const actual = (Number(recommendations?.weeklyWorkouts) || 0);
+                                const compliancePct = Math.min(100, Math.round((actual / target) * 100));
+                                return [
+                                    { icon: Dumbbell, label: "Entrenos", value: recommendations.weeklyWorkouts, color: "blue" },
+                                    { icon: Sparkles, label: "Extra", value: recommendations.extraActivities, color: "emerald" },
+                                    { icon: Award, label: "Récords", value: recommendations.personalRecordsCount || 0, color: "amber" },
+                                    { icon: Zap, label: "Cumplimiento", value: `${compliancePct}%`, color: "indigo" }
+                                ];
+                            })().map((stat, i) => (
                                 <div key={i} className="p-3 rounded-3xl bg-white/[0.03] border border-white/5 flex items-center gap-3">
                                     <div className={`p-2 rounded-xl bg-${stat.color}-500/10 text-${stat.color}-400`}>
                                         <stat.icon size={16} />

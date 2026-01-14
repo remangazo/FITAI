@@ -167,7 +167,7 @@ export default function Shop() {
                                         Premium
                                     </span>
                                 </div>
-                                <p className="text-slate-400 text-sm">Suplementos, equipamiento y mÃ¡s</p>
+                                <p className="text-slate-400 text-sm">Suplementos, equipamiento y más</p>
                             </div>
                         </div>
                         <button
@@ -252,7 +252,7 @@ export default function Shop() {
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="grid grid-cols-3 gap-4 mb-8">
                     {[
-                        { icon: Truck, label: 'EnvÃ­o Gratis', sublabel: '+$30.000' },
+                        { icon: Truck, label: 'Envío Gratis', sublabel: '+$30.000' },
                         { icon: Shield, label: 'Calidad Premium', sublabel: 'Garantizada' },
                         { icon: CreditCard, label: 'Pago Seguro', sublabel: '100%' },
                     ].map((badge, i) => (
@@ -434,7 +434,7 @@ function CartDrawer({ cart, onClose, onRemove, onUpdateQuantity, total, premiumS
                     {cart.length === 0 ? (
                         <div className="text-center py-12 text-slate-600">
                             <ShoppingCart size={48} className="mx-auto mb-4 opacity-30" />
-                            <p>Tu carrito estÃ¡ vacÃ­o</p>
+                            <p>Tu carrito está vacío</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -494,7 +494,7 @@ function CartDrawer({ cart, onClose, onRemove, onUpdateQuantity, total, premiumS
                         )}
 
                         <div className="flex justify-between items-center">
-                            <span className="text-slate-400">EnvÃ­o</span>
+                            <span className="text-slate-400">Envío</span>
                             <span className="font-bold text-green-400">{total > 30000 ? 'GRATIS' : formatARS(4990)}</span>
                         </div>
                         <div className="h-px bg-white/5" />

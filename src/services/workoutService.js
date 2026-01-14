@@ -165,6 +165,7 @@ export const completeWorkout = async (workoutId, notes = '') => {
 
     await updateDoc(doc(db, 'workouts', workoutId), {
         endTime,
+        completedAt: endTime, // FIX: Set completedAt for indexing in Trainer Dashboard
         duration,
         status: 'completed',
         notes

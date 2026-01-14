@@ -14,10 +14,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Trophy, Dumbbell, Star, ChevronRight, Copy, Check,
     TrendingUp, Award, Crown, Search, Filter, Loader2, UserPlus,
-    Target, Flame, BarChart3, Settings, RefreshCw, Plus, Calendar, Flag
+    Target, Flame, BarChart3, Settings, RefreshCw, Plus, Calendar, Flag,
+    Gift, Zap, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { trainerService, TRAINER_LEVELS } from '../services/trainerService';
+import { trainerService, TRAINER_LEVELS, REWARD_POINTS } from '../services/trainerService';
 import { BottomNav, BackButton } from '../components/Navigation';
 
 export default function TrainerDashboard({ isDemo = false }) {
@@ -31,9 +32,10 @@ export default function TrainerDashboard({ isDemo = false }) {
     const [copied, setCopied] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
     const [currentTab, setCurrentTab] = useState('students');
-    // students | leaderboard | challenges
+    // students | leaderboard | challenges | benefits
     const [showCreateChallenge, setShowCreateChallenge] = useState(false);
     const [filter, setFilter] = useState(null); // null | risk | premium | active
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         loadDashboardData();
@@ -108,8 +110,34 @@ export default function TrainerDashboard({ isDemo = false }) {
             }
             setTrainerData(trainer);
 
+            // Sync stats in background to fix potential counter mismatches
+            trainerService.syncTrainerStats(user.uid).then(res => {
+                if (res.success) {
+                    setTrainerData(prev => {
+                        const newData = { ...prev };
+                        let changed = false;
+
+                        if (res.count !== prev.studentCount) {
+                            newData.studentCount = res.count;
+                            changed = true;
+                        }
+                        if (res.points !== undefined && res.points !== prev.rewardPoints) {
+                            newData.rewardPoints = res.points;
+                            changed = true;
+                        }
+                        if (res.level !== undefined && res.level !== prev.rewardLevel) {
+                            newData.rewardLevel = res.level;
+                            changed = true;
+                        }
+
+                        return changed ? newData : prev;
+                    });
+                }
+            }).catch(err => console.warn('[TrainerDashboard] Sync failed:', err));
+
             // Get students with stats
             const studentsList = await trainerService.getMyStudentsWithStats(user.uid);
+            console.log('[TrainerDashboard] Students loaded:', studentsList.length);
             setStudents(studentsList);
 
             // Get leaderboard
@@ -163,8 +191,10 @@ export default function TrainerDashboard({ isDemo = false }) {
     const levelProgress = trainerData?.rewardPoints ?
         Math.min((trainerData.rewardPoints / (nextLevel ? (trainerData.rewardPoints + nextLevel.needed) : 2500)) * 100, 100) : 0;
 
+    if (!trainerData) return null; // Fallback safety
+
     return (
-        <div className="min-h-screen bg-slate-950 text-white pb-24 md:pb-8">
+        <div className="min-h-screen bg-slate-950 text-white pb-40 md:pb-8">
 
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
                 {/* Top Bar */}
@@ -192,11 +222,10 @@ export default function TrainerDashboard({ isDemo = false }) {
                     </button>
                 </div>
 
-                {/* Coach Code Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-br from-brand-primary/20 to-brand-violet/20 rounded-3xl p-8 border border-brand-primary/30 relative overflow-hidden group mb-10"
+                    className="bg-gradient-to-br from-brand-primary/20 to-brand-violet/20 rounded-2xl p-4 md:p-6 border border-brand-primary/30 relative overflow-hidden group mb-6"
                 >
                     <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-brand-primary/20 transition-colors"></div>
                     <div className="relative z-10">
@@ -228,7 +257,7 @@ export default function TrainerDashboard({ isDemo = false }) {
                 </motion.div>
 
                 {/* Overview Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                     <StatCard
                         icon={Users}
                         label="Alumnos"
@@ -266,7 +295,7 @@ export default function TrainerDashboard({ isDemo = false }) {
                 </div>
 
                 {/* Rewards Progress */}
-                <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl p-8 border border-white/5 relative overflow-hidden group mb-10">
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/5 relative overflow-hidden group mb-6">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] rounded-full"></div>
                     <div className="flex items-center justify-between mb-6 relative z-10">
                         <div className="flex items-center gap-3">
@@ -275,9 +304,9 @@ export default function TrainerDashboard({ isDemo = false }) {
                                 Tus Recompensas
                             </h3>
                         </div>
-                        <div className="flex items-center gap-2 bg-amber-400/10 px-4 py-1.5 rounded-full border border-amber-400/20">
-                            <Crown size={14} className="text-amber-400" />
-                            <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
+                        <div className="flex items-center gap-2 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+                            <Crown size={12} className="text-amber-400" />
+                            <span className="text-amber-400 font-black text-[9px] uppercase tracking-wider">
                                 Nivel {TRAINER_LEVELS[trainerData.rewardLevel]?.name || 'Base'}
                             </span>
                         </div>
@@ -312,11 +341,12 @@ export default function TrainerDashboard({ isDemo = false }) {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/5 overflow-hidden mb-10 shadow-xl shadow-black/40">
-                    <div className="flex p-1 bg-slate-800/50 border-b border-white/5">
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden mb-6 shadow-xl shadow-black/40">
+                    <div className="flex p-1 bg-slate-800/50 border-b border-white/5 overflow-x-auto no-scrollbar">
                         <TabButton active={currentTab === 'students'} onClick={() => setCurrentTab('students')} icon={Users} label="Alumnos" />
                         <TabButton active={currentTab === 'leaderboard'} onClick={() => setCurrentTab('leaderboard')} icon={Trophy} label="Ranking" />
                         <TabButton active={currentTab === 'challenges'} onClick={() => setCurrentTab('challenges')} icon={Flag} label="Retos" />
+                        <TabButton active={currentTab === 'benefits'} onClick={() => setCurrentTab('benefits')} icon={Gift} label="Beneficios" />
                     </div>
 
                     <div className="p-6">
@@ -328,38 +358,6 @@ export default function TrainerDashboard({ isDemo = false }) {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-6"
                             >
-                                {/* Student Filters */}
-                                <div className="flex flex-wrap gap-3">
-                                    <FilterButton
-                                        label="Todos"
-                                        count={students.length}
-                                        active={!filter}
-                                        color="blue"
-                                        onClick={() => setFilter(null)}
-                                    />
-                                    <FilterButton
-                                        label="En Riesgo"
-                                        count={students.filter(s => s.stats?.isAtRisk).length}
-                                        active={filter === 'risk'}
-                                        color="red"
-                                        onClick={() => setFilter('risk')}
-                                    />
-                                    <FilterButton
-                                        label="Premium"
-                                        count={students.filter(s => s.isPremium).length}
-                                        active={filter === 'premium'}
-                                        color="amber"
-                                        onClick={() => setFilter('premium')}
-                                    />
-                                    <FilterButton
-                                        label="Activos"
-                                        count={students.filter(s => s.stats?.workoutCount > 0).length}
-                                        active={filter === 'active'}
-                                        color="emerald"
-                                        onClick={() => setFilter('active')}
-                                    />
-                                </div>
-
                                 {students.length === 0 ? (
                                     <div className="text-center py-12 text-slate-500">
                                         <UserPlus size={48} className="mx-auto mb-4 opacity-30" />
@@ -367,17 +365,88 @@ export default function TrainerDashboard({ isDemo = false }) {
                                         <p className="text-sm mt-2">Compartí tu código para que se registren</p>
                                     </div>
                                 ) : (
-                                    (filter === 'risk' ? students.filter(s => s.stats?.isAtRisk) :
-                                        filter === 'premium' ? students.filter(s => s.isPremium) :
-                                            filter === 'active' ? students.filter(s => s.stats?.workoutCount > 0) :
-                                                students).map((student, index) => (
+                                    <div className="space-y-6">
+                                        {/* Search and Filters */}
+                                        <div className="flex flex-wrap gap-3 items-center">
+                                            <div className="relative group">
+                                                <input
+                                                    type="text"
+                                                    placeholder="BUSCAR..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="bg-slate-900/50 text-white border border-white/5 rounded-2xl pl-10 pr-4 py-2.5 text-[11px] font-black uppercase tracking-widest w-36 focus:w-48 transition-all focus:border-blue-500/50 outline-none placeholder:text-slate-600 shadow-inner"
+                                                />
+                                                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                                            </div>
+
+                                            <div className="h-6 w-px bg-white/5 hidden md:block mx-1"></div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                <FilterButton
+                                                    label="Todos"
+                                                    count={students.length}
+                                                    active={!filter}
+                                                    color="blue"
+                                                    onClick={() => setFilter(null)}
+                                                />
+                                                <FilterButton
+                                                    label="En Riesgo"
+                                                    count={students.filter(s => s.stats?.isAtRisk).length}
+                                                    active={filter === 'risk'}
+                                                    color="red"
+                                                    onClick={() => setFilter('risk')}
+                                                />
+                                                <FilterButton
+                                                    label="Premium"
+                                                    count={students.filter(s => s.isPremium).length}
+                                                    active={filter === 'premium'}
+                                                    color="amber"
+                                                    onClick={() => setFilter('premium')}
+                                                />
+                                                <FilterButton
+                                                    label="Activos"
+                                                    count={students.filter(s => s.stats?.workoutCount > 0).length}
+                                                    active={filter === 'active'}
+                                                    color="emerald"
+                                                    onClick={() => setFilter('active')}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Students List */}
+                                        <div className="grid gap-4">
+                                            {(() => {
+                                                const filtered = students.filter(s => {
+                                                    const matchesFilter = filter === 'risk' ? s.stats?.isAtRisk :
+                                                        filter === 'premium' ? s.isPremium :
+                                                            filter === 'active' ? s.stats?.workoutCount > 0 :
+                                                                true;
+
+                                                    const matchesSearch = !searchQuery ||
+                                                        (s.displayName || s.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+                                                    return matchesFilter && matchesSearch;
+                                                });
+
+                                                if (filtered.length === 0 && searchQuery) {
+                                                    return (
+                                                        <div className="py-12 text-center text-slate-600 italic text-sm bg-white/[0.02] rounded-3xl border border-dashed border-white/5">
+                                                            No se encontraron alumnos para "{searchQuery}"
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return filtered.map((student, index) => (
                                                     <StudentCard
                                                         key={student.id}
                                                         student={student}
                                                         rank={index + 1}
                                                         onClick={() => navigate(isDemo ? `/trainer/student/demo` : `/trainer/student/${student.id}`)}
                                                     />
-                                                ))
+                                                ));
+                                            })()}
+                                        </div>
+                                    </div>
                                 )}
                             </motion.div>
                         )}
@@ -439,6 +508,71 @@ export default function TrainerDashboard({ isDemo = false }) {
                                 )}
                             </motion.div>
                         )}
+
+                        {currentTab === 'benefits' && (
+                            <motion.div
+                                key="benefits"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-8"
+                            >
+                                {/* Points Breakdown */}
+                                <div>
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="flex items-center gap-2 mb-6"
+                                    >
+                                        <div className="bg-amber-400/10 p-2 rounded-lg">
+                                            <Zap className="text-amber-400" size={18} />
+                                        </div>
+                                        <h3 className="text-lg font-black tracking-tight font-['Outfit'] uppercase">Cómo Ganar Puntos</h3>
+                                    </motion.div>
+                                    <div className="bg-slate-800/30 rounded-3xl border border-white/5 overflow-hidden">
+                                        <PointInfoRow icon={UserPlus} label="Nuevo Alumno Registrado" points={REWARD_POINTS.STUDENT_REGISTERED} color="text-blue-400" />
+                                        <Divider />
+                                        <PointInfoRow icon={Target} label="Alumno Completa Onboarding" points={REWARD_POINTS.STUDENT_COMPLETED_ONBOARDING} color="text-indigo-400" />
+                                        <Divider />
+                                        <PointInfoRow icon={Dumbbell} label="Alumno Entrena 10 Veces" points={REWARD_POINTS.STUDENT_TRAINED_10_TIMES} color="text-emerald-400" />
+                                        <Divider />
+                                        <PointInfoRow icon={Crown} label="Alumno se vuelve Premium (Mes)" points={REWARD_POINTS.STUDENT_PREMIUM_MONTHLY} color="text-amber-400" isHighlight />
+                                        <Divider />
+                                        <PointInfoRow icon={Star} label="Alumno se vuelve Premium (Anual)" points={REWARD_POINTS.STUDENT_PREMIUM_ANNUAL} color="text-violet-400" isHighlight />
+                                    </div>
+                                </div>
+
+                                {/* Levels Breakdown */}
+                                <div>
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="flex items-center gap-2 mb-6"
+                                    >
+                                        <div className="bg-brand-primary/10 p-2 rounded-lg">
+                                            <Trophy className="text-brand-primary" size={18} />
+                                        </div>
+                                        <h3 className="text-lg font-black tracking-tight font-['Outfit'] uppercase">Niveles y Beneficios</h3>
+                                    </motion.div>
+                                    <div className="space-y-4">
+                                        {Object.entries(TRAINER_LEVELS).map(([key, level], index) => {
+                                            const details = trainerService.getLevelDetails(key);
+                                            const isCurrent = trainerData?.rewardLevel === key;
+                                            return (
+                                                <LevelBenefitCard
+                                                    key={key}
+                                                    level={key}
+                                                    details={details}
+                                                    isCurrent={isCurrent}
+                                                    index={index}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
 
@@ -471,7 +605,7 @@ function StatCard({ icon: Icon, label, value, subLabel, gradient, iconColor, bor
     return (
         <motion.div
             whileHover={{ y: -4, scale: 1.02 }}
-            className={`bg-slate-900/50 backdrop-blur-xl rounded-3xl p-6 border ${border || 'border-white/5'} relative overflow-hidden group shadow-lg shadow-black/20`}
+            className={`bg-slate-900/50 backdrop-blur-xl rounded-2xl p-4 border ${border || 'border-white/5'} relative overflow-hidden group shadow-lg shadow-black/20`}
         >
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
             <div className="relative z-10">
@@ -489,10 +623,25 @@ function StatCard({ icon: Icon, label, value, subLabel, gradient, iconColor, bor
     );
 }
 
+const getGoalLabel = (goal) => {
+    const goalMap = {
+        'fat': 'Pérdida de Grasa',
+        'muscle': 'Ganancia Muscular',
+        'strength': 'Fuerza',
+        'performance': 'Rendimiento',
+        'balanced': 'Equilibrio / Salud'
+    };
+
+    // Si es un array (como en el onboarding), tomamos el primero
+    const target = Array.isArray(goal) ? goal[0] : goal;
+    return goalMap[target] || target || 'Sin objetivo';
+};
+
 // Student Card Component (V2)
 function StudentCard({ student, rank, onClick }) {
     const initial = (student.displayName || student.name || 'U')[0].toUpperCase();
     const stats = student.stats || {};
+    const goalLabel = getGoalLabel(student.primaryGoal || student.goal);
 
     return (
         <motion.button
@@ -503,9 +652,17 @@ function StudentCard({ student, rank, onClick }) {
         >
             <div className="flex items-center gap-4">
                 <div className="relative">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-xl font-black">
-                        {initial}
-                    </div>
+                    {(student.photoURL || student.avatarUrl) ? (
+                        <img
+                            src={student.photoURL || student.avatarUrl}
+                            alt={student.displayName}
+                            className="w-14 h-14 rounded-full object-cover border-2 border-slate-800"
+                        />
+                    ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-xl font-black">
+                            {initial}
+                        </div>
+                    )}
                     {student.isPremium && (
                         <div className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 p-1 rounded-full border-2 border-slate-950">
                             <Crown size={12} fill="currentColor" />
@@ -522,8 +679,8 @@ function StudentCard({ student, rank, onClick }) {
                             </span>
                         )}
                     </div>
-                    <div className="text-xs text-slate-400 truncate">
-                        {student.goal || 'Sin objetivo definido'}
+                    <div className="text-xs text-slate-400 font-medium">
+                        {goalLabel}
                     </div>
                 </div>
                 <ChevronRight size={20} className="text-slate-600" />
@@ -566,7 +723,7 @@ function StudentCard({ student, rank, onClick }) {
                     />
                 </div>
             </div>
-        </motion.button>
+        </motion.button >
     );
 }
 
@@ -625,9 +782,17 @@ function LeaderboardEntry({ entry, rank }) {
                 }`}>
                 {rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : rank}
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center font-bold">
-                {initial}
-            </div>
+            {entry.photoURL || entry.avatarUrl ? (
+                <img
+                    src={entry.photoURL || entry.avatarUrl}
+                    alt={entry.displayName}
+                    className="w-10 h-10 rounded-full object-cover border border-slate-700"
+                />
+            ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center font-bold">
+                    {initial}
+                </div>
+            )}
             <div className="flex-1">
                 <div className="font-bold">{entry.displayName}</div>
             </div>
@@ -796,6 +961,91 @@ function CreateChallengeModal({ onClose, onCreate }) {
                 </div>
             </motion.div>
         </motion.div>
+    );
+}
+
+// Helper components for Benefits tab
+function PointInfoRow({ icon: Icon, label, points, color, isHighlight }) {
+    return (
+        <div className={`flex items-center justify-between p-5 ${isHighlight ? 'bg-white/5' : ''}`}>
+            <div className="flex items-center gap-4">
+                <div className={`p-2.5 rounded-xl bg-slate-800/80 border border-white/5 ${color}`}>
+                    <Icon size={18} />
+                </div>
+                <span className="text-sm font-bold text-slate-200">{label}</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
+                <Star size={12} className="text-amber-400" fill="currentColor" />
+                <span className="text-sm font-black text-white">+{points}</span>
+            </div>
+        </div>
+    );
+}
+
+function Divider() {
+    return <div className="h-[1px] bg-white/[0.03] mx-5" />;
+}
+
+function LevelBenefitCard({ level, details, isCurrent, index }) {
+    const colorMap = {
+        bronze: 'from-amber-700/20 to-amber-900/20 border-amber-500/30 text-amber-500',
+        silver: 'from-slate-400/10 to-slate-600/10 border-slate-400/30 text-slate-400',
+        gold: 'from-yellow-500/20 to-yellow-700/20 border-yellow-500/30 text-yellow-500',
+        diamond: 'from-blue-500/20 to-blue-700/20 border-blue-400/30 text-blue-400',
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 + (index * 0.1) }}
+            className={`rounded-2xl p-5 border relative overflow-hidden transition-all ${isCurrent ? 'ring-2 ring-brand-primary ring-offset-4 ring-offset-slate-950 shadow-[0_0_20px_rgba(236,72,153,0.3)]' : ''
+                } ${colorMap[level] || colorMap.bronze}`}
+        >
+            {isCurrent && (
+                <div className="absolute top-0 right-0 bg-brand-primary text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                    <Check size={10} /> Tu Nivel Actual
+                </div>
+            )}
+
+            <div className="flex items-center gap-4 mb-4">
+                <div className="text-3xl">{details.emoji}</div>
+                <div>
+                    <h4 className="font-black text-xl font-['Outfit'] uppercase">{details.name}</h4>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                        {details.min === 0 ? 'Punto de Inicio' : `${details.min} PTS`}
+                        {details.max !== Infinity ? ` — ${details.max} PTS` : ' +'}
+                    </p>
+                </div>
+            </div>
+
+            <div className="grid gap-2">
+                <BenefitItem
+                    icon={Star}
+                    label={details.discount > 0 ? `${details.discount * 100}% Descuento en Tienda` : 'Sin descuento especial'}
+                    active={details.discount > 0}
+                />
+                <BenefitItem
+                    icon={ShieldCheck}
+                    label="Certificado de Coach Elite"
+                    active={level !== 'bronze'}
+                />
+                <BenefitItem
+                    icon={Flame}
+                    label="Referidos Automáticos de FITAI"
+                    active={level === 'diamond'}
+                />
+            </div>
+        </motion.div>
+    );
+}
+
+function BenefitItem({ icon: Icon, label, active }) {
+    return (
+        <div className={`flex items-center gap-2 text-xs font-medium ${active ? 'text-white' : 'text-slate-500 italic'}`}>
+            <Icon size={14} className={active ? 'text-brand-cyan' : 'opacity-20'} />
+            <span>{label}</span>
+        </div>
     );
 }
 

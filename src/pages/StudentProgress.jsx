@@ -15,14 +15,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft, ChevronRight, User, Dumbbell, Scale, Calendar,
     TrendingUp, Target, Clock, Flame, Award, Send, Loader2,
-    CheckCircle2, AlertCircle, Plus, FileText, Crown
+    CheckCircle2, AlertCircle, Plus, FileText, Crown, Ruler, MapPin, History, Activity
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { trainerService } from '../services/trainerService';
 import { BackButton } from '../components/Navigation';
 import { analyzeRoutineFromImage } from '../services/geminiService';
-import { Camera, Sparkles, Wand2 } from 'lucide-react';
+import { Camera, Sparkles, Wand2, BarChart2 } from 'lucide-react';
+import StudentAnalytics from '../components/StudentAnalytics';
 
 export default function StudentProgress({ isDemo = false }) {
     const { studentId } = useParams();
@@ -30,7 +31,10 @@ export default function StudentProgress({ isDemo = false }) {
     const { user } = useAuth();
     const [studentData, setStudentData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview'); // overview | routines | assign
+    const [activeTab, setActiveTab] = useState('overview'); // overview | routines | analytics | assign
+    const [analyticsData, setAnalyticsData] = useState(null);
+    const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+    const [showDemo, setShowDemo] = useState(false);
     const [showAssignModal, setShowAssignModal] = useState(false);
 
     useEffect(() => {
@@ -89,6 +93,22 @@ export default function StudentProgress({ isDemo = false }) {
         } finally {
             setLoading(false);
         }
+
+        // Load analytics in parallel or deferred
+        loadAnalytics();
+    };
+
+    const loadAnalytics = async () => {
+        if (isDemo || !studentId) return;
+        setLoadingAnalytics(true);
+        try {
+            const data = await trainerService.getStudentAnalytics(studentId);
+            setAnalyticsData(data);
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+        } finally {
+            setLoadingAnalytics(false);
+        }
     };
 
     if (loading) {
@@ -104,13 +124,27 @@ export default function StudentProgress({ isDemo = false }) {
             <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
                 <div className="text-center">
                     <AlertCircle size={48} className="mx-auto mb-4 text-red-400" />
-                    <p>No se pudo cargar la informaciÃ³n del alumno</p>
+                    <p>No se pudo cargar la información del alumno</p>
                 </div>
             </div>
         );
     }
 
     const { student, routines, workouts, assignedRoutines, stats } = studentData;
+
+    const getGoalLabel = (goal) => {
+        const goalMap = {
+            'fat': 'Pérdida de Grasa',
+            'muscle': 'Ganancia Muscular',
+            'strength': 'Fuerza',
+            'performance': 'Rendimiento',
+            'balanced': 'Equilibrio / Salud'
+        };
+        const target = Array.isArray(goal) ? goal[0] : goal;
+        return goalMap[target] || target || 'Sin objetivo';
+    };
+
+    const goalLabel = getGoalLabel(student.primaryGoal || student.goal);
     const weightHistory = student.weightHistory || [];
     const chartData = weightHistory.slice(-10).map(w => ({
         date: new Date(w.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }),
@@ -118,84 +152,73 @@ export default function StudentProgress({ isDemo = false }) {
     }));
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white pb-8">
+        <div className="min-h-screen bg-slate-950 text-white pb-32">
             {/* Header */}
             <div className="sticky top-0 z-20 bg-slate-950/95 backdrop-blur-lg border-b border-white/5">
-                <div className="max-w-4xl mx-auto px-4 py-4">
-                    <div className="flex items-center gap-4">
+                <div className="max-w-4xl mx-auto px-4 py-3 md:py-4">
+                    <div className="flex items-center justify-between">
                         <BackButton />
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-lg font-black">
-                            {(student.displayName || student.name || 'U')[0].toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                            <h1 className="text-lg font-black">{student.displayName || student.name || 'Alumno'}</h1>
-                            <p className="text-xs text-slate-400">
-                                {student.goal || 'Sin objetivo definido'} â€¢ {student.experience || 'Principiante'}
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-10 overflow-hidden">
+                <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-10 overflow-hidden">
                     <div className="relative">
-                        <div className="w-16 h-16 bg-brand-primary/10 rounded-2xl flex items-center justify-center border border-brand-primary/20 overflow-hidden">
-                            {student.photoURL ? (
-                                <img src={student.photoURL} alt="" className="w-full h-full object-cover" />
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-brand-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center border border-brand-primary/20 overflow-hidden">
+                            {student.photoURL || student.avatarUrl ? (
+                                <img src={student.photoURL || student.avatarUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
-                                <span className="text-2xl font-['Outfit'] font-black text-brand-primary">
+                                <span className="text-xl md:text-2xl font-['Outfit'] font-black text-brand-primary">
                                     {student.displayName?.charAt(0)}
                                 </span>
                             )}
                         </div>
                         {student.isPremium && (
-                            <div className="absolute -top-2 -right-2 bg-amber-400 p-1 rounded-lg border-2 border-slate-950 shadow-lg">
-                                <Crown size={12} className="text-slate-900" />
+                            <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-amber-400 p-0.5 md:p-1 rounded-md md:rounded-lg border-2 border-slate-950 shadow-lg">
+                                <Crown size={10} className="text-slate-900 md:w-3 md:h-3" />
                             </div>
                         )}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-['Outfit'] font-black tracking-tight text-white leading-tight">
-                            {student.displayName}
+                        <h1 className="text-xl md:text-3xl font-['Outfit'] font-black tracking-tight text-white leading-tight">
+                            {student.displayName || student.name || 'Alumno'}
                         </h1>
-                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                            <span className="bg-slate-800 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                {student.goal}
+                        <div className="flex items-center gap-2 text-slate-400 text-[10px] md:text-sm font-medium">
+                            <span className="bg-slate-800 px-2 py-0.5 rounded text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {goalLabel}
                             </span>
                             <span>•</span>
-                            <span>{student.experience}</span>
+                            <span>{student.techniqueLevel || student.experience || 'Principiante'}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-10">
                     <QuickStat label="Entrenos (30d)" value={studentData.stats.totalWorkouts} icon={Dumbbell} color="text-blue-400" />
                     <QuickStat label="Asistencia" value={`${studentData.stats.attendanceRate}%`} icon={Award} color="text-emerald-400" />
-                    <QuickStat label="Peso actual (kg)" value={student.weight || '--'} icon={Scale} color="text-violet-400" />
+                    <div className="col-span-2 lg:col-span-1">
+                        <QuickStat label="Peso actual (kg)" value={student.weight || '--'} icon={Scale} color="text-violet-400" />
+                    </div>
                 </div>
-                <div className="bg-slate-900 rounded-2xl p-4 text-center border border-white/5">
-                    <Scale className="mx-auto mb-2 text-purple-400" size={20} />
-                    <div className="text-2xl font-black">{student.weight || '--'}</div>
-                    <div className="text-xs text-slate-400">Peso actual (kg)</div>
-                </div>
+                <WeightPath student={student} />
 
                 {/* Weight Chart */}
                 {chartData.length > 1 && (
-                    <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl p-8 border border-white/5 relative overflow-hidden group mb-10 shadow-xl shadow-black/40">
+                    <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 border border-white/5 relative overflow-hidden group mb-6 md:mb-10 shadow-xl shadow-black/40">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-[60px] rounded-full"></div>
-                        <div className="flex items-center justify-between mb-8 relative z-10">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                                    <TrendingUp className="text-blue-400" size={20} />
+                        <div className="flex items-center justify-between mb-6 md:mb-8 relative z-10">
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <div className="p-1.5 md:p-2 bg-blue-500/10 rounded-lg md:rounded-xl border border-blue-500/20">
+                                    <TrendingUp className="text-blue-400 w-4 h-4 md:w-5 md:h-5" />
                                 </div>
-                                <span className="font-['Outfit'] font-black uppercase tracking-[0.2em] text-xs text-slate-400">Evolución de Peso</span>
+                                <span className="font-['Outfit'] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-[10px] md:text-xs text-slate-400">Evolución</span>
                             </div>
-                            <div className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Últimos 10 registros</div>
+                            <div className="text-[8px] md:text-[10px] font-black tracking-widest text-slate-500 uppercase">Últimos 10</div>
                         </div>
-                        <div className="h-64 relative z-10">
+                        <div className="h-48 md:h-64 relative z-10">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={chartData}>
                                     <defs>
@@ -249,6 +272,7 @@ export default function StudentProgress({ isDemo = false }) {
                 <div className="flex gap-2 bg-slate-900 p-1 rounded-xl">
                     {[
                         { id: 'overview', label: 'Resumen', icon: Calendar },
+                        { id: 'analytics', label: 'Analíticas', icon: BarChart2 },
                         { id: 'routines', label: 'Rutinas', icon: FileText },
                     ].map(tab => (
                         <button
@@ -279,7 +303,7 @@ export default function StudentProgress({ isDemo = false }) {
                             <div className="bg-slate-900 rounded-2xl p-5 border border-white/5">
                                 <h3 className="font-bold mb-4 flex items-center gap-2">
                                     <Dumbbell size={16} className="text-blue-400" />
-                                    Ãšltimos Entrenos
+                                    Últimos Entrenos
                                 </h3>
                                 {workouts.length === 0 ? (
                                     <p className="text-slate-500 text-sm">Sin entrenos registrados</p>
@@ -290,7 +314,7 @@ export default function StudentProgress({ isDemo = false }) {
                                                 <div>
                                                     <div className="font-medium text-sm">{workout.routineName || 'Entrenamiento'}</div>
                                                     <div className="text-xs text-slate-400">
-                                                        {workout.completedAt?.toDate?.().toLocaleDateString('es-AR') || 'Fecha desconocida'}
+                                                        {(workout.startTime?.toDate?.() || workout.completedAt?.toDate?.())?.toLocaleDateString('es-AR') || 'Fecha desconocida'}
                                                     </div>
                                                 </div>
                                                 <CheckCircle2 className="text-green-400" size={18} />
@@ -301,7 +325,7 @@ export default function StudentProgress({ isDemo = false }) {
                             </div>
 
                             {/* Student Info */}
-                            <div className="bg-slate-900/50 backdrop-blur-xl rounded-[2rem] p-8 border border-white/5 relative overflow-hidden group shadow-xl shadow-black/30">
+                            <div className="bg-slate-900/50 backdrop-blur-xl rounded-[2rem] p-6 md:p-8 border border-white/5 relative overflow-hidden group shadow-xl shadow-black/30">
                                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-primary to-brand-violet"></div>
                                 <h3 className="font-['Outfit'] font-black text-[10px] uppercase tracking-[0.3em] text-slate-500 mb-8 flex items-center gap-3">
                                     <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
@@ -310,14 +334,83 @@ export default function StudentProgress({ isDemo = false }) {
                                     Perfil del Atleta
                                 </h3>
                                 <div className="grid grid-cols-2 gap-y-8 gap-x-6">
-                                    <InfoRow label="Objetivo" value={student.goal || '--'} icon={Target} />
-                                    <InfoRow label="Frecuencia" value={`${student.daysPerWeek || '--'} días/sem`} icon={Calendar} />
-                                    <InfoRow label="Nivel" value={student.experience || '--'} icon={Award} />
+                                    <InfoRow label="Objetivo" value={goalLabel} icon={Target} />
+                                    <InfoRow label="Frecuencia" value={student.trainingFrequency || student.daysPerWeek || '--'} icon={Calendar} />
+                                    <InfoRow label="Nivel Técnica" value={student.techniqueLevel || '--'} icon={Award} />
+                                    <InfoRow label="Años Exp." value={student.experienceYears || '--'} icon={History} />
                                     <InfoRow label="Metabolismo" value={student.metabolism || 'Estándar'} icon={Flame} />
-                                    <InfoRow label="Altura" value={student.height ? `${student.height} cm` : '--'} icon={Scale} />
+                                    <InfoRow label="Altura" value={student.height ? `${student.height} cm` : '--'} icon={Ruler} />
+                                    <InfoRow label="Lugar" value={student.trainingLocation || '--'} icon={MapPin} />
                                     <InfoRow label="Status" value={student.isPremium ? 'Elite Premium' : 'Atleta Free'} icon={Crown} premium={student.isPremium} />
                                 </div>
+                                {student.availableEquipment && student.availableEquipment.length > 0 && (
+                                    <div className="mt-8 pt-6 border-t border-white/5">
+                                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Equipamiento</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {student.availableEquipment.map((eq, i) => (
+                                                <span key={i} className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-lg border border-white/5 font-bold">
+                                                    {eq}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {student.injuries && student.injuries !== 'none' && (
+                                    <div className="mt-6 pt-6 border-t border-white/5">
+                                        <div className="text-[9px] font-black text-red-400/70 uppercase tracking-widest mb-2">Lesiones / Condiciones</div>
+                                        <div className="text-sm text-red-400 font-bold">{student.injuries}</div>
+                                    </div>
+                                )}
                             </div>
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'analytics' && (
+                        <motion.div
+                            key="analiticas"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                        >
+                            {loadingAnalytics ? (
+                                <div className="py-20 text-center">
+                                    <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto mb-4" />
+                                    <p className="text-slate-400 font-bold">Analizando datos del atleta...</p>
+                                </div>
+                            ) : (analyticsData || showDemo) ? (
+                                <div className="space-y-4">
+                                    {showDemo && (
+                                        <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-amber-500 text-xs font-bold">
+                                                <Sparkles size={14} />
+                                                MODO DEMO ACTIVA (DATOS SIMULADOS)
+                                            </div>
+                                            <button
+                                                onClick={() => setShowDemo(false)}
+                                                className="text-[10px] font-black text-amber-500 uppercase underline"
+                                            >
+                                                Salir
+                                            </button>
+                                        </div>
+                                    )}
+                                    <StudentAnalytics
+                                        analyticsData={showDemo ? ANALYTICS_DEMO_DATA : analyticsData}
+                                        studentName={student.displayName}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="py-20 text-center text-slate-500 bg-slate-900/50 rounded-3xl border border-white/5">
+                                    <Activity size={40} className="mx-auto mb-4 opacity-20" />
+                                    <p className="mb-6">No hay datos suficientes para generar analíticas avanzadas todavía.</p>
+                                    <button
+                                        onClick={() => setShowDemo(true)}
+                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 mx-auto"
+                                    >
+                                        <Sparkles size={16} />
+                                        Ver Demo de Analíticas
+                                    </button>
+                                </div>
+                            )}
                         </motion.div>
                     )}
 
@@ -342,7 +435,7 @@ export default function StudentProgress({ isDemo = false }) {
                             <div className="bg-slate-900 rounded-2xl p-5 border border-white/5">
                                 <h3 className="font-bold mb-4">Rutinas Asignadas por Vos</h3>
                                 {assignedRoutines.length === 0 ? (
-                                    <p className="text-slate-500 text-sm">No le asignaste ninguna rutina todavÃ­a</p>
+                                    <p className="text-slate-500 text-sm">No le asignaste ninguna rutina todavía</p>
                                 ) : (
                                     <div className="space-y-3">
                                         {assignedRoutines.map((ar) => (
@@ -379,7 +472,7 @@ export default function StudentProgress({ isDemo = false }) {
                                             <div key={routine.id} className="bg-slate-800 rounded-xl p-4">
                                                 <span className="font-bold">{routine.name || 'Rutina'}</span>
                                                 <p className="text-xs text-slate-400 mt-1">
-                                                    {routine.days?.length || 0} dÃ­as â€¢ {routine.goal || 'Sin objetivo'}
+                                                    {routine.days?.length || 0} días • {routine.goal || 'Sin objetivo'}
                                                 </p>
                                             </div>
                                         ))}
@@ -408,6 +501,78 @@ export default function StudentProgress({ isDemo = false }) {
                     />
                 )}
             </AnimatePresence>
+        </div>
+    );
+}
+
+function WeightPath({ student }) {
+    const weightHistory = student.weightHistory || [];
+    const initialWeight = weightHistory.length > 0 ? weightHistory[0].weight : student.weight;
+    const currentWeight = student.weight;
+    const targetWeight = student.targetWeight;
+
+    if (!targetWeight) {
+        return (
+            <div className="bg-slate-900/40 backdrop-blur-md rounded-xl p-3 border border-white/5 flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Peso Actual</span>
+                <span className="text-sm font-black text-white">{currentWeight || '--'} kg</span>
+            </div>
+        );
+    }
+
+    const totalToChange = Math.abs(targetWeight - initialWeight);
+    const changed = Math.abs(currentWeight - initialWeight);
+    const progress = totalToChange > 0 ? Math.min(100, Math.max(0, (changed / totalToChange) * 100)) : 0;
+    const remaining = (currentWeight - targetWeight).toFixed(1);
+
+    return (
+        <div className="bg-slate-900/40 backdrop-blur-md rounded-xl p-3 border border-white/5 relative overflow-hidden group shadow-lg shadow-black/20">
+            <div className="flex items-center justify-between mb-3 relative z-10">
+                <div className="flex items-center gap-1.5">
+                    <Scale className="text-purple-400 opacity-70" size={12} />
+                    <span className="font-['Outfit'] font-black uppercase tracking-[0.15em] text-[10px] text-slate-500">Progreso</span>
+                </div>
+                <div className="text-[10px] font-black tracking-widest text-emerald-400 uppercase bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10">
+                    {remaining > 0 ? `-${remaining}kg` : remaining < 0 ? `+${Math.abs(remaining)}kg` : '¡Meta!'}
+                </div>
+            </div>
+
+            <div className="flex items-center gap-3 relative px-1 h-6">
+                {/* Start Label */}
+                <div className="flex flex-col items-center min-w-[35px]">
+                    <span className="text-[7px] font-black text-slate-500 uppercase tracking-tighter leading-none mb-0.5">Inicio</span>
+                    <span className="text-[11px] font-black text-slate-400 font-['Outfit'] leading-none">{initialWeight}</span>
+                </div>
+
+                {/* Bar Container */}
+                <div className="relative flex-1 h-1 flex items-center">
+                    <div className="absolute inset-0 bg-white/10 rounded-full"></div>
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                    ></motion.div>
+
+                    {/* Current Indicator *) */}
+                    <motion.div
+                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex flex-col items-center"
+                        animate={{ left: `${progress}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                    >
+                        <div className="bg-blue-600 px-1.5 py-0.5 rounded shadow-xl mb-1 flex items-center justify-center -mt-8">
+                            <span className="text-[9px] font-black text-white leading-none">{currentWeight}</span>
+                        </div>
+                        <div className="w-2 h-2 rounded-full bg-white border-2 border-blue-600 shadow-md"></div>
+                    </motion.div>
+                </div>
+
+                {/* Target Label *) *) *) *) *) *) *) */}
+                <div className="flex flex-col items-center min-w-[35px]">
+                    <span className="text-[7px] font-black text-purple-400 uppercase tracking-tighter leading-none mb-0.5">Meta</span>
+                    <span className="text-[11px] font-black text-purple-300 font-['Outfit'] leading-none">{targetWeight}</span>
+                </div>
+            </div>
         </div>
     );
 }
@@ -582,3 +747,61 @@ function QuickStat({ label, value, icon: Icon, color }) {
         </div>
     );
 }
+
+const ANALYTICS_DEMO_DATA = {
+    summary: {
+        totalWorkouts: 24,
+        totalVolume: 125400,
+        totalSets: 312,
+        avgDuration: 62,
+        prCount: 18
+    },
+    charts: {
+        volumeTrend: Array.from({ length: 12 }).map((_, i) => ({
+            date: `20/${11 + Math.floor(i / 4)}/25`,
+            volume: 8500 + (i * 450) + (Math.random() * 500),
+            name: i % 2 === 0 ? 'Empuje' : 'Tracción'
+        })),
+        exercises: {
+            'Sentadilla Libre': Array.from({ length: 8 }).map((_, i) => ({
+                date: `${i + 1}/12/25`,
+                maxWeight: 80 + (i * 5)
+            })),
+            'Press de Banca': Array.from({ length: 8 }).map((_, i) => ({
+                date: `${i + 1}/12/25`,
+                maxWeight: 60 + (i * 2.5)
+            })),
+            'Peso Muerto': Array.from({ length: 8 }).map((_, i) => ({
+                date: `${i + 1}/12/25`,
+                maxWeight: 100 + (i * 10)
+            }))
+        }
+    },
+    cardio: [
+        { name: 'Running', durationMinutes: 45, caloriesBurned: 520, date: '2025-01-12' },
+        { name: 'Natación', durationMinutes: 30, caloriesBurned: 350, date: '2025-01-10' },
+        { name: 'Ciclismo', durationMinutes: 60, caloriesBurned: 600, date: '2025-01-08' }
+    ],
+    recentHistory: [
+        {
+            id: 'demo-1',
+            date: new Date(),
+            dayName: 'Empuje (Pecho/Hombro)',
+            totalVolume: 12400,
+            exercises: [
+                { name: 'Press de Banca', sets: [{ weight: 80, reps: 8 }, { weight: 80, reps: 7 }], personalRecord: true },
+                { name: 'Press Militar', sets: [{ weight: 45, reps: 10 }, { weight: 45, reps: 10 }] }
+            ]
+        },
+        {
+            id: 'demo-2',
+            date: new Date(Date.now() - 86400000 * 2),
+            dayName: 'Tracción (Espalda/Bíceps)',
+            totalVolume: 11800,
+            exercises: [
+                { name: 'Dominadas', sets: [{ weight: 0, reps: 12 }, { weight: 0, reps: 10 }] },
+                { name: 'Remo con Barra', sets: [{ weight: 70, reps: 10 }, { weight: 70, reps: 8 }] }
+            ]
+        }
+    ]
+};

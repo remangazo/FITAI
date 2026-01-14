@@ -294,7 +294,7 @@
                 </div>
 
                 <p
-                    class="text-xl md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-6 md:pl-8">
+                    class="text-lg md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-5 md:pl-8">
                     La primera plataforma donde la IA no solo te da planes, sino que entiende tu biología.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-6 md:gap-8">
@@ -398,16 +398,18 @@
                     FitAI analiza cada sesión individual de entrenamiento. Si fallas una repetición, Gemini 1.5 Flash
                     recalcula tu volumen en milisegundos para que no te estanques nunca.
                 </p>
-                <div class="grid grid-cols-2 gap-12 pt-8 reveal-up" x-data="{ active: false }"
+                <div class="grid grid-cols-2 gap-8 md:gap-12 pt-8 reveal-up" x-data="{ active: false }"
                     x-intersect="active = true" :class="{ 'active': active }">
-                    <div class="space-y-2">
-                        <div class="text-5xl font-display font-black">2.4ms</div>
-                        <div class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">LATENCIA IA RECAP
+                    <div class="space-y-1">
+                        <div class="text-4xl md:text-5xl font-display font-black tracking-tighter">2.4ms</div>
+                        <div class="text-[8px] md:text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">
+                            LATENCIA IA
                         </div>
                     </div>
-                    <div class="space-y-2">
-                        <div class="text-5xl font-display font-black">0</div>
-                        <div class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">ESTANCAMIENTOS</div>
+                    <div class="space-y-1">
+                        <div class="text-4xl md:text-5xl font-display font-black tracking-tighter">0</div>
+                        <div class="text-[8px] md:text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">
+                            ESTANCAMIENTOS</div>
                     </div>
                 </div>
             </div>
@@ -437,11 +439,11 @@
                     <span class="flex h-1.5 w-1.5 rounded-full bg-brand-indigo animate-pulse"></span>
                     ELITE COACHING NETWORK
                 </p>
-                <h2 class="text-5xl md:text-[10rem] font-display font-black uppercase leading-none tracking-tighter reveal-scale"
+                <h2 class="text-4xl md:text-[10rem] font-display font-black uppercase leading-none tracking-tighter reveal-scale"
                     :class="{ 'active': active }">
                     <span class="shimmer-white">EL ESTÁNDAR</span> <br>
                     <span
-                        class="bg-white text-dark px-4 md:px-10 transform -rotate-2 inline-block animate-ambient mt-2">PROFESIONAL.</span>
+                        class="bg-white text-dark px-6 md:px-10 transform md:-rotate-2 inline-block animate-ambient mt-4 md:mt-2">PROFESIONAL.</span>
                 </h2>
                 <p class="mt-16 text-2xl md:text-4xl font-display font-medium text-white/40 leading-tight reveal-up"
                     :class="{ 'active': active }">
@@ -452,8 +454,8 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-                <div class="bento-card relative p-12 space-y-12 group overflow-hidden reveal-up"
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-12">
+                <div class="bento-card relative p-8 md:p-12 space-y-8 md:space-y-12 group overflow-hidden reveal-up"
                     x-data="{ active: false }" x-intersect="active = true" :class="{ 'active': active }">
                     <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
                         <img src="images/massive_management.png"
@@ -474,7 +476,7 @@
                             desde un solo mando. Visualiza alertas de riesgo automáticas.</p>
                     </div>
                 </div>
-                <div class="bento-card relative p-12 space-y-12 border-brand-indigo/50 bg-gradient-to-br from-dark to-brand-indigo/10 group overflow-hidden reveal-up"
+                <div class="bento-card relative p-8 md:p-12 space-y-8 md:space-y-12 border-brand-indigo/50 bg-gradient-to-br from-dark to-brand-indigo/10 group overflow-hidden reveal-up"
                     style="transition-delay: 0.1s" x-data="{ active: false }" x-intersect="active = true"
                     :class="{ 'active': active }">
                     <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
@@ -495,7 +497,7 @@
                             ingreso pasivo directo para ti.</p>
                     </div>
                 </div>
-                <div class="bento-card relative p-12 space-y-12 group overflow-hidden reveal-up"
+                <div class="bento-card relative p-8 md:p-12 space-y-8 md:space-y-12 group overflow-hidden reveal-up"
                     style="transition-delay: 0.2s" x-data="{ active: false }" x-intersect="active = true"
                     :class="{ 'active': active }">
                     <div class="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
@@ -680,10 +682,11 @@
                     <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
                         <div class="text-center md:text-left space-y-4">
                             <h3
-                                class="text-3xl md:text-5xl font-display font-black uppercase italic tracking-tighter leading-none">
-                                ¿SOS ENTRENADOR <br> <span class="shimmer-indigo">PERSONAL?</span>
+                                class="text-3xl md:text-5xl font-display font-black uppercase italic tracking-tighter leading-tight md:leading-none">
+                                ¿SOS ENTRENADOR <br class="hidden md:block"> <span
+                                    class="shimmer-indigo">PERSONAL?</span>
                             </h3>
-                            <p class="text-base md:text-lg text-white/40 font-medium max-w-xl">
+                            <p class="text-base md:text-lg text-white/50 font-medium max-w-xl">
                                 Únete a nuestra red de élite. Accede a herramientas de gestión de última generación y
                                 escala
                                 tu negocio llegando a acuerdos estratégicos directamente con nosotros.

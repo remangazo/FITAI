@@ -75,8 +75,28 @@
     </script>
 
     <style>
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        p,
+        span {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
         .text-huge {
-            font-size: clamp(2.5rem, 12vw, 7.5rem);
+            font-size: clamp(2.2rem, 12vw, 7.5rem);
             line-height: 0.9;
             letter-spacing: -0.05em;
         }
@@ -200,7 +220,7 @@
     </style>
 </head>
 
-<body class="bg-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-indigo/30">
+<body class="bg-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-indigo/30 w-full relative">
 
     <!-- Nav -->
     <nav x-data="{ scrolled: false, mobileMenu: false }" @scroll.window="scrolled = (window.pageYOffset > 50)"
@@ -294,7 +314,7 @@
                 </div>
 
                 <p
-                    class="text-lg md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-5 md:pl-8">
+                    class="text-base md:text-3xl font-medium text-white/50 leading-tight max-w-xl border-l-4 border-brand-indigo pl-5 md:pl-8">
                     La primera plataforma donde la IA no solo te da planes, sino que entiende tu biología.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-6 md:gap-8">

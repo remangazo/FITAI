@@ -54,11 +54,12 @@ export const getRoutineProgress = async (userId, routineId) => {
 
         // BACKFILL: Consultar la colección 'workouts' para asegurar que no falten días
         // Esto ayuda si el usuario completó entrenamientos pero no se marcó en routineProgress
+        // IMPORTANTE: Solo contar entrenamientos COMPLETADOS, no abandonados
         const qWorkouts = query(
             collection(db, 'workouts'),
             where('userId', '==', userId),
             where('routineId', '==', routineId),
-            where('status', '==', 'completed'),
+            where('status', '==', 'completed'), // Esto ya está correcto - solo 'completed', no 'abandoned'
             where('startTime', '>=', Timestamp.fromDate(weekStart))
         );
 

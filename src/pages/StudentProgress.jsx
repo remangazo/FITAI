@@ -196,12 +196,11 @@ export default function StudentProgress({ isDemo = false }) {
                 </div>
 
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-10">
                     <QuickStat label="Entrenos (30d)" value={studentData.stats.totalWorkouts} icon={Dumbbell} color="text-blue-400" />
                     <QuickStat label="Asistencia" value={`${studentData.stats.attendanceRate}%`} icon={Award} color="text-emerald-400" />
-                    <div className="col-span-2 lg:col-span-1">
-                        <QuickStat label="Peso actual (kg)" value={student.weight || '--'} icon={Scale} color="text-violet-400" />
-                    </div>
+                    <QuickStat label="Cardio (kcal)" value={studentData.stats.totalCardioCalories || 0} icon={Activity} color="text-amber-400" />
+                    <QuickStat label="Peso actual (kg)" value={student.weight || '--'} icon={Scale} color="text-violet-400" />
                 </div>
                 <WeightPath student={student} />
 
@@ -598,6 +597,7 @@ function AssignRoutineModal({ onClose, onAssign }) {
     const [notes, setNotes] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
+    const [scannedRoutineData, setScannedRoutineData] = useState(null); // Para guardar datos de IA
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
 
@@ -650,10 +650,12 @@ function AssignRoutineModal({ onClose, onAssign }) {
 
             // Call Gemini
             const aiData = await analyzeRoutineFromImage(base64Image);
-            // ... lines removed for brevity, will use specific replace ...
 
             if (aiData) {
                 setName(aiData.title || aiData.name || '');
+
+                // CRÍTICO: Guardar aiData para usarlo en handleSubmit
+                setScannedRoutineData(aiData);
 
                 let exercisesText = "";
 
@@ -695,7 +697,8 @@ function AssignRoutineModal({ onClose, onAssign }) {
             const routineData = {
                 name: name.trim(),
                 createdAt: new Date(),
-                days: [], // Aquí se podrían mapear los días si la IA los devolviera estructurados
+                // Usar los datos escaneados si existen, sino array vacío
+                days: scannedRoutineData?.days || [],
             };
             await onAssign(routineData, notes);
         } finally {

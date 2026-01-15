@@ -7,13 +7,12 @@ import { db } from '../config/firebase';
 import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, addDoc } from 'firebase/firestore';
 import { generateWithOpenRouter } from '../services/openrouterService';
 import { generateRoutine } from '../services/routineGenerator';
-import { getActiveRoutine, saveRoutine, saveAndActivateRoutine } from '../services/routineService';
-import { getProgressRecommendations } from '../services/progressService';
-import { getWorkoutHistory, getAllPersonalRecords, getExerciseProgress } from '../services/workoutService';
+import { getActiveRoutine } from '../services/routineService';
+import { getWorkoutHistory, getAllPersonalRecords, getExerciseProgress, getWeeklyStats, getInProgressWorkout } from '../services/workoutService';
 import { calculateFullMetabolicProfile } from '../services/metabolicCalculator';
 import { generateQuickPlan } from '../services/mealGenerator';
 import { aiService } from '../services/aiService';
-import { addActivityToLog, getDailyNutritionLog } from '../services/nutritionService';
+import { addActivityToLog, getDailyNutritionLog, getWeeklyActivities } from '../services/nutritionService';
 import { getLocalDateString } from '../utils/dateUtils';
 import { challengeService } from '../services/challengeService';
 // Lazy load NotificationCenter to prevent circular dependency
@@ -99,6 +98,8 @@ export default function Dashboard() {
         coachAvatar: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&q=80&w=150&h=150'
     });
     const [assignedCoach, setAssignedCoach] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [activities, setActivities] = useState([]);
 
     // Global Modal Back-Button Handler
     useEffect(() => {
@@ -127,6 +128,7 @@ export default function Dashboard() {
     const [strengthData, setStrengthData] = useState([]);
     const [loadingStrength, setLoadingStrength] = useState(false);
     const [todayActivities, setTodayActivities] = useState([]);
+    const [pendingWorkout, setPendingWorkout] = useState(null); // Entrenamiento sin terminar
 
     useEffect(() => {
         if (!user) {
@@ -154,7 +156,8 @@ export default function Dashboard() {
         loadDailyActivities();
         checkWeightUpdateRequirement();
         checkTutorialRequirement();
-    }, [user, profile, profileLoading, navigate]);
+        // CRITICAL: Solo dependencias primitivas para evitar re-renders que desmontan ActiveWorkout
+    }, [user?.uid, profileLoading, profile?.onboardingCompleted, profile?.role]);
 
     const checkTutorialRequirement = () => {
         if (profile && profile.onboardingCompleted && !profile.tutorialCompleted) {
@@ -221,26 +224,61 @@ export default function Dashboard() {
                 where('userId', '==', user.uid)
             );
             const routineSnap = await getDocs(qRoutines);
-            console.log('[Dashboard] Found', routineSnap.docs.length, 'routines');
+            console.log('[Dashboard] Found', routineSnap.docs.length, 'user-created routines');
 
             const fetchedRoutines = routineSnap.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
-                createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt
+                createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt,
+                source: 'user' // Marca para identificar origen
             }));
 
-            // Sort in memory
-            fetchedRoutines.sort((a, b) => {
-                const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt || 0);
-                const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt || 0);
+            // NUEVO: Fetch rutinas asignadas por el coach
+            const qAssignedRoutines = query(
+                collection(db, 'assignedRoutines'),
+                where('studentId', '==', user.uid),
+                where('status', '==', 'active')
+            );
+            const assignedSnap = await getDocs(qAssignedRoutines);
+            console.log('[Dashboard] Found', assignedSnap.docs.length, 'coach-assigned routines');
+
+            const assignedRoutines = assignedSnap.docs.map(doc => {
+                const routineData = doc.data().routine || {};
+                return {
+                    id: doc.id,
+                    // Asegurar que tenga tanto 'name' como 'title' para compatibilidad
+                    name: routineData.title || routineData.name || 'Rutina sin nombre',
+                    title: routineData.title || routineData.name || 'Rutina sin nombre',
+                    days: routineData.days || [],
+                    createdAt: routineData.createdAt,
+                    assignedAt: doc.data().assignedAt?.toDate?.() || doc.data().assignedAt,
+                    coachAssigned: true,
+                    coachNotes: doc.data().notes,
+                    trainerId: doc.data().trainerId,
+                    assignedRoutineId: doc.id, // ID del documento de asignación
+                    source: 'coach' // Marca para identificar origen
+                };
+            });
+
+            // Combinar ambas fuentes de rutinas
+            const allRoutines = [...fetchedRoutines, ...assignedRoutines];
+
+            // Sort in memory by creation/assignment date
+            allRoutines.sort((a, b) => {
+                const dateA = a.createdAt instanceof Date ? a.createdAt : (a.assignedAt instanceof Date ? a.assignedAt : new Date(a.createdAt || a.assignedAt || 0));
+                const dateB = b.createdAt instanceof Date ? b.createdAt : (b.assignedAt instanceof Date ? b.assignedAt : new Date(b.createdAt || b.assignedAt || 0));
                 return dateB - dateA;
             });
 
-            setRoutines(fetchedRoutines.slice(0, 5));
+            setRoutines(allRoutines.slice(0, 5));
 
-            // Set active routine
-            const active = fetchedRoutines.find(r => r.isActive === true);
+            // Set active routine - PRIORIDAD: rutinas asignadas por coach > rutinas propias
+            const activeCoachRoutine = assignedRoutines.length > 0 ? assignedRoutines[0] : null;
+            const activeUserRoutine = fetchedRoutines.find(r => r.isActive === true);
+            const active = activeCoachRoutine || activeUserRoutine;
+
             if (active) {
+                console.log('[Dashboard] Setting active routine', active.source === 'coach' ? '(coach-assigned)' : '(user-created)', active);
                 setActiveRoutine(active);
             }
 
@@ -337,6 +375,36 @@ export default function Dashboard() {
                 }
             }
 
+            setLoading(true);
+            console.log('[Dashboard] Fetching data for user:', user.uid);
+
+            // 1. Detectar entrenamientos sin completar (PRIORIDAD ZERO)
+            const inProgress = await getInProgressWorkout(user.uid);
+            setPendingWorkout(inProgress);
+            if (inProgress) console.log('[Dashboard] Found incomplete workout:', inProgress.id);
+
+            // 2. Cargar dieta activa y perfil metabólico ya están manejados arriba 
+            // mediante setDiets y metabolicProfile
+
+            // 3. Cargar estadísticas y actividades (I/O BOUND)
+            const weeklyStats = await getWeeklyStats(user.uid);
+            const acts = await getWeeklyActivities(user.uid);
+            setActivities(acts || []);
+
+            // 4. Actualizar estadísticas asegurando que NO se cuente el pendiente
+            if (weeklyStats) {
+                const filteredWorkouts = (weeklyStats.workouts || []).filter(w =>
+                    w.status === 'completed' && (!inProgress || w.id !== inProgress.id)
+                );
+
+                const adjustedStats = {
+                    ...weeklyStats,
+                    workoutsThisWeek: filteredWorkouts.length,
+                    workouts: filteredWorkouts
+                };
+                setStats(adjustedStats);
+            }
+
         } catch (error) {
             console.error("[Dashboard] Error fetching dashboard data:", error);
         } finally {
@@ -408,8 +476,16 @@ export default function Dashboard() {
             alert("✅ Rutina activada correctamente");
             fetchData();
             loadStrengthData();
+
+            // TODO: Re-habilitar cuando se solucione el problema de loading
+            // Detectar entrenamientos sin completar
+            // const inProgress = await getInProgressWorkout(user.uid);
+            // if (inProgress && !inProgress.completed) {
+            //     console.log('[Dashboard] Found incomplete workout:', inProgress);
+            //     setPendingWorkout(inProgress);
+            // }
         } catch (error) {
-            console.error("[Dashboard] Error fatal en activacion:", error);
+            console.error('[Dashboard] Error fatal en activacion:', error);
             alert("Error al activar rutina: " + (error.message || 'Error de red o permisos'));
         }
     };
@@ -694,12 +770,14 @@ export default function Dashboard() {
                             </div>
                             <div className="relative z-10 mb-8">
                                 <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">
-                                    {activeRoutine ? 'Listo para tu entreno?' : 'Tu viaje comienza hoy'}
+                                    {pendingWorkout ? '¡Terminá tu entreno!' : activeRoutine ? 'Listo para tu entreno?' : 'Tu viaje comienza hoy'}
                                 </h3>
                                 <p className="text-slate-400 font-medium leading-relaxed">
-                                    {activeRoutine
-                                        ? `Continúa con "${activeRoutine.title}". Mantén la constancia para ver resultados.`
-                                        : 'Genera tu primera rutina personalizada con IA hoy mismo.'}
+                                    {pendingWorkout
+                                        ? `Dejaste un entreno de "${pendingWorkout.dayName}" sin completar. ¡Terminalo ahora y completá el día!`
+                                        : activeRoutine
+                                            ? `Continúa con "${activeRoutine.title || activeRoutine.name}". Mantén la constancia para ver resultados.`
+                                            : 'Genera tu primera rutina personalizada con IA hoy mismo.'}
                                 </p>
                             </div>
                             <motion.button
@@ -758,7 +836,14 @@ export default function Dashboard() {
 
                     {/* AI Coach Recommendations */}
                     <div id="guide-ia-coach">
-                        <AICoachCard user={user} profile={profile} />
+                        <AICoachCard
+                            user={user}
+                            profile={profile}
+                            activeRoutine={activeRoutine}
+                            pendingWorkout={pendingWorkout}
+                            stats={stats}
+                            activities={activities}
+                        />
                     </div>
 
                     {/* Nutrition Progress Widget */}

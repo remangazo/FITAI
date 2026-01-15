@@ -469,10 +469,11 @@ async function handleVerifyProof(data) {
 }
 
 async function handleAnalyzeRoutineFromImage(data) {
-    const geminiKey = process.env.GEMINI_API_KEY;
-    // Usamos el modelo flash 2.0 que es excelente en visión
-    const model = "gemini-2.0-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+    const groqApiKey = process.env.GROQ_API_KEY;
+
+    if (!groqApiKey) {
+        throw new Error("GROQ_API_KEY no configurada en el servidor.");
+    }
 
     if (!data.image) {
         throw new Error("No se recibió ninguna imagen para analizar.");
@@ -483,59 +484,100 @@ async function handleAnalyzeRoutineFromImage(data) {
         ? data.image.split('base64,')[1]
         : data.image;
 
-    const prompt = `Analiza detalladamente esta imagen de rutina de entrenamiento. 
-    ESTRUCTURA ESPERADA: Detecto que puede ser una tabla semanal (por ejemplo, columnas para Día 1, Día 2, etc.).
-    TAREA: Extrae TODOS los ejercicios, organizándolos por día.
-    
-    Responde ÚNICAMENTE con este formato JSON (sin markdown, sin texto extra):
+    const prompt = `Eres un experto en lectura de rutinas de fitness. Analiza esta imagen y extrae la información de la rutina.
+
+INSTRUCCIONES CRÍTICAS:
+1. Lee TODOS los ejercicios visibles en la imagen
+2. Si es una tabla con múltiples días (ej: Día 1, Día 2, etc.), organiza por día
+3. Si solo lista ejercicios sin días específicos, ponlos todos en un único día llamado "Rutina Completa"
+4. Extrae: nombre del ejercicio, series, repeticiones
+
+Tu respuesta DEBE ser SOLO un objeto JSON válido con esta estructura EXACTA:
+{
+  "title": "nombre descriptivo de la rutina",
+  "notes": "objetivos o consejos breves (máx 100 caracteres)",
+  "days": [
     {
-      "title": "Nombre de la rutina",
-      "notes": "Consejos generales del plan",
-      "days": [
-        {
-          "day": "Día / Grupo Muscular",
-          "focus": "Músculo principal",
-          "exercises": [
-            { "name": "Nombre", "sets": "3", "reps": "12", "notes": "" }
-          ]
-        }
+      "day": "Día 1" o "Pecho" o "Rutina Completa",
+      "focus": "grupo muscular principal",
+      "exercises": [
+        {"name": "Press Banca", "sets": "4", "reps": "8-10", "notes": ""},
+        {"name": "Aperturas", "sets": "3", "reps": "12", "notes": ""}
       ]
-    }`;
+    }
+  ]
+}
+
+IMPORTANTE: Responde SOLO con el JSON, sin texto antes ni después, sin markdown.`;
 
     try {
-        console.log(`[AIProxy] Llamando a Gemini API Directa para análisis de imagen...`);
-        const response = await axios.post(url, {
-            contents: [{
-                parts: [
-                    { text: prompt },
-                    {
-                        inline_data: {
-                            mime_type: "image/jpeg",
-                            data: base64Data
+        console.log(`[AIProxy] Llamando a Groq API (Llama Vision) para análisis de imagen...`);
+
+        // Groq usa la API compatible con OpenAI
+        const response = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
+            model: "meta-llama/llama-4-scout-17b-16e-instruct", // Llama 4 Scout Vision (nombre oficial en Groq)
+            messages: [
+                {
+                    role: "system",
+                    content: "Eres un asistente que SIEMPRE responde con JSON válido y estructurado. NUNCA añadas texto explicativo fuera del JSON."
+                },
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: prompt },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:image/jpeg;base64,${base64Data}`
+                            }
                         }
-                    }
-                ]
-            }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.2 // Más bajo para mayor precisión en datos
-            }
+                    ]
+                }
+            ],
+            temperature: 0.1, // Muy bajo para respuestas más deterministas
+            max_tokens: 3000 // Aumentado para rutinas grandes
+        }, {
+            headers: {
+                "Authorization": `Bearer ${groqApiKey}`,
+                "Content-Type": "application/json"
+            },
+            timeout: 30000
         });
 
-        const resultText = response.data.candidates[0].content.parts[0].text;
-        console.log("[AIProxy] Respuesta de Gemini recibida.");
+        const resultText = response.data.choices[0].message.content;
+        console.log("[AIProxy] Respuesta de Groq recibida:", resultText.substring(0, 200));
 
-        // Limpiar posibles bloques de código markdown
+        // PARSING MÁS ROBUSTO
         let cleanJson = resultText.trim();
-        if (cleanJson.startsWith('```')) {
-            cleanJson = cleanJson.replace(/^```json/, '').replace(/```$/, '').trim();
+
+        // Remover bloques markdown si existen
+        cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+        // Buscar el JSON entre llaves
+        const firstBrace = cleanJson.indexOf('{');
+        const lastBrace = cleanJson.lastIndexOf('}');
+
+        if (firstBrace === -1 || lastBrace === -1 || firstBrace >= lastBrace) {
+            console.error("[AIProxy] No se encontró JSON válido en la respuesta");
+            throw new Error("La IA no devolvió un formato JSON válido. Respuesta recibida: " + cleanJson.substring(0, 500));
         }
 
-        return JSON.parse(cleanJson);
+        cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+
+        // Intentar parsear
+        const parsedData = JSON.parse(cleanJson);
+
+        // Validación de estructura
+        if (!parsedData.days || !Array.isArray(parsedData.days) || parsedData.days.length === 0) {
+            console.error("[AIProxy] JSON parseado pero estructura inválida:", parsedData);
+            throw new Error("La estructura del JSON es inválida: falta el array 'days' o está vacío");
+        }
+
+        return parsedData;
     } catch (error) {
-        console.error("[AIProxy] Error en Gemini Directo:", error.response?.data || error.message);
+        console.error("[AIProxy] Error en Groq Vision:", error.response?.data || error.message);
         const detail = error.response?.data?.error?.message || error.message;
-        throw new Error(`Error de visión IA: ${detail}`);
+        throw new Error(`Error de visión IA (Groq): ${detail}`);
     }
 }
 

@@ -15,7 +15,7 @@ import {
     Users, Trophy, Dumbbell, Star, ChevronRight, Copy, Check,
     TrendingUp, Award, Crown, Search, Filter, Loader2, UserPlus,
     Target, Flame, BarChart3, Settings, RefreshCw, Plus, Calendar, Flag,
-    Gift, Zap, ShieldCheck
+    Gift, Zap, ShieldCheck, User, LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { trainerService, TRAINER_LEVELS, REWARD_POINTS } from '../services/trainerService';
@@ -23,7 +23,7 @@ import { BottomNav, BackButton } from '../components/Navigation';
 
 export default function TrainerDashboard({ isDemo = false }) {
     const navigate = useNavigate();
-    const { user, profile } = useAuth();
+    const { user, profile, logout } = useAuth();
     const [trainerData, setTrainerData] = useState(null);
     const [students, setStudents] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
@@ -213,13 +213,40 @@ export default function TrainerDashboard({ isDemo = false }) {
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={loadDashboardData}
-                        disabled={loading}
-                        className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all text-slate-400 hover:text-white"
-                    >
-                        <RefreshCw className={loading ? 'animate-spin' : ''} size={20} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => navigate('/settings')}
+                            className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all text-slate-400 hover:text-white"
+                            title="Configuración"
+                        >
+                            <Settings size={20} />
+                        </button>
+                        <button
+                            onClick={() => navigate('/profile')}
+                            className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all text-slate-400 hover:text-white"
+                            title="Mi Perfil"
+                        >
+                            <User size={20} />
+                        </button>
+                        <button
+                            onClick={async () => {
+                                await logout();
+                                navigate('/login');
+                            }}
+                            className="p-3 bg-red-500/10 hover:bg-red-500/20 rounded-2xl border border-red-500/20 transition-all text-red-400 hover:text-red-300"
+                            title="Cerrar Sesión"
+                        >
+                            <LogOut size={20} />
+                        </button>
+                        <button
+                            onClick={loadDashboardData}
+                            disabled={loading}
+                            className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 transition-all text-slate-400 hover:text-white"
+                            title="Actualizar"
+                        >
+                            <RefreshCw className={loading ? 'animate-spin' : ''} size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 <motion.div

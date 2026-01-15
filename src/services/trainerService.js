@@ -457,6 +457,30 @@ class TrainerService {
             const assignedSnapshot = await getDocs(assignedQuery);
             const assignedRoutines = assignedSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
+            // Get cardio activities from nutritionLogs (last 30 days)
+            let totalCardioCalories = 0;
+            let cardioActivityCount = 0;
+            try {
+                const nutritionQuery = query(
+                    collection(db, 'nutritionLogs'),
+                    where('userId', '==', studentId)
+                );
+                const nutritionSnapshot = await getDocs(nutritionQuery);
+                const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+                nutritionSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.date >= thirtyDaysAgoStr && Array.isArray(data.activities)) {
+                        data.activities.forEach(act => {
+                            totalCardioCalories += Number(act.caloriesBurned) || 0;
+                            cardioActivityCount++;
+                        });
+                    }
+                });
+            } catch (cardioErr) {
+                console.warn('[TrainerService] Non-critical: Cardio fetch failed:', cardioErr);
+            }
+
             return {
                 student,
                 routines,
@@ -465,6 +489,8 @@ class TrainerService {
                 stats: {
                     totalWorkouts: workouts.length,
                     attendanceRate: this.calculateAttendanceRate(workouts, student),
+                    totalCardioCalories,
+                    cardioActivityCount
                 }
             };
         } catch (error) {
@@ -578,35 +604,38 @@ class TrainerService {
                 }
             });
 
-            // 5. Get cardio activities (last 30 days) - Robust fetch to avoid index issues
+            // 5. Get cardio activities (last 30 days) - Robust fetch without orderBy to avoid index issues
             const cardioActivities = [];
             try {
                 const now = new Date();
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
 
-                // Fetch all logs for the user (or a limited set to be safe)
-                // Filtering by date in JS is safer than requiring a composite index in Firestore
+                console.log('[TrainerService] Fetching cardio for student:', studentId, 'since', thirtyDaysAgoStr);
+
+                // ROBUST: Query without orderBy to avoid composite index requirement
                 const nutritionQuery = query(
                     collection(db, 'nutritionLogs'),
-                    where('userId', '==', studentId),
-                    orderBy('date', 'desc'),
-                    limit(45) // Get more than a month to be safe
+                    where('userId', '==', studentId)
                 );
 
                 const nutritionSnapshot = await getDocs(nutritionQuery);
+                console.log('[TrainerService] NutritionLogs found:', nutritionSnapshot.docs.length);
+
                 nutritionSnapshot.docs.forEach(doc => {
                     const data = doc.data();
-                    const logDate = new Date(data.date + 'T00:00:00');
+                    console.log('[TrainerService] Doc:', doc.id, 'Date:', data.date, 'Has activities:', Array.isArray(data.activities), 'Count:', (data.activities || []).length);
 
-                    if (logDate >= thirtyDaysAgo && data.activities) {
+                    // Filter by date in JS instead of Firestore
+                    if (data.date >= thirtyDaysAgoStr && Array.isArray(data.activities) && data.activities.length > 0) {
                         data.activities.forEach(act => {
-                            // Only include if it has relevant info and is cardio (or categorized as such)
-                            if (act.category === 'cardio' || act.durationMinutes > 0 || act.caloriesBurned > 0) {
+                            console.log('[TrainerService] Activity:', act.name, 'Calories:', act.caloriesBurned, 'Duration:', act.durationMinutes);
+                            // Include all activities with caloriesBurned or durationMinutes
+                            if (act.caloriesBurned > 0 || act.durationMinutes > 0 || act.category === 'cardio') {
                                 cardioActivities.push({
                                     ...act,
                                     date: data.date,
-                                    // Ensure field names match what UI expects
                                     durationMinutes: act.durationMinutes || 0,
                                     caloriesBurned: act.caloriesBurned || 0,
                                     name: act.name || 'Actividad sin nombre'
@@ -615,6 +644,7 @@ class TrainerService {
                         });
                     }
                 });
+                console.log('[TrainerService] Total cardio activities found:', cardioActivities.length);
             } catch (err) {
                 console.error('[TrainerService] Non-critical: Cardio fetch failed:', err);
             }
@@ -720,7 +750,10 @@ class TrainerService {
                 startDate: serverTimestamp(),
                 status: 'active',
             };
-            // The routine is saved in the assignedRoutines record above.
+
+            // Add the routine to the batch
+            batch.set(assignedRoutineRef, assignedData);
+
             // We also update the student's profile with the new active routine ID if needed
             batch.update(doc(db, USERS_COLLECTION, studentId), {
                 activeRoutineId: assignedRoutineRef.id,

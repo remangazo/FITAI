@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Brain, TrendingUp, TrendingDown, AlertTriangle,
+    Brain, TrendingUp, TrendingDown, AlertTriangle, AlertCircle,
     ChevronRight, ChevronDown, RefreshCw, Target, Dumbbell,
     Award, Zap, Heart, Flame, Clock, Play, Calendar,
     Sparkles, ArrowUp, ArrowDown, Check, Info
@@ -270,7 +270,14 @@ const InsightCard = ({ icon: Icon, title, items, color = "indigo" }) => {
     );
 };
 
-const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
+const AICoachCard = React.memo(function AICoachCard({
+    user,
+    profile,
+    activeRoutine: activeRoutineProp,
+    pendingWorkout,
+    stats: statsProp,
+    activities: activitiesProp
+}) {
     const navigate = useNavigate();
     const [recommendations, setRecommendations] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -301,7 +308,7 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                 setLastAnalyzed(new Date(parseInt(cachedTime)));
             }
         }
-    }, [user?.uid]);
+    }, []);
 
     const handleRefresh = () => {
         // Clear cache and force re-analysis
@@ -315,111 +322,149 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
         if (!user || loading) return;
         setLoading(true);
 
-        let stats = {}, recentWorkouts = [], personalRecords = {}, activeRoutine = null, extraActivities = [];
+        let stats = statsProp || {}, recentWorkouts = [], personalRecords = {}, activeRoutine = activeRoutineProp, extraActivities = activitiesProp || [];
         let workoutCount = 0;
 
         try {
-            console.log('[AICoach] Starting analysis for user:', user.uid);
+            console.log('[AICoach] Starting analysis with props data...');
 
             const results = await Promise.all([
-                getWeeklyStats(user.uid),
                 getWorkoutHistory(user.uid, 10),
                 getAllPersonalRecords(user.uid),
-                getActiveRoutine(user.uid),
-                getWeeklyActivities(user.uid)
+                activeRoutineProp ? Promise.resolve(activeRoutineProp) : getActiveRoutine(user.uid)
             ]);
 
-            stats = results[0] || {};
-            recentWorkouts = results[1] || [];
-            personalRecords = results[2] || {};
-            activeRoutine = results[3] || null;
-            extraActivities = results[4] || [];
+            recentWorkouts = results[0] || [];
+            personalRecords = results[1] || [];
+            activeRoutine = results[2] || null;
             workoutCount = recentWorkouts.length;
 
             // Smart Cache Check inside function (double check before API call if not forced)
+            let finalResult = null;
+            let fromCache = false;
+
             if (!force) {
                 const cached = localStorage.getItem('fitai_ai_recommendations');
                 const cachedTime = localStorage.getItem('fitai_ai_recommendations_time');
                 const cachedMeta = localStorage.getItem('fitai_ai_recommendations_meta');
 
-                // If we have cached results and workout count matches, use it to save API calls
-                // But if we have MORE workouts now than in meta, we proceed to API.
                 if (cached && cachedMeta) {
                     const meta = JSON.parse(cachedMeta);
-                    const recentCount = recentWorkouts.length;
+                    const pendingId = pendingWorkout?.id || null;
+                    const recentCount = (recentWorkouts?.length || 0) + (extraActivities?.length || 0);
+                    const weeklyCount = stats?.workoutsThisWeek || 0;
 
-                    if (meta.workoutCount === recentCount) {
-                        // Data hasn't changed, reuse cache if not expired
+                    // Invalidar caché si cambió el pendiente, el conteo reciente O el conteo semanal
+                    if (meta.workoutCount === recentCount && meta.pendingWorkoutId === pendingId && meta.weeklyWorkouts === weeklyCount) {
                         const hoursSince = (Date.now() - parseInt(cachedTime)) / (1000 * 60 * 60);
                         if (hoursSince < 6) {
-                            console.log('[AICoach] Smart Cache: Data identical, reusing cache.');
-                            setRecommendations(JSON.parse(cached));
-                            setLastAnalyzed(new Date(parseInt(cachedTime)));
-                            setLoading(false);
-                            return;
+                            console.log('[AICoach] Smart Cache: Data identical, using cached base.');
+                            finalResult = JSON.parse(cached);
+                            fromCache = true;
                         }
+                    } else {
+                        console.log('[AICoach] Cache invalidated: stats changed', { oldWeekly: meta.weeklyWorkouts, newWeekly: weeklyCount });
                     }
                 }
             }
 
-            console.log('[AICoach] Data collected:', {
-                stats,
-                workoutCount: recentWorkouts?.length || 0,
-                prCount: Object.keys(personalRecords || {}).length,
-                hasRoutine: !!activeRoutine,
-                extraCount: extraActivities?.length || 0
-            });
+            // SALVAGUARDA: Asegurar que el entrenamiento pendiente NO se cuente como completado
+            const filteredRecent = recentWorkouts.filter(rw => !pendingWorkout || rw.id !== pendingWorkout.id);
+            const filteredStats = { ...stats };
 
-            workoutCount = recentWorkouts?.length || 0;
+            if (pendingWorkout && (recentWorkouts || []).some(rw => rw.id === pendingWorkout.id)) {
+                console.warn('[AICoach] Pending workout detected in completed list. Adjusting stats visually...');
+                filteredStats.workoutsThisWeek = Math.max(0, (stats?.workoutsThisWeek || 0) - 1);
+            }
 
-            console.log('[AICoach] Calling AI API...');
-            const aiPromise = analyzeProgressWithAI({
-                weeklyStats: stats,
-                recentWorkouts,
-                personalRecords,
-                userProfile: profile,
-                activeRoutine,
-                extraActivities
-            });
+            workoutCount = filteredRecent?.length || 0;
 
-            const result = await Promise.race([
-                aiPromise,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
-            ]);
+            if (!finalResult) {
+                console.log('[AICoach] Calling AI API with filtered data...');
+                try {
+                    const aiPromise = analyzeProgressWithAI({
+                        weeklyStats: filteredStats,
+                        recentWorkouts: filteredRecent,
+                        personalRecords,
+                        userProfile: profile,
+                        activeRoutine,
+                        extraActivities
+                    });
 
-            console.log('[AICoach] AI Result received:', result);
+                    finalResult = await Promise.race([
+                        aiPromise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000))
+                    ]);
+                    console.log('[AICoach] AI Result received:', finalResult);
+                } catch (aiError) {
+                    console.error('[AICoach] AI API failed, preparing local fallback:', aiError);
+                    // No return here, finalResult stays null and triggers local fallback below
+                }
+            }
 
-            // Enrich result
-            result.streak = stats?.streak || 0;
-            result.totalWorkouts = workoutCount;
-            result.weeklyWorkouts = stats?.workoutsThisWeek || 0;
-            result.extraActivities = extraActivities?.length || 0;
-            result.personalRecordsCount = Object.keys(personalRecords || {}).length;
+            // FALLBACK LOCAL: Si la IA falló o no hay resultado aún
+            if (!finalResult) {
+                console.warn('[AICoach] Using local fallback analysis');
+                const localFallback = generateLocalAnalysis({
+                    weeklyStats: filteredStats,
+                    userProfile: profile,
+                    activeRoutine: activeRoutine || null,
+                    extraActivities: extraActivities || []
+                });
+                finalResult = { ...localFallback };
+            }
 
-            // Logic for Target Workouts (Data Fix for 20% vs 25%)
-            // Prioritize activeRoutine days, then profile preference, then default 3
-            result.targetWorkouts = (activeRoutine?.daysPerWeek)
-                ? parseInt(activeRoutine.daysPerWeek)
-                : (profile?.trainingFrequency || 3);
+            // INYECCIÓN DE ADVERTENCIA (Siempre se ejecuta)
+            if (pendingWorkout) {
+                const dayName = pendingWorkout.dayName || 'tu sesión';
+                finalResult.overallAssessment = `⚠️ Tienes un entreno de "${dayName}" sin terminar. ¡Terminalo ahora para completar el día y no perder el ritmo!`;
 
-            console.log('[AICoach] Target Workouts determined:', result.targetWorkouts);
+                if (Array.isArray(finalResult.areasToImprove)) {
+                    if (!finalResult.areasToImprove.some(a => a.includes('Completar entreno'))) {
+                        finalResult.areasToImprove.unshift(`Completar entreno de ${dayName}`);
+                    }
+                }
+            }
 
-            if (result.weeklyGoals && typeof result.weeklyGoals[0] === 'string') {
-                result.weeklyGoals = result.weeklyGoals.map(g => ({
+            // Enrich finalResult
+            finalResult.streak = filteredStats?.streak || 0;
+            finalResult.totalWorkouts = workoutCount;
+            finalResult.weeklyWorkouts = filteredStats?.workoutsThisWeek || 0;
+            finalResult.extraActivities = extraActivities?.length || 0;
+            finalResult.personalRecordsCount = Object.keys(personalRecords || {}).length;
+
+            // CALCULAR CARDIO PROGRESS: Basado en calorías quemadas vs objetivo semanal
+            const totalCardioCalories = (extraActivities || []).reduce((sum, act) =>
+                sum + (Number(act.caloriesBurned) || 0), 0
+            );
+            const weeklyCardioGoal = profile?.primaryGoal === 'weight_loss' ? 1500 : 1000; // kcal/semana
+            finalResult.cardioProgress = Math.min(100, Math.round((totalCardioCalories / weeklyCardioGoal) * 100));
+            finalResult.totalCardioCalories = totalCardioCalories;
+
+            finalResult.targetWorkouts = activeRoutine?.days?.length
+                ? activeRoutine.days.length
+                : (activeRoutine?.daysPerWeek)
+                    ? parseInt(activeRoutine.daysPerWeek)
+                    : (profile?.trainingFrequency || 3);
+
+            console.log('[AICoach] Target Workouts determined:', finalResult.targetWorkouts, 'from routine days:', activeRoutine?.days?.length);
+
+            if (finalResult.weeklyGoals && typeof finalResult.weeklyGoals[0] === 'string') {
+                finalResult.weeklyGoals = finalResult.weeklyGoals.map(g => ({
                     text: g,
-                    completed: stats?.workoutsThisWeek >= 3 && g.toLowerCase().includes('entren')
+                    completed: filteredStats?.workoutsThisWeek >= 3 && g.toLowerCase().includes('entren')
                 }));
-            } else if (!result.weeklyGoals || result.weeklyGoals.length === 0) {
+            } else if (!finalResult.weeklyGoals || finalResult.weeklyGoals.length === 0) {
                 // GENERATE DYNAMIC MISSIONS (NEW)
                 const prList = Object.keys(personalRecords || {});
                 const hasWorkouts = stats?.workoutsThisWeek > 0;
 
-                result.weeklyGoals = [
+                finalResult.weeklyGoals = [
                     {
-                        text: stats?.workoutsThisWeek < result.targetWorkouts
-                            ? `Entrenar ${result.targetWorkouts} días esta semana`
+                        text: filteredStats?.workoutsThisWeek < finalResult.targetWorkouts
+                            ? `Entrenar ${finalResult.targetWorkouts} días esta semana`
                             : "¡Objetivo de frecuencia cumplido!",
-                        completed: stats?.workoutsThisWeek >= result.targetWorkouts
+                        completed: filteredStats?.workoutsThisWeek >= finalResult.targetWorkouts
                     },
                     {
                         text: prList.length > 0
@@ -429,27 +474,41 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                     },
                     {
                         text: "Registrar entrenamientos para mejorar mi IA",
-                        completed: stats?.workoutsThisWeek > 0
+                        completed: filteredStats?.workoutsThisWeek > 0
                     }
                 ];
             }
 
-            console.log('[AICoach] Enriched result:', result);
-            setRecommendations(result);
-            setLastAnalyzed(new Date());
+            console.log('[AICoach] Enriched result:', finalResult);
+            // SALVAGUARDA DE SEGUNDO NIVEL: Si algo falló catastróficamente
+            if (!finalResult) {
+                finalResult = {
+                    overallAssessment: "Optimizando tu plan...",
+                    progressScore: 0,
+                    weeklyWorkouts: filteredStats?.workoutsThisWeek || 0,
+                    extraActivities: extraActivities?.length || 0,
+                    personalRecordsCount: Object.keys(personalRecords || {}).length,
+                    strengths: ["Cargando datos"],
+                    areasToImprove: ["Sincronizando..."],
+                    weeklyGoals: [],
+                    streak: filteredStats?.streak || 0
+                };
+            }
 
-            if (!result.isFallback) {
-                localStorage.setItem('fitai_ai_recommendations', JSON.stringify(result));
+            if (!fromCache && !finalResult.isFallback) {
+                localStorage.setItem('fitai_ai_recommendations', JSON.stringify(finalResult));
                 localStorage.setItem('fitai_ai_recommendations_time', Date.now().toString());
-                // Save meta data for smart invalidation
                 localStorage.setItem('fitai_ai_recommendations_meta', JSON.stringify({
                     workoutCount: workoutCount,
+                    weeklyWorkouts: filteredStats?.workoutsThisWeek || 0,
+                    pendingWorkoutId: pendingWorkout?.id || null,
                     date: new Date().toISOString()
                 }));
-                console.log('[AICoach] Result cached to localStorage with Smart Meta');
-            } else {
-                console.warn('[AICoach] Fallback result not cached');
+                console.log('[AICoach] Result cached to localStorage');
             }
+
+            setRecommendations(finalResult);
+            setLastAnalyzed(new Date());
 
             // Fetch strength history for key exercises
             if (workoutCount > 0) {
@@ -471,59 +530,28 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                 setStrengthData(combinedData);
             }
         } catch (error) {
-            console.error('[AICoach] Analysis error:', error);
-
-            try {
-                // FALLBACK DE SEGUNDO NIVEL: Si falla el análisis, forzar uno local ultra-básico
-                if (!recommendations) {
-                    console.warn('[AICoach] Emergency fallback activated');
-                    const ultraStats = stats || { workoutsThisWeek: 0 };
-                    const ultraProfile = profile || { trainingFrequency: 3 };
-
-                    const localFallback = generateLocalAnalysis({
-                        weeklyStats: ultraStats,
-                        userProfile: ultraProfile,
-                        activeRoutine: activeRoutine || null,
-                        extraActivities: extraActivities || []
-                    });
-
-                    // Asegurar que no hay undefined en campos críticos
-                    localFallback.strengths = localFallback.strengths || ["Iniciando programa"];
-                    localFallback.areasToImprove = localFallback.areasToImprove || ["Completar perfil"];
-                    localFallback.weeklyGoals = localFallback.weeklyGoals || [{ text: "Completar entrenamiento", completed: false }];
-
-                    setRecommendations({
-                        ...localFallback,
-                        weeklyWorkouts: ultraStats.workoutsThisWeek || 0,
-                        extraActivities: extraActivities?.length || 0,
-                        personalRecordsCount: Object.keys(personalRecords || {}).length,
-                        streak: ultraStats.streak || 0
-                    });
-                }
-            } catch (fallbackError) {
-                console.error('[AICoach] Catastrophic fallback error:', fallbackError);
-                setRecommendations({
-                    overallAssessment: "Optimizando tu plan...",
-                    progressScore: 0,
-                    weeklyWorkouts: 0,
-                    extraActivities: 0,
-                    personalRecordsCount: 0,
-                    strengths: ["Preparando datos"],
-                    areasToImprove: ["Cargando información"],
-                    weeklyGoals: [],
-                    streak: 0
-                });
-            }
+            console.error('[AICoach] Catastrophic analysis error:', error);
+            setRecommendations({
+                overallAssessment: "Error de sincronización. Por favor, intenta de nuevo.",
+                progressScore: 0,
+                weeklyWorkouts: 0,
+                extraActivities: 0,
+                personalRecordsCount: 0,
+                strengths: ["Error temporal"],
+                areasToImprove: ["Verificar conexión"],
+                weeklyGoals: [],
+                streak: 0
+            });
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (user && !recommendations && !loading) {
+        if (user) {
             analyzeProgress();
         }
-    }, [user?.uid]);
+    }, [user?.uid, pendingWorkout?.id, statsProp?.workoutsThisWeek]);
 
     if (loading && !recommendations) {
         return (
@@ -628,12 +656,31 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                         </div>
 
                         <div className="relative">
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                className="text-lg md:text-xl font-medium text-slate-200 leading-tight"
-                            >
-                                "{recommendations.overallAssessment}"
-                            </motion.div>
+                            {/* RENDER-TIME: Mensaje de advertencia de sesión pendiente */}
+                            {pendingWorkout && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="mb-4 p-4 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-start gap-3 shadow-lg shadow-orange-500/5"
+                                >
+                                    <AlertCircle className="text-orange-400 shrink-0 mt-0.5" size={18} />
+                                    <div>
+                                        <div className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Entreno sin terminar</div>
+                                        <p className="text-sm font-bold text-white leading-tight">
+                                            ¡Tienes un entreno de "{pendingWorkout.dayName || 'tu sesión'}" sin terminar! Termínalo para completar el día.
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {!pendingWorkout && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                    className="text-lg md:text-xl font-medium text-slate-200 leading-tight"
+                                >
+                                    "{recommendations.overallAssessment}"
+                                </motion.div>
+                            )}
                         </div>
 
                         {/* Quick Stats Grid */}
@@ -643,7 +690,7 @@ const AICoachCard = React.memo(function AICoachCard({ user, profile }) {
                                 const actual = (Number(recommendations?.weeklyWorkouts) || 0);
                                 const compliancePct = Math.min(100, Math.round((actual / target) * 100));
                                 return [
-                                    { icon: Dumbbell, label: "Entrenos", value: recommendations.weeklyWorkouts, color: "blue" },
+                                    { icon: Dumbbell, label: "Entrenos", value: actual, color: "blue" },
                                     { icon: Sparkles, label: "Extra", value: recommendations.extraActivities, color: "emerald" },
                                     { icon: Award, label: "Récords", value: recommendations.personalRecordsCount || 0, color: "amber" },
                                     { icon: Zap, label: "Cumplimiento", value: `${compliancePct}%`, color: "indigo" }

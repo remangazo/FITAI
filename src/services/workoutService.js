@@ -274,11 +274,12 @@ export const abandonWorkout = async (workoutId) => {
  * @returns {Array} - Workout history
  */
 export const getWorkoutHistory = async (userId, limitCount = 20) => {
+    if (!userId) return [];
     try {
         const q = query(
             collection(db, 'workouts'),
             where('userId', '==', userId),
-            where('status', '==', 'completed')
+            limit(100) // Fetch enough to sort and filter in memory
         );
 
         const snapshot = await getDocs(q);
@@ -287,9 +288,9 @@ export const getWorkoutHistory = async (userId, limitCount = 20) => {
             ...doc.data(),
             startTime: doc.data().startTime?.toDate?.() || doc.data().startTime,
             endTime: doc.data().endTime?.toDate?.() || doc.data().endTime
-        }));
+        })).filter(w => w.status === 'completed');
 
-        // Sort in memory
+        // Sort in memory by startTime descending
         workouts.sort((a, b) => {
             const dateA = a.startTime instanceof Date ? a.startTime : new Date(a.startTime);
             const dateB = b.startTime instanceof Date ? b.startTime : new Date(b.startTime);
@@ -419,7 +420,13 @@ export const getWeeklyStats = async (userId) => {
         const thisWeek = workouts.filter(w => {
             const date = w.startTime instanceof Date ? w.startTime :
                 (w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime));
-            return date >= weekStart;
+
+            // Un entrenamiento solo cuenta si está completado Y tiene al menos un set registrado
+            // Esto evita contar sesiones accidentales o vacías
+            const hasExercises = Array.isArray(w.exercises) && w.exercises.length > 0;
+            const hasSets = hasExercises && w.exercises.some(ex => (ex.sets || []).length > 0);
+
+            return date >= weekStart && w.status === 'completed' && w.endTime && hasSets;
         });
         const totalVolume = thisWeek.reduce((sum, w) => sum + (w.totalVolume || 0), 0);
         const avgDuration = thisWeek.length > 0
@@ -478,23 +485,22 @@ export const getWeeklyStats = async (userId) => {
  * @returns {Object|null} - In-progress workout or null
  */
 export const getInProgressWorkout = async (userId) => {
+    if (!userId) return null;
     try {
         const q = query(
             collection(db, 'workouts'),
             where('userId', '==', userId),
-            where('status', '==', 'in_progress')
+            limit(20) // Search among recent ones
         );
 
         const snapshot = await getDocs(q);
-
-        if (snapshot.empty) return null;
-
-        // Return the most recent one
-        const doc = snapshot.docs[0];
-        return {
+        const workouts = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-        };
+        }));
+
+        const inProgress = workouts.find(w => w.status === 'in_progress');
+        return inProgress || null;
     } catch (error) {
         console.error('[WorkoutService] Error getting in-progress workout:', error);
         return null;

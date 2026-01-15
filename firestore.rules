@@ -41,9 +41,12 @@ service cloud.firestore {
       
       allow create: if isOwner(userId);
       // Prevent users from modifying their own premium status or role
-      allow update: if isOwner(userId) 
+      allow update: if (isOwner(userId) 
         && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus', 'role', 'email']));
+            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus', 'role', 'email'])))
+        // Allow coach to update activeRoutineId and lastRoutineUpdate
+        || (isAuthenticated() && resource.data.coachId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeRoutineId', 'lastRoutineUpdate']));
       allow delete: if isOwner(userId);
     }
     
@@ -71,7 +74,16 @@ service cloud.firestore {
     
     // ========== NUTRITION LOGS ==========
     match /nutritionLogs/{logId} {
-      allow read, write: if isAuthenticated() 
+      // El documento tiene un campo userId que indica el dueño
+      // Permitir lectura si:
+      // 1. El usuario es el dueño (logId empieza con su uid)
+      // 2. El usuario es el coach del dueño del log (verificado via resource.data.userId)
+      allow read: if isAuthenticated() && (
+        (logId >= request.auth.uid && logId < request.auth.uid + '~') ||
+        (resource.data.userId != null && 
+         get(/databases/$(database)/documents/users/$(resource.data.userId)).data.coachId == request.auth.uid)
+      );
+      allow write: if isAuthenticated() 
         && logId >= request.auth.uid 
         && logId < request.auth.uid + '~';
     }

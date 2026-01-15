@@ -3,6 +3,7 @@
  */
 import { db } from '../config/firebase';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { xpService, XP_ACTIONS } from './xpService';
 
 export const BADGES = {
     EARLY_ADOPTER: { id: 'early_adopter', name: 'Miembro Fundador', icon: '🏛️', color: 'amber' },
@@ -44,6 +45,12 @@ export const badgeService = {
                 await updateDoc(userRef, {
                     badges: arrayUnion(...newBadges)
                 });
+
+                // Award XP for each new badge
+                for (const badgeId of newBadges) {
+                    await xpService.awardXP(userId, XP_ACTIONS.BADGE_UNLOCKED);
+                }
+
                 console.log('[BadgeService] Awarded new badges:', newBadges);
             }
 

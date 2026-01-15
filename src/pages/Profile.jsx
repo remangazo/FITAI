@@ -12,6 +12,7 @@ import { BottomNav, BackButton } from '../components/Navigation';
 import { useNotifications } from '../context/NotificationContext';
 import { calculate1RM } from '../services/progressService';
 import { getWorkoutHistory, getAllPersonalRecords } from '../services/workoutService';
+import { xpService } from '../services/xpService';
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -25,12 +26,12 @@ export default function Profile() {
 
     const [editData, setEditData] = useState({
         name: profile?.name || user?.displayName || 'Usuario',
-        weight: profile?.weight || '',
-        height: profile?.height || '',
-        targetWeight: profile?.targetWeight || '',
+        weight: profile?.weight || (profile?.weightHistory?.length > 0 ? profile.weightHistory[profile.weightHistory.length - 1].weight : ''),
+        height: profile?.height || profile?.metabolicCache?.profile?.height || '',
+        targetWeight: profile?.targetWeight || profile?.metabolicCache?.profile?.targetWeight || '',
         experienceYears: profile?.experienceYears || '',
-        birthYear: profile?.birthYear || '',
-        gender: profile?.gender || '',
+        birthYear: profile?.birthYear || profile?.metabolicCache?.profile?.birthYear || '',
+        gender: profile?.gender || profile?.metabolicCache?.profile?.gender || '',
         avatarUrl: profile?.avatarUrl || '',
     });
 
@@ -38,12 +39,12 @@ export default function Profile() {
         if (profile) {
             setEditData({
                 name: profile.name || user?.displayName || 'Usuario',
-                weight: profile.weight || '',
-                height: profile.height || '',
-                targetWeight: profile.targetWeight || '',
+                weight: profile.weight || (profile?.weightHistory?.length > 0 ? profile.weightHistory[profile.weightHistory.length - 1].weight : ''),
+                height: profile.height || profile?.metabolicCache?.profile?.height || '',
+                targetWeight: profile.targetWeight || profile?.metabolicCache?.profile?.targetWeight || '',
                 experienceYears: profile.experienceYears || '',
-                birthYear: profile.birthYear || '',
-                gender: profile.gender || '',
+                birthYear: profile.birthYear || profile?.metabolicCache?.profile?.birthYear || '',
+                gender: profile.gender || profile?.metabolicCache?.profile?.gender || '',
                 avatarUrl: profile.avatarUrl || '',
             });
         }
@@ -90,8 +91,8 @@ export default function Profile() {
         workoutsCompleted: workoutHistory.length,
         currentStreak: profile?.currentStreak || 0,
         bestStreak: bestStreak,
-        totalXP: profile?.totalXP || (workoutHistory.length * 100),
-        level: profile?.level || Math.floor(((profile?.totalXP || (workoutHistory.length * 100))) / 500) + 1,
+        totalXP: profile?.totalXP || 0,
+        level: profile?.level || 1,
         prs: Object.keys(personalRecords).length || 0,
         hoursTraining: Math.round(totalMinutes / 60),
         weeklyGoal: profile?.trainingFrequency ? parseInt(profile.trainingFrequency) : 4,
@@ -100,18 +101,22 @@ export default function Profile() {
         avgSessionDuration: workoutHistory.length > 0 ? Math.round(totalMinutes / workoutHistory.length) : 0,
     };
 
-    // Calculate age from birthYear
-    const age = profile?.birthYear ? new Date().getFullYear() - parseInt(profile.birthYear) : null;
-
-    // Calculate BMI
-    const bmi = profile?.weight && profile?.height
-        ? (parseFloat(profile.weight) / Math.pow(parseFloat(profile.height) / 100, 2)).toFixed(1)
+    // Calculate BMI and metrics with aggressive fallbacks
+    const effectiveBirthYear = profile?.birthYear || profile?.metabolicCache?.profile?.birthYear;
+    const effectiveWeight = profile?.weight || (profile?.weightHistory?.length > 0 ? profile.weightHistory[profile.weightHistory.length - 1].weight : null) || profile?.metabolicCache?.profile?.weight;
+    const effectiveHeight = profile?.height || profile?.metabolicCache?.profile?.height;
+    const bmi = effectiveWeight && effectiveHeight
+        ? (parseFloat(effectiveWeight) / Math.pow(parseFloat(effectiveHeight) / 100, 2)).toFixed(1)
         : null;
+    const age = effectiveBirthYear ? new Date().getFullYear() - parseInt(effectiveBirthYear) : null;
 
-    // Level progress
-    const xpForNextLevel = stats.level * 500;
-    const currentLevelXP = stats.totalXP % 500;
-    const levelProgress = (currentLevelXP / 500) * 100;
+    // Level progress calculation using xpService
+    const {
+        level: displayLevel,
+        xpInCurrentLevel,
+        nextLevelXP,
+        progressPercentage: levelProgress
+    } = xpService.calculateLevelProgress(stats.totalXP);
 
     // Achievements (Simplified logic for now, could be service-driven)
     const achievements = [
@@ -182,7 +187,7 @@ export default function Profile() {
                             </button>
                             {/* Level Badge */}
                             <div className="absolute -top-2 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-slate-900 text-xs font-black w-8 h-8 rounded-xl flex items-center justify-center border-2 border-slate-950">
-                                {stats.level}
+                                {displayLevel}
                             </div>
                         </div>
                         <div className="text-center sm:text-left flex-1 pb-2">
@@ -199,8 +204,8 @@ export default function Profile() {
                             {/* XP Bar */}
                             <div className="mt-3 max-w-xs mx-auto sm:mx-0">
                                 <div className="flex justify-between text-xs mb-1">
-                                    <span className="text-slate-500">Nivel {stats.level}</span>
-                                    <span className="text-purple-400 font-bold">{currentLevelXP}/{500} XP</span>
+                                    <span className="text-slate-500">Nivel {displayLevel}</span>
+                                    <span className="text-purple-400 font-bold">{xpInCurrentLevel}/{nextLevelXP} XP</span>
                                 </div>
                                 <div className="h-2 bg-slate-900 rounded-full overflow-hidden">
                                     <motion.div
@@ -303,12 +308,12 @@ export default function Profile() {
                                     />
                                     <GoalProgress
                                         label="Peso Objetivo"
-                                        progress={profile?.weight && profile?.targetWeight
-                                            ? Math.min(100, 100 - Math.abs(parseFloat(profile.weight) - parseFloat(profile.targetWeight)) / parseFloat(profile.weight) * 100)
-                                            : 40
+                                        progress={effectiveWeight && profile?.targetWeight
+                                            ? Math.max(0, Math.min(100, (1 - Math.abs(parseFloat(effectiveWeight) - parseFloat(profile.targetWeight)) / 10) * 100))
+                                            : profile?.targetWeight ? 50 : 0
                                         }
                                         color="green"
-                                        subtext={profile?.targetWeight ? `${profile.weight || '?'} → ${profile.targetWeight} kg` : null}
+                                        subtext={profile?.targetWeight ? `${effectiveWeight || '?'} → ${profile.targetWeight} kg` : "Establece un objetivo de peso"}
                                     />
                                     <GoalProgress label="Consistencia Semanal" progress={(stats.weeklyCompleted / stats.weeklyGoal) * 100} color="purple" />
                                 </div>
@@ -441,8 +446,8 @@ export default function Profile() {
                         >
                             {/* Body Metrics */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <MetricCard icon={<Scale size={18} />} label="Peso" value={profile?.weight || '—'} unit="kg" />
-                                <MetricCard icon={<Ruler size={18} />} label="Altura" value={profile?.height || '—'} unit="cm" />
+                                <MetricCard icon={<Scale size={18} />} label="Peso" value={effectiveWeight || '—'} unit="kg" />
+                                <MetricCard icon={<Ruler size={18} />} label="Altura" value={effectiveHeight || '—'} unit="cm" />
                                 <MetricCard icon={<Activity size={18} />} label="IMC" value={bmi || '—'} unit="" highlight={bmi && (bmi < 18.5 || bmi > 25)} />
                                 <MetricCard icon={<Calendar size={18} />} label="Edad" value={age || '—'} unit="años" />
                             </div>

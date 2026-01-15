@@ -43,7 +43,7 @@ service cloud.firestore {
       // Prevent users from modifying their own premium status or role
       allow update: if isOwner(userId) 
         && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus', 'role']));
+            .hasAny(['isPremium', 'subscriptionId', 'subscriptionStatus', 'role', 'email']));
       allow delete: if isOwner(userId);
     }
     
@@ -187,9 +187,10 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       // Only the trainer can create/update their own profile
       allow create: if isOwner(trainerId);
-      allow update: if isOwner(trainerId)
+      allow update: if (isOwner(trainerId)
         && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['shopDiscount', 'studentReferrals']));
+            .hasAny(['shopDiscount', 'studentReferrals'])))
+        || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentCount', 'rewardPoints']));
       allow delete: if isOwner(trainerId);
     }
 

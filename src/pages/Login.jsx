@@ -24,20 +24,37 @@ export default function Login() {
     useEffect(() => {
         // Redirigir solo cuando tengamos certeza del usuario y su perfil
         if (user && !authLoading && !profileLoading) {
+            console.log('[Login] 📍 Decidiendo redirección...', {
+                hasProfile: !!profile,
+                onboardingCompleted: profile?.onboardingCompleted,
+                redirectPath
+            });
+
             // Si hay un path de redirección pendiente, lo priorizamos
             if (redirectPath) {
+                console.log('[Login] ➡️ Redirigiendo a:', redirectPath);
                 navigate(redirectPath);
                 return;
             }
 
             if (profile) {
+                // PRIORIDAD 1: Coaches
+                if (profile.role === 'trainer' || profile.role === 'coach' || profile.isTrainer) {
+                    console.log('[Login] 🏛️ Redirigiendo a Dashboard de Coach (/trainer)');
+                    navigate('/trainer');
+                    return;
+                }
+
+                // PRIORIDAD 2: El resto de usuarios (con onboarding)
                 if (profile.onboardingCompleted) {
+                    console.log('[Login] ✅ Redirigiendo a /dashboard');
                     navigate('/dashboard');
                 } else {
+                    console.log('[Login] ⚠️ Redirigiendo a /onboarding (onboardingCompleted:', profile.onboardingCompleted, ')');
                     navigate('/onboarding');
                 }
             } else {
-                console.warn("Usuario autenticado sin perfil, redirigiendo a onboarding...");
+                console.warn("[Login] ⚠️ Usuario autenticado sin perfil, redirigiendo a onboarding...");
                 navigate('/onboarding');
             }
         }

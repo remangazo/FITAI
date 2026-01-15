@@ -19,6 +19,7 @@ import { getWeekStart } from '../utils/dateUtils';
 import { progressiveOverloadService } from './progressiveOverloadService';
 import { badgeService } from './badgeService';
 import { socialService } from './socialService';
+import { xpService, XP_ACTIONS } from './xpService';
 
 /**
  * Start a new workout session
@@ -131,6 +132,17 @@ export const logSet = async (workoutId, exerciseIndex, setData) => {
     });
 
     console.log('[WorkoutService] Logged set:', exerciseIndex, setData);
+
+    // GAMIFICATION: Award XP for set
+    try {
+        await xpService.awardXP(workout.userId, XP_ACTIONS.SET_COMPLETE);
+        if (exercises[exerciseIndex].personalRecord) {
+            await xpService.awardXP(workout.userId, XP_ACTIONS.PERSONAL_RECORD);
+        }
+    } catch (xpError) {
+        console.error('[WorkoutService] Error awarding XP for set:', xpError);
+    }
+
     return { totalVolume, totalSets, isPR: exercises[exerciseIndex].personalRecord };
 };
 
@@ -206,6 +218,13 @@ export const completeWorkout = async (workoutId, notes = '') => {
         }
     } catch (gamifyError) {
         console.error('[WorkoutService] Error in gamification flow:', gamifyError);
+    }
+
+    // GAMIFICATION: Award XP for workout completion
+    try {
+        await xpService.awardXP(workout.userId, XP_ACTIONS.WORKOUT_COMPLETE);
+    } catch (xpError) {
+        console.error('[WorkoutService] Error awarding XP for workout complete:', xpError);
     }
 
     // SOCIAL: Publicar entrenamiento en el muro de la comunidad

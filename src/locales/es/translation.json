@@ -70,5 +70,13 @@
     "cancel": "Cancelar",
     "loading": "Cargando...",
     "error": "Error"
+  },
+  "activity": {
+    "sedentary": "Sedentario",
+    "light": "Ligero",
+    "moderate": "Moderado",
+    "active": "Activo",
+    "veryActive": "Muy Activo",
+    "athlete": "Atleta"
   }
 }

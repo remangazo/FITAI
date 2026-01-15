@@ -111,8 +111,10 @@ const safeLower = (val) => {
 };
 
 export const calculateTMB = (weightKg, heightCm, age, gender) => {
-    // Validación de inputs
-    const weight = Math.max(30, Math.min(300, parseFloat(weightKg) || 70));
+    // Validación de inputs - Retornar null si falta el peso real
+    if (!weightKg) return null;
+
+    const weight = Math.max(30, Math.min(300, parseFloat(weightKg)));
     const height = Math.max(100, Math.min(250, parseFloat(heightCm) || 170));
     const ageVal = Math.max(15, Math.min(100, parseInt(age) || 25));
 
@@ -340,7 +342,19 @@ export const calculateActivityCalories = (activityType, durationMinutes, weightK
  */
 export const calculateFullMetabolicProfile = (profile) => {
     // Extraer datos del perfil
-    const weight = parseFloat(profile?.weight) || 70;
+    const weight = parseFloat(profile?.weight) || (profile?.weightHistory?.length > 0 ? parseFloat(profile.weightHistory[profile.weightHistory.length - 1].weight) : null);
+
+    if (!weight) {
+        return {
+            profile: { ...profile, weight: null },
+            metabolism: { tmb: null, tdee: null, targetCalories: null },
+            dailyMacros: { protein: null, carbs: null, fats: null },
+            mealDistribution: [],
+            calculatedAt: new Date().toISOString(),
+            error: 'Missing weight'
+        };
+    }
+
     const height = parseFloat(profile?.height) || 170;
     const birthYear = parseInt(profile?.birthYear) || 1995;
     const age = new Date().getFullYear() - birthYear;

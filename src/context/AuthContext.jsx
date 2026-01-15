@@ -59,11 +59,19 @@ export const AuthProvider = ({ children }) => {
         setProfileLoading(true);
         const docRef = doc(db, 'users', user.uid);
 
+        console.log('[AuthContext] 🔍 Iniciando listener para UID:', user.uid);
+
         const unsubscribeProfile = onSnapshot(docRef,
             async (docSnap) => {
+                console.log('[AuthContext] 📥 Snapshot recibido:', docSnap.exists());
+
                 if (docSnap.exists()) {
-                    setProfile(docSnap.data());
+                    const data = docSnap.data();
+                    console.log('[AuthContext] ✅ Datos completos del perfil:', data);
+                    console.log('[AuthContext] 📊 Verificando campos: Weight:', data.weight, 'Experience:', data.experienceYears);
+                    setProfile(data);
                 } else {
+                    console.warn('[AuthContext] ⚠️ Documento no existe, creando perfil inicial...');
                     // Create profile if it doesn't exist
                     const initialData = {
                         email: user.email,
@@ -72,7 +80,8 @@ export const AuthProvider = ({ children }) => {
                         createdAt: new Date(),
                     };
                     try {
-                        await setDoc(docRef, initialData);
+                        await setDoc(docRef, initialData, { merge: true });
+                        console.log('[AuthContext] ✅ Perfil inicial creado (o fusionado)');
                         // Profile state will be updated by the next snapshot
                     } catch (err) {
                         console.error("[AuthContext] Error creating profile:", err);

@@ -9,6 +9,7 @@ import { BottomNav, BackButton } from '../components/Navigation';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { trainerService } from '../services/trainerService';
+import { shopService } from '../services/shopService';
 import { CATEGORIES } from '../data/shopConstants';
 import { analyticsService } from '../services/analyticsService';
 
@@ -266,24 +267,26 @@ export default function Shop() {
 
                 {/* Products Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <ProductCard
-                        key={product.id}
-                        product={product}
-                        onAdd={() => {
-                            addToCart(product);
-                            analyticsService.recordOrder({ // Simulation for demo: add to cart records an "intent" or just use a dedicated button for order
-                                // We'll actually record the order in the checkout button later
-                            });
-                        }}
-                        onView={() => {
-                            setSelectedProduct(product);
-                            analyticsService.trackProductView(product.id);
-                        }}
-                        isPremium={isPremium}
-                        isTrainerEligible={isTrainerDiscountEligible(product.category)}
-                        trainerDiscount={getTrainerDiscount()}
-                        getDiscountedPrice={getDiscountedPrice}
-                    />
+                    {Array.isArray(filteredProducts) && filteredProducts.map(product => (
+                        <ProductCard
+                            key={product.id || Math.random().toString()}
+                            product={product}
+                            onAdd={() => {
+                                addToCart(product);
+                                analyticsService.recordOrder({ // Simulation for demo: add to cart records an "intent" or just use a dedicated button for order
+                                    // We'll actually record the order in the checkout button later
+                                });
+                            }}
+                            onView={() => {
+                                setSelectedProduct(product);
+                                analyticsService.trackProductView(product.id);
+                            }}
+                            isPremium={isPremium}
+                            isTrainerEligible={isTrainerDiscountEligible(product.category)}
+                            trainerDiscount={getTrainerDiscount()}
+                            getDiscountedPrice={getDiscountedPrice}
+                        />
+                    ))}
                 </div>
 
                 {filteredProducts.length === 0 && (
@@ -333,6 +336,11 @@ export default function Shop() {
 }
 
 function ProductCard({ product, onAdd, onView, isPremium, isTrainerEligible, trainerDiscount, getDiscountedPrice }) {
+    if (!product) {
+        console.error('[Shop] ProductCard received null/undefined product');
+        return null;
+    }
+
     const discountedPrice = getDiscountedPrice(product.price, product.category);
     const hasDiscount = (isPremium || isTrainerEligible) && discountedPrice < product.price;
 

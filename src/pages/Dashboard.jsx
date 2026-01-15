@@ -137,6 +137,13 @@ export default function Dashboard() {
         // Esperar a que el perfil termine de cargar en AuthContext
         if (profileLoading) return;
 
+        // Redirección por Rol (Coaches al TrainerDashboard)
+        if (profile && (profile.role === 'trainer' || profile.role === 'coach' || profile.isTrainer)) {
+            console.log('[Dashboard] 🏛️ El usuario es un coach, redirigiendo a /trainer');
+            navigate('/trainer');
+            return;
+        }
+
         // Validación de onboarding estricta usando Datos del Contexto (Source of Truth)
         if (!profile || !profile.onboardingCompleted) {
             navigate('/onboarding');
@@ -305,6 +312,14 @@ export default function Dashboard() {
             } else {
                 console.log('[Dashboard] Calculating metabolic profile (no cache found)');
                 metabolicProfile = calculateFullMetabolicProfile(profile);
+            }
+
+            // Actualizar estado de dietas con la dieta activa encontrada
+            if (activeDiet) {
+                setDiets([activeDiet]);
+                console.log('[Dashboard] Active diet set in state:', activeDiet.id);
+            } else {
+                setDiets([]);
             }
 
             // Usar el perfil metabólico para lo que sea necesario en el Dashboard...
@@ -769,18 +784,18 @@ export default function Dashboard() {
                             disabled={generating.diet}
                             color="emerald"
                         />
-                        {profile?.weight && (
+                        {profile && (
                             <StatsCard
                                 title={t('dashboard.weight', 'Peso Corporal')}
-                                value={`${profile.weight} ${profile.units === 'imperial' ? 'lb' : 'kg'}`}
+                                value={`${profile.weight || (profile.weightHistory?.length > 0 ? profile.weightHistory[profile.weightHistory.length - 1].weight : null) || '--'} ${profile.units === 'imperial' ? 'lb' : 'kg'}`}
                                 icon={<Scale className="text-purple-400" size={20} />}
                                 color="purple"
                             />
                         )}
-                        {profile?.experienceYears && (
+                        {profile && (
                             <StatsCard
                                 title={t('dashboard.level', 'Nivel Atleta')}
-                                value={profile.experienceYears}
+                                value={profile.experienceYears || profile.techniqueLevel || profile.fitnessLevel || profile.level || (profile.metabolicCache?.profile?.activityLevel ? t(`activity.${profile.metabolicCache.profile.activityLevel}`) : '--')}
                                 icon={<Trophy className="text-amber-400" size={20} />}
                                 color="amber"
                             />
@@ -1027,17 +1042,23 @@ export default function Dashboard() {
                                     </div>
                                 ) : (
                                     <div className="text-center py-12 px-4 space-y-4">
-                                        <div className="w-16 h-16 bg-white/[0.02] rounded-2xl border border-white/5 flex items-center justify-center mx-auto">
-                                            <Utensils size={24} className="text-slate-700" />
+                                        <div className="w-16 h-16 bg-white/[0.02] rounded-2xl border border-white/5 flex items-center justify-center mx-auto shadow-inner">
+                                            <UtensilsCrossed size={24} className="text-slate-700" />
                                         </div>
-                                        <p className="text-xs text-slate-500 font-medium italic">
-                                            {t('dashboard.no_diet', 'No hay un plan de alimentación activo.')}
-                                        </p>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-400">
+                                                {t('dashboard.no_diet', 'No hay un plan generado')}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mt-1">
+                                                Recetas con macros calculados
+                                            </p>
+                                        </div>
                                         <button
-                                            onClick={() => navigate('/nutrition')}
-                                            className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] border-b border-indigo-400/20 pb-1"
+                                            onClick={handleGenerateDiet}
+                                            disabled={generating.diet}
+                                            className="w-full py-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-50"
                                         >
-                                            Generar ahora
+                                            {generating.diet ? 'GENERANDO...' : 'GENERAR AHORA'}
                                         </button>
                                     </div>
                                 )}

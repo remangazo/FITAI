@@ -203,18 +203,28 @@ export default function Settings() {
         if (!user || !coachCode.trim()) return;
         setLinkingCoach(true);
         setError(null);
+        console.log('[Settings] Intentando vincular con coach code:', coachCode.trim());
         try {
             const result = await trainerService.linkStudentToCoach(user.uid, coachCode.trim());
+            console.log('[Settings] Resultado de vinculación:', result);
             if (result.success) {
                 showToast({ type: 'success', title: '¡Vinculado!', message: `Ahora estás bajo la supervisión de ${result.trainerName}` });
                 setSaved(true);
                 setCoachCode('');
+                // Recargar información del coach
                 await loadCoachInfo(result.trainerId);
+
+                // Forzar actualización del perfil local para que el UI reaccione
+                if (profile) {
+                    profile.coachId = result.trainerId;
+                }
+
                 setTimeout(() => setSaved(false), 2000);
             }
         } catch (err) {
-            console.error('[Settings] Error linking coach:', err);
+            console.error('[Settings] Error vinculando coach:', err);
             setError(err.message || 'Código de coach inválido');
+            showToast({ type: 'error', title: 'Error de vinculación', message: err.message || 'Código inválido' });
         } finally {
             setLinkingCoach(false);
         }

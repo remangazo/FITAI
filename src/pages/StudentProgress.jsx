@@ -599,6 +599,46 @@ function AssignRoutineModal({ onClose, onAssign }) {
     const [isLoading, setIsLoading] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
     const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
+
+    // Función para comprimir/redimensionar imagen antes de enviar a IA
+    const processImage = async (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Redimensionar si es muy grande (máximo 1200px)
+                    const MAX_SIZE = 1200;
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Exportar como JPG para ahorrar espacio
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
     const handleScanRoutine = async (e) => {
         const file = e.target.files?.[0];
@@ -606,30 +646,42 @@ function AssignRoutineModal({ onClose, onAssign }) {
 
         setIsScanning(true);
         try {
-            // Convert file to base64
-            const reader = new FileReader();
-            const base64Promise = new Promise((resolve) => {
-                reader.onload = () => resolve(reader.result);
-                reader.readAsDataURL(file);
-            });
-            const base64Image = await base64Promise;
+            const base64Image = await processImage(file);
 
             // Call Gemini
             const aiData = await analyzeRoutineFromImage(base64Image);
+            // ... lines removed for brevity, will use specific replace ...
 
             if (aiData) {
-                setName(aiData.title || '');
-                // Formatear ejercicios en las notas para que el coach los revise
+                setName(aiData.title || aiData.name || '');
+
                 let exercisesText = "";
-                if (aiData.exercises && aiData.exercises.length > 0) {
-                    exercisesText = "\n\nEJERCICIOS DETECTADOS:\n" +
-                        aiData.exercises.map(ex => `- ${ex.name}: ${ex.sets}x${ex.reps} (${ex.notes || ''})`).join('\n');
+
+                // Si la IA devolvió días estructurados, formatearlos bonito
+                if (aiData.days && aiData.days.length > 0) {
+                    exercisesText = "\n\n--- RUTINA DETECTADA POR DÍAS ---";
+                    aiData.days.forEach(d => {
+                        exercisesText += `\n\n📌 ${d.day.toUpperCase()} (${d.focus || 'General'})\n`;
+                        if (d.exercises) {
+                            d.exercises.forEach(ex => {
+                                exercisesText += `- ${ex.name}: ${ex.sets}x${ex.reps} ${ex.notes ? '(' + ex.notes + ')' : ''}\n`;
+                            });
+                        }
+                    });
+                } else if (aiData.exercises && aiData.exercises.length > 0) {
+                    // Fallback a lista plana
+                    exercisesText = "\n\n--- EJERCICIOS DETECTADOS ---\n" +
+                        aiData.exercises.map(ex => `- ${ex.name}: ${ex.sets}x${ex.reps} ${ex.notes ? '(' + ex.notes + ')' : ''}`).join('\n');
                 }
-                setNotes((aiData.notes || '') + exercisesText);
+
+                setNotes((aiData.notes || aiData.description || '') + exercisesText);
             }
         } catch (error) {
             console.error("Error scanning routine:", error);
-            alert("No pudimos leer la imagen. Intenta con una foto más clara.");
+            const errorMsg = error.message?.includes('413')
+                ? "La imagen es demasiado pesada. Intenta con una captura más pequeña."
+                : `Error: ${error.message}. Intenta con otra imagen o escribe el nombre manualmente.`;
+            alert(errorMsg);
         } finally {
             setIsScanning(false);
         }
@@ -668,27 +720,57 @@ function AssignRoutineModal({ onClose, onAssign }) {
             >
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-black">Asignar Rutina</h3>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleScanRoutine}
-                    />
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isScanning}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-brand-primary/20 to-brand-violet/20 border border-brand-primary/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-primary-light hover:from-brand-primary/30 hover:to-brand-violet/30 transition-all disabled:opacity-50"
-                    >
-                        {isScanning ? (
-                            <Wand2 className="animate-pulse" size={14} />
-                        ) : (
+                    <div className="flex gap-2">
+                        <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleScanRoutine}
+                        />
+                        <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            ref={cameraInputRef}
+                            onChange={handleScanRoutine}
+                        />
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => cameraInputRef.current?.click()}
+                            disabled={isScanning}
+                            className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-xl text-[9px] font-black uppercase tracking-widest text-blue-400 hover:bg-blue-600/30 transition-all disabled:opacity-50"
+                        >
                             <Camera size={14} />
-                        )}
-                        {isScanning ? 'Escaneando...' : 'Escanear IA'}
-                    </motion.button>
+                            Capturar
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isScanning}
+                            className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-700 transition-all disabled:opacity-50"
+                        >
+                            {isScanning ? (
+                                <Wand2 className="animate-pulse" size={14} />
+                            ) : (
+                                <FileText size={14} />
+                            )}
+                            Galería
+                        </motion.button>
+                    </div>
+                </div>
+
+                <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-3 mb-6">
+                    <div className="text-[8px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Formatos Permitidos</div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                        Sube imágenes en <span className="text-white font-bold">JPG, PNG o WEBP</span> o documentos <span className="text-white font-bold">PDF</span>.
+                        Asegúrate de que el texto sea legible y haya buena luz.
+                    </p>
                 </div>
 
                 <div className="space-y-4">

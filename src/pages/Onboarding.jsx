@@ -15,7 +15,7 @@ import { trainerService } from '../services/trainerService';
 
 export default function Onboarding() {
     const navigate = useNavigate();
-    const { user, updateProfile } = useAuth();
+    const { user, profile, updateProfile } = useAuth();
     const stepConfig = [
         { icon: User, title: 'IDENTIDAD', color: 'blue' },
         { icon: Target, title: 'OBJETIVOS', color: 'purple' },
@@ -124,6 +124,34 @@ export default function Onboarding() {
         }
     }, [user, navigate]);
 
+    // AUTO-BYPASS: Si el usuario ya tiene datos completos, redirigir al dashboard
+    useEffect(() => {
+        if (profile) {
+            // Verificar si el usuario ya tiene datos críticos completados
+            const hasBasicData = profile.name && profile.weight && profile.primaryGoal;
+
+            if (hasBasicData && !profile.onboardingCompleted) {
+                console.log('[Onboarding] 🔄 Usuario existente detectado, marcando onboarding como completado automáticamente');
+
+                // Marcar onboarding como completado y redirigir
+                updateProfile({ onboardingCompleted: true })
+                    .then(() => {
+                        console.log('[Onboarding] ✅ Onboarding marcado como completado');
+                        navigate('/dashboard');
+                    })
+                    .catch(err => {
+                        console.error('[Onboarding] Error al marcar onboarding:', err);
+                    });
+            }
+
+            // Si ya está marcado como completado, redirigir directo
+            if (profile.onboardingCompleted) {
+                console.log('[Onboarding] ✅ Usuario ya completó onboarding, redirigiendo...');
+                navigate('/dashboard');
+            }
+        }
+    }, [profile, navigate, updateProfile]);
+
     const updateField = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setError('');
@@ -138,7 +166,49 @@ export default function Onboarding() {
         }));
     };
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS - 1));
+    const isStepValid = (stepIndex) => {
+        switch (stepIndex) {
+            case 0: // Identity
+                return formData.name.trim().length > 0 &&
+                    formData.gender &&
+                    formData.birthYear &&
+                    formData.country;
+            case 1: // Goals
+                return Array.isArray(formData.primaryGoal) ? formData.primaryGoal.length > 0 : !!formData.primaryGoal;
+            case 2: // Biometrics
+                return formData.weight && formData.height && formData.targetWeight;
+            case 3: // Experience
+                return formData.experienceYears && formData.trainingFrequency && formData.preferredStyle;
+            case 4: // Strength Benchmarks
+                if (!hasExperience) return true;
+                // Opcional por ahora para no ser demasiado restrictivo, pero animamos a llenarlo
+                return true;
+            case 5: // Technique
+                if (!hasExperience) return true;
+                return formData.techniqueLevel && formData.hasCoachExperience;
+            case 6: // Equipment
+                return !!formData.trainingLocation;
+            case 7: // Schedule
+                return formData.occupation && formData.availableDays.length > 0 && formData.sessionDuration && formData.preferredTime;
+            case 8: // Health
+                return !!formData.injuries && !!formData.sleepHours && !!formData.stressLevel;
+            case 9: // Nutrition
+                return !!formData.dietType && !!formData.mealsPerDay && !!formData.waterIntake;
+            case 10: // Motivation
+                return !!formData.motivationLevel && !!formData.previousAttempts && !!formData.biggestChallenge;
+            default:
+                return true;
+        }
+    };
+
+    const nextStep = () => {
+        if (isStepValid(currentStep)) {
+            setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS - 1));
+            setError('');
+        } else {
+            setError('Por favor, completa todos los campos obligatorios para continuar.');
+        }
+    };
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0));
 
     const handleSubmit = async () => {
@@ -286,7 +356,7 @@ export default function Onboarding() {
                                             placeholder="Ej: Carlos"
                                         />
                                         <div className="mt-6">
-                                            <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Género</label>
+                                            <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Género *</label>
                                             <div className="grid grid-cols-3 gap-3">
                                                 {['Hombre', 'Mujer', 'Otro'].map(g => (
                                                     <SelectCard
@@ -311,7 +381,7 @@ export default function Onboarding() {
                                         <div className="mt-6">
                                             <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">
                                                 <MapPin className="inline mr-2" size={14} />
-                                                País de residencia
+                                                País de residencia *
                                             </label>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {[
@@ -421,7 +491,7 @@ export default function Onboarding() {
                                     <StepContainer icon={Dumbbell} title="Experiencia de Entrenamiento" subtitle="¿Cuánto tiempo llevas entrenando?">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Años de experiencia</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Años de experiencia *</label>
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                     {['Principiante', '1-2 años', '3-5 años', '+5 años'].map(exp => (
                                                         <SelectCard
@@ -435,7 +505,7 @@ export default function Onboarding() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Frecuencia semanal actual</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Frecuencia semanal actual *</label>
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                     {['0-1 días', '2-3 días', '4-5 días', '6+ días'].map(freq => (
                                                         <SelectCard
@@ -449,7 +519,7 @@ export default function Onboarding() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Estilo preferido</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Estilo preferido *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {['Bodybuilding', 'Powerlifting', 'CrossFit', 'Funcional', 'Calistenia', 'Híbrido'].map(style => (
                                                         <SelectCard
@@ -627,7 +697,7 @@ export default function Onboarding() {
                                     <StepContainer icon={Building} title="Equipamiento Disponible" subtitle="¿Dónde y con qué entrenas?">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Lugar de entrenamiento</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Lugar de entrenamiento *</label>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {[
                                                         { id: 'gym', icon: '🏋️', label: 'Gimnasio' },
@@ -645,7 +715,7 @@ export default function Onboarding() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Equipamiento disponible (múltiple)</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Equipamiento disponible (múltiple) *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {['Barras', 'Mancuernas', 'Máquinas', 'Cables/Poleas', 'Kettlebells', 'Bandas Elásticas', 'TRX', 'Ninguno/Solo Peso Corporal'].map(eq => (
                                                         <MultiSelectCard
@@ -666,7 +736,7 @@ export default function Onboarding() {
                                     <StepContainer icon={Calendar} title="Horarios y Disponibilidad" subtitle="¿Cuándo puedes entrenar?">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Tipo de ocupación</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Tipo de ocupación *</label>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {[
                                                         { id: 'desk', icon: '💻', label: 'Escritorio' },
@@ -684,7 +754,7 @@ export default function Onboarding() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Días disponibles</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Días disponibles *</label>
                                                 <div className="flex gap-2 flex-wrap">
                                                     {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => (
                                                         <button
@@ -702,7 +772,7 @@ export default function Onboarding() {
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Horario preferido</label>
+                                                    <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Horario preferido *</label>
                                                     <div className="space-y-2">
                                                         {['Mañana', 'Mediodía', 'Tarde', 'Noche'].map(time => (
                                                             <SelectCard
@@ -716,7 +786,7 @@ export default function Onboarding() {
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Duración sesión</label>
+                                                    <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Duración sesión *</label>
                                                     <div className="space-y-2">
                                                         {['30-45 min', '45-60 min', '60-90 min', '+90 min'].map(dur => (
                                                             <SelectCard
@@ -739,7 +809,7 @@ export default function Onboarding() {
                                     <StepContainer icon={Heart} title="Salud y Condiciones" subtitle="Información importante para tu seguridad">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Tienes lesiones activas?</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Tienes lesiones activas? *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {[
                                                         { id: 'none', icon: '✅', label: 'No, ninguna' },
@@ -762,7 +832,7 @@ export default function Onboarding() {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3 flex items-center gap-2">
-                                                        <Moon size={14} /> Horas de sueño
+                                                        <Moon size={14} /> Horas de sueño *
                                                     </label>
                                                     <div className="space-y-2">
                                                         {['<5h', '5-6h', '7-8h', '+8h'].map(hrs => (
@@ -778,7 +848,7 @@ export default function Onboarding() {
                                                 </div>
                                                 <div>
                                                     <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3 flex items-center gap-2">
-                                                        <Brain size={14} /> Nivel de estrés
+                                                        <Brain size={14} /> Nivel de estrés *
                                                     </label>
                                                     <div className="space-y-2">
                                                         {['Bajo', 'Moderado', 'Alto', 'Muy Alto'].map(str => (
@@ -802,7 +872,7 @@ export default function Onboarding() {
                                     <StepContainer icon={UtensilsCrossed} title="Nutrición y Dieta" subtitle="Define tus preferencias alimentarias">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Tipo de dieta</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Tipo de dieta *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {['Tradicional', 'Vegetariana', 'Vegana', 'Keto', 'Paleo', 'Mediterránea'].map(diet => (
                                                         <SelectCard
@@ -831,7 +901,7 @@ export default function Onboarding() {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3 flex items-center gap-2">
-                                                        <Utensils size={14} /> Comidas por día
+                                                        <Utensils size={14} /> Comidas por día *
                                                     </label>
                                                     <div className="space-y-2">
                                                         {['2-3', '4-5', '5-6', '+6'].map(meals => (
@@ -847,7 +917,7 @@ export default function Onboarding() {
                                                 </div>
                                                 <div>
                                                     <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3 flex items-center gap-2">
-                                                        💧 Agua diaria
+                                                        💧 Agua diaria *
                                                     </label>
                                                     <div className="space-y-2">
                                                         {['<1L', '1-2L', '2-3L', '+3L'].map(water => (
@@ -871,7 +941,7 @@ export default function Onboarding() {
                                     <StepContainer icon={Brain} title="Motivación y Mentalidad" subtitle="Entendamos tu psicología para ayudarte mejor">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Cómo está tu motivación ahora?</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Cómo está tu motivación ahora? *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {[
                                                         { id: 'max', icon: '🔥', label: 'Al máximo' },
@@ -890,7 +960,7 @@ export default function Onboarding() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Has intentado transformarte antes?</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Has intentado transformarte antes? *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {[
                                                         { id: 'first', label: 'Primera vez' },
@@ -909,7 +979,7 @@ export default function Onboarding() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Tu mayor desafío?</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">¿Tu mayor desafío? *</label>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {['Consistencia', 'Tiempo', 'Nutrición', 'Conocimiento', 'Lesiones', 'Motivación'].map(ch => (
                                                         <SelectCard
@@ -931,7 +1001,7 @@ export default function Onboarding() {
                                     <StepContainer icon={Sparkles} title="Enfoque Profesional" subtitle="Personaliza el 'ADN' de tu próxima rutina">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Prioridad Muscular del Mes</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Prioridad Muscular del Mes *</label>
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                     {[
                                                         { id: 'balanced', label: 'Equilibrado' },
@@ -955,7 +1025,7 @@ export default function Onboarding() {
                                             </div>
 
                                             <div>
-                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Nivel de Intensidad y Esfuerzo</label>
+                                                <label className="text-xs text-slate-500 font-bold uppercase ml-1 block mb-3">Nivel de Intensidad y Esfuerzo *</label>
                                                 <div className="space-y-3">
                                                     {[
                                                         { id: 'standard', icon: '⚖️', label: 'Estándar', desc: 'Series controladas, dejando 1-2 reps en reserva (RPE 8-9).' },
@@ -1173,9 +1243,13 @@ export default function Onboarding() {
                         {currentStep < TOTAL_STEPS - 1 ? (
                             <button
                                 onClick={nextStep}
-                                className="w-full bg-white text-slate-950 py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-blue-400 transition-colors"
+                                disabled={!isStepValid(currentStep)}
+                                className={`w-full py-4 rounded-2xl font-black flex items-center justify-center gap-2 transition-all ${isStepValid(currentStep)
+                                    ? 'bg-white text-slate-950 hover:bg-blue-400'
+                                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
+                                    }`}
                             >
-                                {currentStep === 12 && !formData.coachCode ? 'Omitir y Continuar' : 'Continuar'} <ChevronRight size={20} />
+                                {isStepValid(currentStep) ? 'Continuar' : 'Completa los campos'} <ChevronRight size={20} />
                             </button>
                         ) : (
                             <button
@@ -1238,10 +1312,12 @@ function StepContainer({ icon: Icon, title, subtitle, children }) {
     );
 }
 
-function InputField({ label, value, onChange, placeholder, type = 'text', className = '' }) {
+function InputField({ label, value, onChange, placeholder, type = 'text', className = '', required = true }) {
     return (
         <div className={`space-y-2 ${className}`}>
-            <label className="text-xs text-slate-500 font-bold uppercase ml-1 block">{label}</label>
+            <label className="text-xs text-slate-500 font-bold uppercase ml-1 block">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
             <input
                 type={type}
                 value={value}
@@ -1257,7 +1333,7 @@ function NumberInput({ icon, label, value, onChange, optional }) {
     return (
         <div className="space-y-2">
             <label className="text-xs text-slate-500 font-bold uppercase ml-1 block flex items-center gap-2">
-                {icon} {label} {optional && <span className="text-slate-700">(opcional)</span>}
+                {icon} {label} {!optional && <span className="text-red-500">*</span>} {optional && <span className="text-slate-700">(opcional)</span>}
             </label>
             <input
                 type="number"

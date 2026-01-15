@@ -139,7 +139,9 @@ async function callOpenRouter(prompt, systemPrompt = "Eres un asistente de fitne
             throw new Error("La IA no devolvió ninguna respuesta válida.");
         }
 
-        return response.data.choices[0].message.content;
+        const content = response.data.choices[0].message.content;
+        console.log(`[AIProxy] Respuesta exitosa de ${model} (${content.length} caracteres)`);
+        return content;
     } catch (error) {
         console.error("OpenRouter API Error:", error.response?.data || error.message);
         throw new Error(error.response?.data?.error?.message || "Error al conectar con el servicio de IA. Intenta de nuevo.");
@@ -467,27 +469,74 @@ async function handleVerifyProof(data) {
 }
 
 async function handleAnalyzeRoutineFromImage(data) {
-    const prompt = `Analiza esta imagen de rutina y extrae JSON:
+    const geminiKey = process.env.GEMINI_API_KEY;
+    // Usamos el modelo flash 2.0 que es excelente en visión
+    const model = "gemini-2.0-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+
+    if (!data.image) {
+        throw new Error("No se recibió ninguna imagen para analizar.");
+    }
+
+    // Limpiar el base64 de prefijos si existen
+    const base64Data = data.image.includes('base64,')
+        ? data.image.split('base64,')[1]
+        : data.image;
+
+    const prompt = `Analiza detalladamente esta imagen de rutina de entrenamiento. 
+    ESTRUCTURA ESPERADA: Detecto que puede ser una tabla semanal (por ejemplo, columnas para Día 1, Día 2, etc.).
+    TAREA: Extrae TODOS los ejercicios, organizándolos por día.
+    
+    Responde ÚNICAMENTE con este formato JSON (sin markdown, sin texto extra):
     {
-      "name": "Título",
-      "description": "...",
+      "title": "Nombre de la rutina",
+      "notes": "Consejos generales del plan",
       "days": [
         {
-          "day": "Día",
-          "focus": "...",
-          "exercises": [ { "name": "...", "sets": 3, "reps": "12", "rest": "60s" } ]
+          "day": "Día / Grupo Muscular",
+          "focus": "Músculo principal",
+          "exercises": [
+            { "name": "Nombre", "sets": "3", "reps": "12", "notes": "" }
+          ]
         }
       ]
     }`;
 
-    const systemPrompt = "Eres un experto en lectura de rutinas de fitness.";
-    const response = await callOpenRouter(prompt, systemPrompt, data.image);
+    try {
+        console.log(`[AIProxy] Llamando a Gemini API Directa para análisis de imagen...`);
+        const response = await axios.post(url, {
+            contents: [{
+                parts: [
+                    { text: prompt },
+                    {
+                        inline_data: {
+                            mime_type: "image/jpeg",
+                            data: base64Data
+                        }
+                    }
+                ]
+            }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.2 // Más bajo para mayor precisión en datos
+            }
+        });
 
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-        return JSON.parse(jsonMatch[0].replace(/,\s*([\]\}])/g, '$1'));
+        const resultText = response.data.candidates[0].content.parts[0].text;
+        console.log("[AIProxy] Respuesta de Gemini recibida.");
+
+        // Limpiar posibles bloques de código markdown
+        let cleanJson = resultText.trim();
+        if (cleanJson.startsWith('```')) {
+            cleanJson = cleanJson.replace(/^```json/, '').replace(/```$/, '').trim();
+        }
+
+        return JSON.parse(cleanJson);
+    } catch (error) {
+        console.error("[AIProxy] Error en Gemini Directo:", error.response?.data || error.message);
+        const detail = error.response?.data?.error?.message || error.message;
+        throw new Error(`Error de visión IA: ${detail}`);
     }
-    throw new Error("No se pudo extraer el JSON de la imagen.");
 }
 
 async function handleMealRecipe(data) {
